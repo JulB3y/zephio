@@ -149,7 +149,11 @@ static void parse_csi_from(int fd, int first_byte, TuiEvent *event)
         apply_modifiers(params[1], event);
     }
 
-    if (final_byte == '~') {
+    if (final_byte == 'Z') {
+        /* Backtab (Shift+Tab): ESC [ Z  or  ESC [ 1;2 Z */
+        event->key = TUI_KEY_TAB;
+        event->modifiers |= TUI_MOD_SHIFT;
+    } else if (final_byte == '~') {
         apply_key_by_param((param_count > 0) ? params[0] : 1, event);
     } else {
         apply_key_by_letter(final_byte, event);
