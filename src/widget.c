@@ -157,12 +157,10 @@ void tui_widget_render(TuiWidget *widget)
 
     compute_absolute_position(widget);
 
-    if (widget->dirty) {
-        if (widget->vtable && widget->vtable->render) {
-            widget->vtable->render(widget);
-        }
-        widget->dirty = 0;
+    if (widget->vtable && widget->vtable->render) {
+        widget->vtable->render(widget);
     }
+    widget->dirty = 0;
 
     for (int i = 0; i < widget->child_count; i++) {
         tui_widget_render(widget->children[i]);
@@ -187,9 +185,24 @@ int tui_widget_handle_input(TuiWidget *widget, const TuiEvent *event)
     return 0;
 }
 
+/* Forward declarations — needed for auto-blur in tui_widget_focus() */
+extern void tui_widget_blur(TuiWidget *widget);
+extern TuiWidget *tui_widget_get_focused(TuiWidget *root);
+
 void tui_widget_focus(TuiWidget *widget)
 {
     if (!widget || widget->focused || !widget->focusable) return;
+
+    /* Blur the previously focused widget (if any) so that only one
+     * widget is focused at a time — required for mouse-click focus
+     * changes where the old widget is not explicitly blurred first. */
+    TuiWidget *root = widget;
+    while (root->parent)
+        root = root->parent;
+
+    TuiWidget *old = tui_widget_get_focused(root);
+    if (old && old != widget)
+        tui_widget_blur(old);
 
     widget->focused = 1;
     widget->dirty   = 1;
