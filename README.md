@@ -168,4 +168,4 @@ All widgets embed `TuiWidget` as their first member and support the widget tree 
 
 ## License
 
-TODO
+MIT License - see [LICENSE](LICENSE) for details.
