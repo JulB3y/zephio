@@ -1,6 +1,6 @@
-# TUI Framework
+# Zephio
 
-A lightweight, portable terminal UI framework in C11 with **zero external dependencies**. Renders directly to the terminal using ANSI escape sequences — no ncurses required.
+A lightweight, portable terminal UI framework in C with **zero external dependencies**
 
 ## Features
 
