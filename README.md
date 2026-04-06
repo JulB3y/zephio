@@ -17,6 +17,9 @@ A lightweight, portable terminal UI framework in C with **zero external dependen
 - Signal-safe cleanup on exit/crash
 - AddressSanitizer and UBSan support via `DEBUG=1`
 
+## Images
+![Widgets](./examples/imgs/interactive-widgets.png)
+
 ## Build
 
 Requires `gcc` and `make`.
