@@ -113,6 +113,28 @@ static int list_handle_input(TuiWidget *widget, const TuiEvent *event)
     return 0;
 }
 
+static int list_handle_mouse(TuiWidget *widget, const TuiMouseEvent *mouse)
+{
+    TuiList *list = (TuiList *)widget;
+
+    if (mouse->action != TUI_MOUSE_PRESS || mouse->button != TUI_MOUSE_BTN_LEFT)
+        return 0;
+
+    int idx = list->scroll_offset + (mouse->row - widget->abs_y);
+    if (idx < 0 || idx >= list->item_count)
+        return 0;
+
+    list->selected = idx;
+    list_ensure_visible(list);
+    widget->dirty = 1;
+
+    if (list->on_select) {
+        list->on_select(widget, idx, list->items[idx], list->user_data);
+    }
+
+    return 1;
+}
+
 static void list_destroy(TuiWidget *widget)
 {
     TuiList *list = (TuiList *)widget;
@@ -129,7 +151,7 @@ static void list_destroy(TuiWidget *widget)
 static TuiWidgetVTable list_vtable = {
     .render       = list_render,
     .handle_input = list_handle_input,
-    .handle_mouse = NULL,
+    .handle_mouse = list_handle_mouse,
     .destroy      = list_destroy,
     .on_resize    = NULL,
     .on_focus     = NULL,

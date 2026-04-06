@@ -6,7 +6,7 @@
  * Up/Down keys and select with Enter. Supports scrolling when the
  * number of items exceeds the widget height.
  *
- * Mouse support is not yet implemented.
+ * Mouse support: click to select items.
  */
 
 #ifndef TUI_LIST_H
