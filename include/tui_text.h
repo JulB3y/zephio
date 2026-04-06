@@ -27,6 +27,16 @@
 int tui_utf8_valid(const char *str, size_t len);
 
 /**
+ * @brief Encode a Unicode codepoint as UTF-8 bytes.
+ *
+ * @param codepoint  Unicode codepoint (U+0000 .. U+10FFFF).
+ * @param buf        Output buffer for the encoded bytes.
+ * @param buf_size   Number of available bytes in buf.
+ * @return Number of bytes written (1-4), or 0 on error.
+ */
+int tui_utf8_encode(uint32_t codepoint, char *buf, size_t buf_size);
+
+/**
  * @brief Return the expected byte length of a UTF-8 character from its lead byte.
  *
  * @param c  The first byte of a potential UTF-8 character.

@@ -1,6 +1,7 @@
 #define _POSIX_C_SOURCE 200809L
 
 #include "tui_input_field.h"
+#include "tui_text.h"
 
 #include <stdlib.h>
 #include <string.h>
@@ -59,20 +60,17 @@ static void input_field_render(TuiWidget *widget)
     }
 
     if (widget->focused && !widget->disabled) {
-        int cursor_col = field->cursor_pos - field->scroll_offset;
+        int text_len = field->text ? (int)strlen(field->text) : 0;
+        int cursor_col = 0;
+        int pos = field->scroll_offset;
+        while (pos < field->cursor_pos && pos < text_len) {
+            uint32_t cp;
+            int clen = tui_utf8_next(field->text + pos, text_len - pos, &cp);
+            if (clen <= 0) break;
+            cursor_col += tui_utf8_char_width(cp);
+            pos += clen;
+        }
         if (cursor_col >= 0 && cursor_col < widget->width) {
-            char cursor_ch[4] = " ";
-            if (field->text && field->cursor_pos < (int)strlen(field->text)) {
-                int len = 1;
-                unsigned char c = (unsigned char)field->text[field->cursor_pos];
-                if ((c & 0x80) == 0x00) len = 1;
-                else if ((c & 0xE0) == 0xC0) len = 2;
-                else if ((c & 0xF0) == 0xE0) len = 3;
-                else if ((c & 0xF8) == 0xF0) len = 4;
-                memcpy(cursor_ch, field->text + field->cursor_pos, (size_t)len);
-                cursor_ch[len] = '\0';
-            }
-
             uint8_t cursor_fg = field->cursor_fg;
             uint8_t cursor_bg = field->cursor_bg;
             if (widget->theme) {
@@ -80,9 +78,13 @@ static void input_field_render(TuiWidget *widget)
                 cursor_fg = focused.bg;
                 cursor_bg = focused.fg;
             }
+            const char *cursor_ch = " ";
+            if (field->cursor_pos < text_len) {
+                cursor_ch = field->text + field->cursor_pos;
+            }
             tui_screen_set_cell(widget->abs_y, widget->abs_x + cursor_col,
                                 cursor_ch, cursor_fg, cursor_bg,
-                                TUI_ATTR_REVERSE);
+                                TUI_ATTR_NONE);
         }
     }
 }
@@ -94,7 +96,12 @@ static int input_field_handle_input(TuiWidget *widget, const TuiEvent *event)
 
     if (event->key == TUI_KEY_LEFT) {
         if (field->cursor_pos > 0) {
-            field->cursor_pos--;
+            int back = 1;
+            while (back < field->cursor_pos &&
+                   ((unsigned char)field->text[field->cursor_pos - back] & 0xC0) == 0x80) {
+                back++;
+            }
+            field->cursor_pos -= back;
             input_field_update_scroll(field);
             widget->dirty = 1;
         }
@@ -103,7 +110,9 @@ static int input_field_handle_input(TuiWidget *widget, const TuiEvent *event)
 
     if (event->key == TUI_KEY_RIGHT) {
         if (field->cursor_pos < text_len) {
-            field->cursor_pos++;
+            int fwd = tui_utf8_char_len((unsigned char)field->text[field->cursor_pos]);
+            if (field->cursor_pos + fwd > text_len) fwd = text_len - field->cursor_pos;
+            field->cursor_pos += fwd;
             input_field_update_scroll(field);
             widget->dirty = 1;
         }
@@ -126,10 +135,15 @@ static int input_field_handle_input(TuiWidget *widget, const TuiEvent *event)
 
     if (event->key == TUI_KEY_BACKSPACE) {
         if (field->cursor_pos > 0 && text_len > 0) {
-            memmove(field->text + field->cursor_pos - 1,
+            int back = 1;
+            while (back < field->cursor_pos &&
+                   ((unsigned char)field->text[field->cursor_pos - back] & 0xC0) == 0x80) {
+                back++;
+            }
+            memmove(field->text + field->cursor_pos - back,
                     field->text + field->cursor_pos,
                     (size_t)(text_len - field->cursor_pos + 1));
-            field->cursor_pos--;
+            field->cursor_pos -= back;
             input_field_update_scroll(field);
             widget->dirty = 1;
             if (field->on_change) {
@@ -141,9 +155,11 @@ static int input_field_handle_input(TuiWidget *widget, const TuiEvent *event)
 
     if (event->key == TUI_KEY_DELETE) {
         if (field->cursor_pos < text_len && text_len > 0) {
+            int fwd = tui_utf8_char_len((unsigned char)field->text[field->cursor_pos]);
+            if (field->cursor_pos + fwd > text_len) fwd = text_len - field->cursor_pos;
             memmove(field->text + field->cursor_pos,
-                    field->text + field->cursor_pos + 1,
-                    (size_t)(text_len - field->cursor_pos));
+                    field->text + field->cursor_pos + fwd,
+                    (size_t)(text_len - field->cursor_pos - fwd + 1));
             widget->dirty = 1;
             if (field->on_change) {
                 field->on_change(widget, field->text, field->user_data);
@@ -159,19 +175,23 @@ static int input_field_handle_input(TuiWidget *widget, const TuiEvent *event)
         return 1;
     }
 
-    if (event->codepoint >= 32 && event->codepoint < 127 && event->key == TUI_KEY_UNKNOWN) {
-        if (text_len + 1 < field->text_capacity) {
+    if (event->codepoint >= 32 && event->key == TUI_KEY_UNKNOWN) {
+        char enc[4];
+        int char_len = tui_utf8_encode(event->codepoint, enc, sizeof(enc));
+        if (char_len == 0) return 1;
+
+        if (text_len + char_len < field->text_capacity) {
             if (!field->text) {
                 field->text = (char *)calloc((size_t)field->text_capacity, 1);
                 if (!field->text) return 1;
                 text_len = 0;
             }
 
-            memmove(field->text + field->cursor_pos + 1,
+            memmove(field->text + field->cursor_pos + char_len,
                     field->text + field->cursor_pos,
                     (size_t)(text_len - field->cursor_pos + 1));
-            field->text[field->cursor_pos] = (char)event->codepoint;
-            field->cursor_pos++;
+            memcpy(field->text + field->cursor_pos, enc, (size_t)char_len);
+            field->cursor_pos += char_len;
             input_field_update_scroll(field);
             widget->dirty = 1;
 

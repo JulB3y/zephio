@@ -48,6 +48,36 @@ int tui_utf8_valid(const char *str, size_t len)
     return 1;
 }
 
+int tui_utf8_encode(uint32_t codepoint, char *buf, size_t buf_size)
+{
+    if (!buf || buf_size == 0) return 0;
+
+    if (codepoint <= 0x7F) {
+        buf[0] = (char)codepoint;
+        return 1;
+    } else if (codepoint <= 0x7FF) {
+        if (buf_size < 2) return 0;
+        buf[0] = (char)(0xC0 | (codepoint >> 6));
+        buf[1] = (char)(0x80 | (codepoint & 0x3F));
+        return 2;
+    } else if (codepoint <= 0xFFFF) {
+        if (buf_size < 3) return 0;
+        buf[0] = (char)(0xE0 | (codepoint >> 12));
+        buf[1] = (char)(0x80 | ((codepoint >> 6) & 0x3F));
+        buf[2] = (char)(0x80 | (codepoint & 0x3F));
+        return 3;
+    } else if (codepoint <= 0x10FFFF) {
+        if (buf_size < 4) return 0;
+        buf[0] = (char)(0xF0 | (codepoint >> 18));
+        buf[1] = (char)(0x80 | ((codepoint >> 12) & 0x3F));
+        buf[2] = (char)(0x80 | ((codepoint >> 6) & 0x3F));
+        buf[3] = (char)(0x80 | (codepoint & 0x3F));
+        return 4;
+    }
+
+    return 0;
+}
+
 int tui_utf8_char_len(unsigned char c)
 {
     if ((c & 0x80) == 0x00) return 1;
