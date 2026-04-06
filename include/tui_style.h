@@ -1,0 +1,120 @@
+/**
+ * @file tui_style.h
+ * @brief Themes, colors, and convenience drawing functions.
+ *
+ * Provides the TuiColor enum (256-color palette), TuiStyle struct
+ * (fg + bg + attributes), TuiTheme (per-state styles), and convenience
+ * wrappers that combine screen drawing with style application.
+ */
+
+#ifndef TUI_STYLE_H
+#define TUI_STYLE_H
+
+#include "tui_screen.h"
+#include <stdint.h>
+
+/**
+ * @brief Named 256-color palette entries.
+ */
+typedef enum {
+    TUI_COLOR_BLACK   = 0,
+    TUI_COLOR_RED     = 1,
+    TUI_COLOR_GREEN   = 2,
+    TUI_COLOR_YELLOW  = 3,
+    TUI_COLOR_BLUE    = 4,
+    TUI_COLOR_MAGENTA = 5,
+    TUI_COLOR_CYAN    = 6,
+    TUI_COLOR_WHITE   = 7,
+
+    TUI_COLOR_BRIGHT_BLACK   = 8,
+    TUI_COLOR_BRIGHT_RED     = 9,
+    TUI_COLOR_BRIGHT_GREEN   = 10,
+    TUI_COLOR_BRIGHT_YELLOW  = 11,
+    TUI_COLOR_BRIGHT_BLUE    = 12,
+    TUI_COLOR_BRIGHT_MAGENTA = 13,
+    TUI_COLOR_BRIGHT_CYAN    = 14,
+    TUI_COLOR_BRIGHT_WHITE   = 15,
+
+    TUI_COLOR_GRAY_DARK  = 232,
+    TUI_COLOR_GRAY_MID   = 240,
+    TUI_COLOR_GRAY_LIGHT = 248,
+
+    TUI_COLOR_BG_DARK  = 234,
+    TUI_COLOR_BG_MID   = 236,
+    TUI_COLOR_BG_LIGHT = 238
+} TuiColor;
+
+typedef TuiAttr TuiTextAttributes;
+
+/**
+ * @brief Complete style for a single cell (fg, bg, attributes).
+ */
+typedef struct {
+    uint8_t fg;
+    uint8_t bg;
+    TuiAttr attr;
+} TuiStyle;
+
+/** @brief Construct a TuiStyle inline. */
+#define TUI_STYLE(fg_color, bg_color, attrs) \
+    ((TuiStyle){ (uint8_t)(fg_color), (uint8_t)(bg_color), (attrs) })
+
+#define TUI_STYLE_NONE TUI_STYLE(0, 0, TUI_ATTR_NONE)
+
+/**
+ * @brief Widget visual states (used to index into a TuiTheme).
+ */
+typedef enum {
+    TUI_STATE_NORMAL   = 0,
+    TUI_STATE_FOCUSED  = 1,
+    TUI_STATE_DISABLED = 2,
+    TUI_STATE_ACTIVE   = 3,
+    TUI_STATE_HOVER    = 4,
+    TUI_STATE_COUNT    = 5
+} TuiWidgetState;
+
+/**
+ * @brief Per-state style collection for a widget.
+ */
+typedef struct TuiTheme {
+    TuiStyle styles[TUI_STATE_COUNT];
+} TuiTheme;
+
+/**
+ * @brief Return the built-in default theme.
+ *
+ * Uses a dark color scheme with cyan/blue accents.
+ */
+TuiTheme tui_theme_default(void);
+
+/**
+ * @brief Create a theme with custom normal, focused, disabled, and active styles.
+ *
+ * The hover state is derived from the focused style.
+ *
+ * @param normal   Style for the normal state.
+ * @param focused  Style for the focused state.
+ * @param disabled Style for the disabled state.
+ * @param active   Style for the active/pressed state.
+ * @return The assembled TuiTheme.
+ */
+TuiTheme tui_theme_create(const TuiStyle *normal, const TuiStyle *focused,
+                          const TuiStyle *disabled, const TuiStyle *active);
+
+/**
+ * @brief Set a single cell with a TuiStyle.
+ */
+void tui_style_set_cell(int row, int col, const char *ch, const TuiStyle *style);
+
+/**
+ * @brief Write text at (row, col) with a TuiStyle.
+ */
+void tui_style_write(int row, int col, const char *text, const TuiStyle *style);
+
+/**
+ * @brief Fill a rectangular region with a TuiStyle.
+ */
+void tui_style_fill(int row, int col, int width, int height,
+                    const char *ch, const TuiStyle *style);
+
+#endif

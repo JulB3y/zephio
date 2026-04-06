@@ -1,0 +1,146 @@
+#define _POSIX_C_SOURCE 200809L
+
+#include "tui.h"
+#include "tui_ansi.h"
+#include "tui_input.h"
+#include "tui_screen.h"
+#include "tui_terminal.h"
+
+#include <stdio.h>
+#include <string.h>
+
+static void draw_frame(int rows, int cols) {
+  tui_screen_clear();
+
+  tui_screen_fill(0, 0, cols, 1, " ", 0, 4, TUI_ATTR_BOLD);
+  tui_screen_write(0, 2, "Phase 3 - Screen Buffer & Rendering Demo", 15, 4,
+                   TUI_ATTR_BOLD);
+
+  char info[64];
+  int info_len = snprintf(info, sizeof(info), "Terminal: %dx%d ", cols, rows);
+  tui_screen_write(0, cols - info_len, info, 15, 4, TUI_ATTR_BOLD);
+
+  int half_w = cols / 2;
+  int box_h = rows > 16 ? 10 : (rows - 6) / 2;
+  if (box_h < 3)
+    box_h = 3;
+
+  tui_screen_box_single(2, 1, half_w - 1, box_h, 2, 0, TUI_ATTR_NONE);
+  tui_screen_write(3, 3, "Single Border Box", 2, 0, TUI_ATTR_BOLD);
+
+  int text_y = 5;
+  if (text_y < 2 + box_h - 1) {
+    tui_screen_write(text_y, 3, "Colors: ", 7, 0, TUI_ATTR_NONE);
+    int x = 3 + 8;
+    for (int i = 0; i < 8 && x + 3 < half_w - 2; i++) {
+      char label[4] = {' ', '0' + i, ' ', 0};
+      tui_screen_write(text_y, x, label, 0, i, TUI_ATTR_NONE);
+      x += 3;
+    }
+  }
+  if (text_y + 1 < 2 + box_h - 1) {
+    tui_screen_write(text_y + 1, 3, "Attrs: ", 6, 0, TUI_ATTR_NONE);
+    int x = 3 + 7;
+    if (x + 5 < half_w - 2) {
+      tui_screen_write(text_y + 1, x, "Bold", 3, 0, TUI_ATTR_BOLD);
+      x += 5;
+    }
+    if (x + 4 < half_w - 2) {
+      tui_screen_write(text_y + 1, x, "Dim", 3, 0, TUI_ATTR_DIM);
+      x += 4;
+    }
+    if (x + 6 < half_w - 2) {
+      tui_screen_write(text_y + 1, x, "Under", 5, 0, TUI_ATTR_UNDERLINE);
+      x += 6;
+    }
+  }
+
+  tui_screen_box_double(2, half_w, cols - half_w - 1, box_h, 4, 0,
+                        TUI_ATTR_NONE);
+  tui_screen_write(3, half_w + 2, "Double Border Box", 4, 0, TUI_ATTR_BOLD);
+
+  if (text_y < 2 + box_h - 1) {
+    tui_screen_write(text_y, half_w + 2, "Fill demo:", 6, 0, TUI_ATTR_NONE);
+    for (int i = 0; i < 5; i++) {
+      int bx = half_w + 2 + i * 5;
+      if (bx + 4 < cols - 2) {
+        tui_screen_fill(text_y + 1, bx, 4, 2, " ", 0, 1 + i * 4, TUI_ATTR_NONE);
+      }
+    }
+  }
+
+  int color_row = 2 + box_h + 1;
+  if (color_row < rows - 3) {
+    tui_screen_write(color_row, 1, "256-Color Gradient:", 14, 0, TUI_ATTR_BOLD);
+    color_row++;
+    int bar_cols = cols - 4;
+    for (int i = 0; i < bar_cols && i < 256; i++) {
+      char block[4] = {' ', 0, 0, 0};
+      tui_screen_set_cell(color_row, 2 + i, block, 15, (uint8_t)i,
+                          TUI_ATTR_NONE);
+    }
+  }
+
+  int fill_row = color_row + 2;
+  if (fill_row < rows - 3) {
+    int inner_w = cols > 12 ? cols - 4 : 8;
+    tui_screen_box_single(fill_row, 1, inner_w, 3, 5, 0, TUI_ATTR_NONE);
+    tui_screen_fill(fill_row + 1, 2, inner_w - 2, 1, "\xe2\x95\x90", 5, 236,
+                    TUI_ATTR_NONE);
+    char msg[128];
+    int msg_len = snprintf(msg, sizeof(msg),
+                           " Buffered rendering with diff-based output ");
+    int msg_col = 2 + (inner_w - 2 - msg_len) / 2;
+    if (msg_col < 2)
+      msg_col = 2;
+    tui_screen_write(fill_row + 1, msg_col, msg, 13, 236, TUI_ATTR_BOLD);
+  }
+
+  tui_screen_fill(rows - 1, 0, cols, 1, " ", 0, 236, TUI_ATTR_NONE);
+  char status[128];
+  (void)snprintf(
+      status, sizeof(status),
+      " Screen: %dx%d  |  Buffer: %d cells  |  Press 'q' or Escape to quit ",
+      cols, rows, rows * cols);
+  tui_screen_write(rows - 1, 2, status, 12, 236, TUI_ATTR_NONE);
+
+  tui_screen_render();
+}
+
+static int input_callback(const TuiEvent *event, void *user_data) {
+  (void)user_data;
+
+  if (event->key == TUI_EVENT_RESIZE) {
+    tui_screen_resize(event->size.rows, event->size.cols);
+    draw_frame(event->size.rows, event->size.cols);
+    return 0;
+  }
+
+  if (event->key == TUI_KEY_ESCAPE || event->key == TUI_KEY_CTRL_C) {
+    return 1;
+  }
+  if (event->codepoint == 'q' && event->modifiers == TUI_MOD_NONE) {
+    return 1;
+  }
+
+  return 0;
+}
+
+int main(void) {
+  TuiResult res = tui_init();
+  if (res != TUI_OK) {
+    fprintf(stderr, "tui_init failed: %d\n", res);
+    return 1;
+  }
+
+  tui_input_init();
+
+  TuiSize size = tui_screen_size();
+  draw_frame(size.rows, size.cols);
+
+  tui_input_loop(input_callback, NULL);
+
+  tui_input_shutdown();
+  tui_shutdown();
+  return 0;
+}
