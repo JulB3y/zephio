@@ -49,11 +49,11 @@ typedef struct {
 
 static void draw_background(int rows, int cols) {
   tui_screen_clear();
-  tui_screen_fill(0, 0, cols, 1, " ", 15, 4, TUI_ATTR_BOLD);
+  tui_screen_fill(0, 0, cols, 1, " ", TUI_COLOR_INDEX(15), TUI_COLOR_INDEX(4), TUI_ATTR_BOLD);
   tui_screen_write(
-      0, 2, "Mouse Demo  |  Click widgets, Tab to focus  |  q/Esc to quit", 15,
-      4, TUI_ATTR_BOLD);
-  tui_screen_fill(rows - 1, 0, cols, 1, " ", 15, 236, TUI_ATTR_NONE);
+      0, 2, "Mouse Demo  |  Click widgets, Tab to focus  |  q/Esc to quit", TUI_COLOR_INDEX(15),
+      TUI_COLOR_INDEX(4), TUI_ATTR_BOLD);
+  tui_screen_fill(rows - 1, 0, cols, 1, " ", TUI_COLOR_INDEX(15), TUI_COLOR_INDEX(236), TUI_ATTR_NONE);
 }
 
 static void update_status(AppWidgets *w) {
@@ -128,22 +128,22 @@ static void build_widgets(AppWidgets *w, int rows, int cols) {
 
   tui_label_init(&w->title, usable_x, 2, usable_w, 1,
                  "Mouse Demo — click buttons, select items, type text");
-  tui_label_set_colors(&w->title, 14, 0);
+  tui_label_set_colors(&w->title, TUI_COLOR_INDEX(14), TUI_COLOR_INDEX(0));
   tui_label_set_attr(&w->title, TUI_ATTR_BOLD);
   tui_widget_add_child(&w->root, &w->title.base);
 
   tui_label_init(&w->mouse_info, usable_x, 3, usable_w, 1,
                  "Mouse: (waiting...)");
-  tui_label_set_colors(&w->mouse_info, 8, 0);
+  tui_label_set_colors(&w->mouse_info, TUI_COLOR_INDEX(8), TUI_COLOR_INDEX(0));
   tui_widget_add_child(&w->root, &w->mouse_info.base);
 
   tui_container_init(&w->panel_bg, usable_x, 4, usable_w, 5);
-  tui_container_set_bg(&w->panel_bg, 234);
+  tui_container_set_bg(&w->panel_bg, TUI_COLOR_INDEX(234));
   tui_widget_add_child(&w->root, &w->panel_bg.base);
 
   tui_button_init(&w->btn_click, usable_x + 2, 5,
                   usable_w > 20 ? 18 : usable_w / 2, 1, "Click Me");
-  tui_button_set_colors(&w->btn_click, 0, 2, 15, 10);
+  tui_button_set_colors(&w->btn_click, TUI_COLOR_INDEX(0), TUI_COLOR_INDEX(2), TUI_COLOR_INDEX(15), TUI_COLOR_INDEX(10));
   tui_button_set_on_click(&w->btn_click, on_click, w);
   w->btn_click.base.focusable = 1;
   tui_widget_add_child(&w->root, &w->btn_click.base);
@@ -151,7 +151,7 @@ static void build_widgets(AppWidgets *w, int rows, int cols) {
   int btn2_x = usable_x + 2 + (usable_w > 20 ? 20 : usable_w / 2 + 1);
   if (btn2_x + 10 < usable_x + usable_w) {
     tui_button_init(&w->btn_reset, btn2_x, 5, 10, 1, "Reset");
-    tui_button_set_colors(&w->btn_reset, 0, 1, 15, 9);
+    tui_button_set_colors(&w->btn_reset, TUI_COLOR_INDEX(0), TUI_COLOR_INDEX(1), TUI_COLOR_INDEX(15), TUI_COLOR_INDEX(9));
     tui_button_set_on_click(&w->btn_reset, on_reset, w);
     w->btn_reset.base.focusable = 1;
     tui_widget_add_child(&w->root, &w->btn_reset.base);
@@ -159,13 +159,13 @@ static void build_widgets(AppWidgets *w, int rows, int cols) {
 
   tui_label_init(&w->focus_label, usable_x + 2, 7, usable_w - 4, 1,
                  "No widget focused");
-  tui_label_set_colors(&w->focus_label, 11, 0);
+  tui_label_set_colors(&w->focus_label, TUI_COLOR_INDEX(11), TUI_COLOR_INDEX(0));
   tui_widget_add_child(&w->root, &w->focus_label.base);
 
   int sep_y = 10;
   if (sep_y < rows - 4) {
     tui_separator_init_h(&w->sep, usable_x, sep_y, usable_w);
-    tui_separator_set_colors(&w->sep, 8, 0);
+    tui_separator_set_colors(&w->sep, TUI_COLOR_INDEX(8), TUI_COLOR_INDEX(0));
     tui_widget_add_child(&w->root, &w->sep.base);
   }
 
@@ -175,7 +175,7 @@ static void build_widgets(AppWidgets *w, int rows, int cols) {
     list_h = 2;
   if (list_y + list_h < rows - 4) {
     tui_list_init(&w->list, usable_x, list_y, usable_w / 2, list_h);
-    tui_list_set_colors(&w->list, 15, 234, 0, 12);
+    tui_list_set_colors(&w->list, TUI_COLOR_INDEX(15), TUI_COLOR_INDEX(234), TUI_COLOR_INDEX(0), TUI_COLOR_INDEX(12));
     tui_list_set_on_select(&w->list, on_list_select, w);
     w->list.base.focusable = 1;
     tui_list_add_item(&w->list, "Option Alpha");
@@ -191,7 +191,7 @@ static void build_widgets(AppWidgets *w, int rows, int cols) {
     input_w = cols - 2 - input_x;
   if (input_w > 6 && list_y + list_h < rows - 4) {
     tui_input_field_init(&w->input, input_x, list_y, input_w, 128);
-    tui_input_field_set_colors(&w->input, 15, 235, 0, 12);
+    tui_input_field_set_colors(&w->input, TUI_COLOR_INDEX(15), TUI_COLOR_INDEX(235), TUI_COLOR_INDEX(0), TUI_COLOR_INDEX(12));
     tui_input_field_set_on_change(&w->input, on_input_change, w);
     tui_input_field_set_on_submit(&w->input, on_input_submit, w);
     w->input.base.focusable = 1;
@@ -200,7 +200,7 @@ static void build_widgets(AppWidgets *w, int rows, int cols) {
 
   tui_label_init(&w->status, 1, rows - 1, cols - 2, 1,
                  " Clicks: 0  |  Tab: cycle focus");
-  tui_label_set_colors(&w->status, 15, 236);
+  tui_label_set_colors(&w->status, TUI_COLOR_INDEX(15), TUI_COLOR_INDEX(236));
   tui_widget_add_child(&w->root, &w->status.base);
 }
 

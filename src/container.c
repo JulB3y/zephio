@@ -14,7 +14,7 @@ static void container_render(TuiWidget *widget)
     } else {
         tui_screen_fill(widget->abs_y, widget->abs_x,
                         widget->width, widget->height,
-                        " ", 0, container->bg, TUI_ATTR_NONE);
+                        " ", TUI_COLOR_INDEX(0), container->bg, TUI_ATTR_NONE);
     }
 }
 
@@ -38,12 +38,12 @@ TuiResult tui_container_init(TuiContainer *container, int x, int y,
     if (res != TUI_OK) return res;
 
     container->base.focusable = 0;
-    container->bg             = 0;
+    container->bg             = TUI_COLOR_INDEX(0);
 
     return TUI_OK;
 }
 
-void tui_container_set_bg(TuiContainer *container, uint8_t bg)
+void tui_container_set_bg(TuiContainer *container, TuiColor bg)
 {
     if (!container) return;
     container->bg = bg;

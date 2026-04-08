@@ -6,8 +6,8 @@ static void separator_render(TuiWidget *widget)
 {
     TuiSeparator *sep = (TuiSeparator *)widget;
 
-    uint8_t fg;
-    uint8_t bg;
+    TuiColor fg;
+    TuiColor bg;
     TuiAttr attr;
 
     if (widget->theme) {
@@ -54,8 +54,8 @@ TuiResult tui_separator_init_h(TuiSeparator *sep, int x, int y, int width)
 
     sep->base.focusable = 0;
     sep->horizontal     = 1;
-    sep->fg             = 8;
-    sep->bg             = 0;
+    sep->fg             = TUI_COLOR_INDEX(8);
+    sep->bg             = TUI_COLOR_INDEX(0);
     sep->attr           = TUI_ATTR_NONE;
 
     return TUI_OK;
@@ -71,14 +71,14 @@ TuiResult tui_separator_init_v(TuiSeparator *sep, int x, int y, int height)
 
     sep->base.focusable = 0;
     sep->horizontal     = 0;
-    sep->fg             = 8;
-    sep->bg             = 0;
+    sep->fg             = TUI_COLOR_INDEX(8);
+    sep->bg             = TUI_COLOR_INDEX(0);
     sep->attr           = TUI_ATTR_NONE;
 
     return TUI_OK;
 }
 
-void tui_separator_set_colors(TuiSeparator *sep, uint8_t fg, uint8_t bg)
+void tui_separator_set_colors(TuiSeparator *sep, TuiColor fg, TuiColor bg)
 {
     if (!sep) return;
     sep->fg = fg;

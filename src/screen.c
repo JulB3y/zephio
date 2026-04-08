@@ -15,12 +15,24 @@ TuiScreen g_screen = {
     .initialized = 0
 };
 
-static const TuiCell DEFAULT_CELL = {
-    .ch = {' ', 0, 0, 0},
-    .fg = 0,
-    .bg = 0,
-    .attr = 0
-};
+static TuiCell DEFAULT_CELL;
+
+static int default_cell_ready = 0;
+
+static void init_default_cell(void)
+{
+    if (default_cell_ready) return;
+    DEFAULT_CELL.ch[0] = ' ';
+    DEFAULT_CELL.ch[1] = 0;
+    DEFAULT_CELL.ch[2] = 0;
+    DEFAULT_CELL.ch[3] = 0;
+    DEFAULT_CELL.fg.type = TUI_COLOR_TYPE_INDEX;
+    DEFAULT_CELL.fg.index = 0;
+    DEFAULT_CELL.bg.type = TUI_COLOR_TYPE_INDEX;
+    DEFAULT_CELL.bg.index = 0;
+    DEFAULT_CELL.attr = 0;
+    default_cell_ready = 1;
+}
 
 static int utf8_char_len(unsigned char c)
 {
@@ -40,6 +52,7 @@ static void cell_set_char(TuiCell *cell, const char *ch)
 
 static void clear_buffer(TuiCell *buf, int count)
 {
+    init_default_cell();
     for (int i = 0; i < count; i++) {
         buf[i] = DEFAULT_CELL;
     }
@@ -154,7 +167,7 @@ void tui_screen_clear(void)
     clear_buffer(g_screen.back, g_screen.rows * g_screen.cols);
 }
 
-void tui_screen_set_cell(int row, int col, const char *ch, uint8_t fg, uint8_t bg, TuiAttr attr)
+void tui_screen_set_cell(int row, int col, const char *ch, TuiColor fg, TuiColor bg, TuiAttr attr)
 {
     if (!g_screen.initialized) return;
     if (row < 0 || row >= g_screen.rows) return;
@@ -168,7 +181,7 @@ void tui_screen_set_cell(int row, int col, const char *ch, uint8_t fg, uint8_t b
     cell->attr = attr;
 }
 
-void tui_screen_write(int row, int col, const char *text, uint8_t fg, uint8_t bg, TuiAttr attr)
+void tui_screen_write(int row, int col, const char *text, TuiColor fg, TuiColor bg, TuiAttr attr)
 {
     if (!g_screen.initialized || !text) return;
 
@@ -192,7 +205,7 @@ void tui_screen_write(int row, int col, const char *text, uint8_t fg, uint8_t bg
     }
 }
 
-void tui_screen_fill(int row, int col, int width, int height, const char *ch, uint8_t fg, uint8_t bg, TuiAttr attr)
+void tui_screen_fill(int row, int col, int width, int height, const char *ch, TuiColor fg, TuiColor bg, TuiAttr attr)
 {
     if (!g_screen.initialized || !ch) return;
 
@@ -203,7 +216,7 @@ void tui_screen_fill(int row, int col, int width, int height, const char *ch, ui
     }
 }
 
-void tui_screen_box_single(int row, int col, int width, int height, uint8_t fg, uint8_t bg, TuiAttr attr)
+void tui_screen_box_single(int row, int col, int width, int height, TuiColor fg, TuiColor bg, TuiAttr attr)
 {
     if (!g_screen.initialized || width < 2 || height < 2) return;
 
@@ -223,7 +236,7 @@ void tui_screen_box_single(int row, int col, int width, int height, uint8_t fg, 
     }
 }
 
-void tui_screen_box_double(int row, int col, int width, int height, uint8_t fg, uint8_t bg, TuiAttr attr)
+void tui_screen_box_double(int row, int col, int width, int height, TuiColor fg, TuiColor bg, TuiAttr attr)
 {
     if (!g_screen.initialized || width < 2 || height < 2) return;
 
@@ -260,14 +273,24 @@ void tui_screen_render(void)
     int total = g_screen.rows * g_screen.cols;
 
     int cur_row = -1, cur_col = -1;
-    uint8_t cur_fg = 0xFF, cur_bg = 0xFF;
+    TuiColor cur_fg;
+    TuiColor cur_bg;
+    memset(&cur_fg, 0, sizeof(cur_fg));
+    cur_fg.type = TUI_COLOR_TYPE_NONE;
+    memset(&cur_bg, 0, sizeof(cur_bg));
+    cur_bg.type = TUI_COLOR_TYPE_NONE;
     uint16_t cur_attr = 0xFFFF;
+
+    int use_truecolor = g_terminal.truecolor;
 
     for (int i = 0; i < total; i++) {
         TuiCell *b = &g_screen.back[i];
         TuiCell *f = &g_screen.front[i];
 
-        if (memcmp(b, f, sizeof(TuiCell)) == 0) continue;
+        if (b->ch[0] == f->ch[0] && b->ch[1] == f->ch[1] &&
+            b->ch[2] == f->ch[2] && b->ch[3] == f->ch[3] &&
+            tui_color_eq(b->fg, f->fg) && tui_color_eq(b->bg, f->bg) &&
+            b->attr == f->attr) continue;
 
         int row = i / g_screen.cols;
         int col = i % g_screen.cols;
@@ -286,8 +309,10 @@ void tui_screen_render(void)
 
         if (b->attr != cur_attr) {
             memcpy(rbuf + rpos, "\033[0m", 4); rpos += 4;
-            cur_fg = 0xFF;
-            cur_bg = 0xFF;
+            memset(&cur_fg, 0, sizeof(cur_fg));
+            cur_fg.type = TUI_COLOR_TYPE_NONE;
+            memset(&cur_bg, 0, sizeof(cur_bg));
+            cur_bg.type = TUI_COLOR_TYPE_NONE;
             if (b->attr & TUI_ATTR_BOLD)          { memcpy(rbuf + rpos, "\033[1m", 4); rpos += 4; }
             if (b->attr & TUI_ATTR_DIM)           { memcpy(rbuf + rpos, "\033[2m", 4); rpos += 4; }
             if (b->attr & TUI_ATTR_ITALIC)        { memcpy(rbuf + rpos, "\033[3m", 4); rpos += 4; }
@@ -298,14 +323,24 @@ void tui_screen_render(void)
             cur_attr = b->attr;
         }
 
-        if (b->fg != cur_fg) {
-            rpos += (size_t)snprintf(rbuf + rpos, RENDER_BUF_SIZE - rpos,
-                                     "\033[38;5;%dm", b->fg);
+        if (!tui_color_eq(b->fg, cur_fg)) {
+            if (use_truecolor && b->fg.type == TUI_COLOR_TYPE_RGB) {
+                rpos += (size_t)snprintf(rbuf + rpos, RENDER_BUF_SIZE - rpos,
+                                         "\033[38;2;%d;%d;%dm", b->fg.rgb.r, b->fg.rgb.g, b->fg.rgb.b);
+            } else {
+                rpos += (size_t)snprintf(rbuf + rpos, RENDER_BUF_SIZE - rpos,
+                                         "\033[38;5;%dm", b->fg.type == TUI_COLOR_TYPE_INDEX ? b->fg.index : 0);
+            }
             cur_fg = b->fg;
         }
-        if (b->bg != cur_bg) {
-            rpos += (size_t)snprintf(rbuf + rpos, RENDER_BUF_SIZE - rpos,
-                                     "\033[48;5;%dm", b->bg);
+        if (!tui_color_eq(b->bg, cur_bg)) {
+            if (use_truecolor && b->bg.type == TUI_COLOR_TYPE_RGB) {
+                rpos += (size_t)snprintf(rbuf + rpos, RENDER_BUF_SIZE - rpos,
+                                         "\033[48;2;%d;%d;%dm", b->bg.rgb.r, b->bg.rgb.g, b->bg.rgb.b);
+            } else {
+                rpos += (size_t)snprintf(rbuf + rpos, RENDER_BUF_SIZE - rpos,
+                                         "\033[48;5;%dm", b->bg.type == TUI_COLOR_TYPE_INDEX ? b->bg.index : 0);
+            }
             cur_bg = b->bg;
         }
 

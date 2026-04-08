@@ -17,8 +17,8 @@
 typedef struct {
     TuiWidget base;
     int       horizontal;
-    uint8_t   fg;
-    uint8_t   bg;
+    TuiColor  fg;
+    TuiColor  bg;
     TuiAttr   attr;
 } TuiSeparator;
 
@@ -49,7 +49,7 @@ TuiResult tui_separator_init_h(TuiSeparator *sep, int x, int y, int width);
 TuiResult tui_separator_init_v(TuiSeparator *sep, int x, int y, int height);
 
 /** @brief Set separator colors. */
-void tui_separator_set_colors(TuiSeparator *sep, uint8_t fg, uint8_t bg);
+void tui_separator_set_colors(TuiSeparator *sep, TuiColor fg, TuiColor bg);
 
 /** @brief Set separator text attributes. */
 void tui_separator_set_attr(TuiSeparator *sep, TuiAttr attr);

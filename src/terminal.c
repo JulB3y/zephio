@@ -17,7 +17,8 @@ Terminal g_terminal = {
     .fd = -1,
     .rows = 0,
     .cols = 0,
-    .initialized = 0
+    .initialized = 0,
+    .truecolor = 0
 };
 
 static struct termios g_orig_termios;
@@ -138,6 +139,11 @@ TuiResult tui_init(void)
     TuiResult res;
 
     g_terminal.fd = STDIN_FILENO;
+
+    const char *colorterm = getenv("COLORTERM");
+    g_terminal.truecolor = (colorterm != NULL &&
+        (strcmp(colorterm, "truecolor") == 0 ||
+         strcmp(colorterm, "24bit") == 0));
 
     res = terminal_raw_mode_enable(&g_terminal);
     if (res != TUI_OK) {

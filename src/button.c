@@ -9,8 +9,8 @@ static void button_render(TuiWidget *widget)
 {
     TuiButton *button = (TuiButton *)widget;
 
-    uint8_t fg;
-    uint8_t bg;
+    TuiColor fg;
+    TuiColor bg;
     TuiAttr attr;
 
     if (widget->theme) {
@@ -106,10 +106,10 @@ TuiResult tui_button_init(TuiButton *button, int x, int y, int width, int height
 
     button->base.focusable = 1;
 
-    button->fg          = 15;
-    button->bg          = 0;
-    button->fg_focused  = 0;
-    button->bg_focused  = 12;
+    button->fg          = TUI_COLOR_INDEX(15);
+    button->bg          = TUI_COLOR_INDEX(0);
+    button->fg_focused  = TUI_COLOR_INDEX(0);
+    button->bg_focused  = TUI_COLOR_INDEX(12);
     button->attr        = TUI_ATTR_NONE;
     button->on_click    = NULL;
     button->user_data   = NULL;
@@ -132,8 +132,8 @@ void tui_button_set_text(TuiButton *button, const char *text)
     button->base.dirty = 1;
 }
 
-void tui_button_set_colors(TuiButton *button, uint8_t fg, uint8_t bg,
-                           uint8_t fg_focused, uint8_t bg_focused)
+void tui_button_set_colors(TuiButton *button, TuiColor fg, TuiColor bg,
+                           TuiColor fg_focused, TuiColor bg_focused)
 {
     if (!button) return;
     button->fg          = fg;

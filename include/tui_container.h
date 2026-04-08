@@ -17,7 +17,7 @@
  */
 typedef struct {
     TuiWidget base;
-    uint8_t   bg;
+    TuiColor  bg;
 } TuiContainer;
 
 /**
@@ -39,6 +39,6 @@ TuiResult tui_container_init(TuiContainer *container, int x, int y,
  * @param container  Container widget.
  * @param bg         256-color background index.
  */
-void tui_container_set_bg(TuiContainer *container, uint8_t bg);
+void tui_container_set_bg(TuiContainer *container, TuiColor bg);
 
 #endif

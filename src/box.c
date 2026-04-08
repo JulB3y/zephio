@@ -11,8 +11,8 @@ static void box_render(TuiWidget *widget)
 
     if (widget->width < 2 || widget->height < 2) return;
 
-    uint8_t fg;
-    uint8_t bg;
+    TuiColor fg;
+    TuiColor bg;
     TuiAttr attr;
 
     if (widget->theme) {
@@ -105,8 +105,8 @@ TuiResult tui_box_init(TuiBox *box, int x, int y, int width, int height,
     box->base.focusable = 0;
 
     box->title         = NULL;
-    box->fg            = 15;
-    box->bg            = 0;
+    box->fg            = TUI_COLOR_INDEX(15);
+    box->bg            = TUI_COLOR_INDEX(0);
     box->attr          = TUI_ATTR_NONE;
     box->border_style  = border_style;
     box->padding       = 0;
@@ -122,7 +122,7 @@ void tui_box_set_title(TuiBox *box, const char *title)
     box->base.dirty = 1;
 }
 
-void tui_box_set_colors(TuiBox *box, uint8_t fg, uint8_t bg)
+void tui_box_set_colors(TuiBox *box, TuiColor fg, TuiColor bg)
 {
     if (!box) return;
     box->fg = fg;

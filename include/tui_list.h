@@ -28,10 +28,10 @@ typedef struct {
     int             item_capacity;
     int             selected;
     int             scroll_offset;
-    uint8_t         fg;
-    uint8_t         bg;
-    uint8_t         fg_selected;
-    uint8_t         bg_selected;
+    TuiColor        fg;
+    TuiColor        bg;
+    TuiColor        fg_selected;
+    TuiColor        bg_selected;
     TuiAttr         attr;
     TuiListCallback on_select;
     void           *user_data;
@@ -73,8 +73,8 @@ int tui_list_get_selected(TuiList *list);
 const char *tui_list_get_selected_item(TuiList *list);
 
 /** @brief Set normal and selected color pairs. */
-void tui_list_set_colors(TuiList *list, uint8_t fg, uint8_t bg,
-                         uint8_t fg_selected, uint8_t bg_selected);
+void tui_list_set_colors(TuiList *list, TuiColor fg, TuiColor bg,
+                         TuiColor fg_selected, TuiColor bg_selected);
 
 /** @brief Set the selection callback. */
 void tui_list_set_on_select(TuiList *list, TuiListCallback callback,

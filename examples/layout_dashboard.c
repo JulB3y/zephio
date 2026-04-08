@@ -22,7 +22,7 @@ static TuiWidget preview;
 static TuiWidget statusbar;
 
 static void draw_panel(TuiWidget *w, const char *label,
-                       uint8_t fg, uint8_t bg)
+                       TuiColor fg, TuiColor bg)
 {
     if (!w->visible || w->width <= 0 || w->height <= 0) return;
 
@@ -54,7 +54,7 @@ static void draw_panel(TuiWidget *w, const char *label,
 }
 
 static void draw_bar(TuiWidget *w, const char *text,
-                     uint8_t fg, uint8_t bg)
+                     TuiColor fg, TuiColor bg)
 {
     if (!w->visible || w->width <= 0 || w->height <= 0) return;
     tui_screen_fill(w->abs_y, w->abs_x, w->width, w->height,
@@ -72,16 +72,16 @@ static void draw_frame(int rows, int cols)
 
     draw_bar(&titlebar,
              "Phase 6 - Dashboard Layout  |  Nested H+V Layouts  |  Resize to test",
-             15, 4);
+             TUI_COLOR_INDEX(15), TUI_COLOR_INDEX(4));
 
-    draw_bar(&toolbar, "  File  Edit  View  Tools  Help", 0, 252);
+    draw_bar(&toolbar, "  File  Edit  View  Tools  Help", TUI_COLOR_INDEX(0), TUI_COLOR_INDEX(252));
 
-    draw_panel(&nav, "Navigation", 7, 194);
-    draw_panel(&editor, "Editor [Fill w=2]", 0, 234);
-    draw_panel(&preview, "Preview [Fill w=1]", 0, 230);
+    draw_panel(&nav, "Navigation", TUI_COLOR_INDEX(7), TUI_COLOR_INDEX(194));
+    draw_panel(&editor, "Editor [Fill w=2]", TUI_COLOR_INDEX(0), TUI_COLOR_INDEX(234));
+    draw_panel(&preview, "Preview [Fill w=1]", TUI_COLOR_INDEX(0), TUI_COLOR_INDEX(230));
     draw_bar(&statusbar,
              "  Layout: nested V>H>V  |  Press 'q' or Escape to quit",
-             15, 236);
+             TUI_COLOR_INDEX(15), TUI_COLOR_INDEX(236));
 
     tui_screen_render();
     (void)rows;

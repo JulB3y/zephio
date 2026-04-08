@@ -48,8 +48,8 @@ TuiResult tui_label_init(TuiLabel *label, int x, int y, int width, int height,
 
     label->base.focusable = 0;
 
-    label->fg   = 15;
-    label->bg   = 0;
+    label->fg   = TUI_COLOR_INDEX(15);
+    label->bg   = TUI_COLOR_INDEX(0);
     label->attr = TUI_ATTR_NONE;
 
     if (text) {
@@ -70,7 +70,7 @@ void tui_label_set_text(TuiLabel *label, const char *text)
     label->base.dirty = 1;
 }
 
-void tui_label_set_colors(TuiLabel *label, uint8_t fg, uint8_t bg)
+void tui_label_set_colors(TuiLabel *label, TuiColor fg, TuiColor bg)
 {
     if (!label) return;
     label->fg = fg;

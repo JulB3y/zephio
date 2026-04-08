@@ -22,8 +22,8 @@ static void input_field_render(TuiWidget *widget)
 {
     TuiInputField *field = (TuiInputField *)widget;
 
-    uint8_t fg;
-    uint8_t bg;
+    TuiColor fg;
+    TuiColor bg;
     TuiAttr attr;
 
     if (widget->theme) {
@@ -71,8 +71,8 @@ static void input_field_render(TuiWidget *widget)
             pos += clen;
         }
         if (cursor_col >= 0 && cursor_col < widget->width) {
-            uint8_t cursor_fg = field->cursor_fg;
-            uint8_t cursor_bg = field->cursor_bg;
+            TuiColor cursor_fg = field->cursor_fg;
+            TuiColor cursor_bg = field->cursor_bg;
             if (widget->theme) {
                 TuiStyle focused = widget->theme->styles[TUI_STATE_FOCUSED];
                 cursor_fg = focused.bg;
@@ -238,10 +238,10 @@ TuiResult tui_input_field_init(TuiInputField *field, int x, int y, int width,
     field->text_capacity  = capacity;
     field->cursor_pos     = 0;
     field->scroll_offset  = 0;
-    field->fg             = 15;
-    field->bg             = 234;
-    field->cursor_fg      = 0;
-    field->cursor_bg      = 15;
+    field->fg             = TUI_COLOR_INDEX(15);
+    field->bg             = TUI_COLOR_INDEX(234);
+    field->cursor_fg      = TUI_COLOR_INDEX(0);
+    field->cursor_bg      = TUI_COLOR_INDEX(15);
     field->attr           = TUI_ATTR_NONE;
     field->on_change      = NULL;
     field->on_submit      = NULL;
@@ -279,8 +279,8 @@ const char *tui_input_field_get_text(TuiInputField *field)
     return field->text ? field->text : "";
 }
 
-void tui_input_field_set_colors(TuiInputField *field, uint8_t fg, uint8_t bg,
-                                uint8_t cursor_fg, uint8_t cursor_bg)
+void tui_input_field_set_colors(TuiInputField *field, TuiColor fg, TuiColor bg,
+                                TuiColor cursor_fg, TuiColor cursor_bg)
 {
     if (!field) return;
     field->fg         = fg;

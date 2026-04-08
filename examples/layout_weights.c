@@ -10,19 +10,13 @@
 #include <string.h>
 
 typedef struct {
-    uint8_t fg;
-    uint8_t bg;
+    TuiColor fg;
+    TuiColor bg;
 } PanelColor;
 
 static TuiLayout root;
 static TuiWidget panels[5];
-static PanelColor colors[5] = {
-    { 15, 21 },
-    { 15, 54 },
-    { 15, 97 },
-    { 15, 132 },
-    { 15, 165 }
-};
+static PanelColor colors[5];
 
 static void draw_panel(TuiWidget *w, const char *label, PanelColor c)
 {
@@ -51,14 +45,14 @@ static void draw_frame(int rows, int cols)
 {
     tui_screen_clear();
 
-    tui_screen_fill(0, 0, cols, 1, " ", 15, 4, TUI_ATTR_BOLD);
+    tui_screen_fill(0, 0, cols, 1, " ", TUI_COLOR_INDEX(15), TUI_COLOR_INDEX(4), TUI_ATTR_BOLD);
     tui_screen_write(0, 2, "Phase 6 - Weighted Fill Layouts (2:1, 1:1:1)",
-                     15, 4, TUI_ATTR_BOLD);
+                     TUI_COLOR_INDEX(15), TUI_COLOR_INDEX(4), TUI_ATTR_BOLD);
 
     char info[64];
     int info_len = snprintf(info, sizeof(info), "%dx%d  |  Press 'q' to quit",
                             cols, rows);
-    tui_screen_write(0, cols - info_len - 1, info, 15, 4, TUI_ATTR_BOLD);
+    tui_screen_write(0, cols - info_len - 1, info, TUI_COLOR_INDEX(15), TUI_COLOR_INDEX(4), TUI_ATTR_BOLD);
 
     tui_widget_render(&root.base);
 
@@ -76,7 +70,7 @@ static void draw_frame(int rows, int cols)
 
     tui_screen_write(rows - 1, 1,
         "Resize terminal to see panels redistribute space proportionally",
-        8, 0, TUI_ATTR_DIM);
+        TUI_COLOR_INDEX(8), TUI_COLOR_INDEX(0), TUI_ATTR_DIM);
 
     tui_screen_render();
 }
@@ -107,6 +101,12 @@ int main(void)
     }
 
     tui_input_init();
+
+    static const int bg_vals[5] = {21, 54, 97, 132, 165};
+    for (int i = 0; i < 5; i++) {
+        colors[i].fg = TUI_COLOR_INDEX(15);
+        colors[i].bg = TUI_COLOR_INDEX(bg_vals[i]);
+    }
 
     TuiSize size = tui_screen_size();
 

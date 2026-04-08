@@ -42,7 +42,7 @@ typedef enum {
     TUI_COLOR_BG_DARK  = 234,
     TUI_COLOR_BG_MID   = 236,
     TUI_COLOR_BG_LIGHT = 238
-} TuiColor;
+} TuiPaletteColor;
 
 typedef TuiAttr TuiTextAttributes;
 
@@ -50,14 +50,18 @@ typedef TuiAttr TuiTextAttributes;
  * @brief Complete style for a single cell (fg, bg, attributes).
  */
 typedef struct {
-    uint8_t fg;
-    uint8_t bg;
-    TuiAttr attr;
+    TuiColor fg;
+    TuiColor bg;
+    TuiAttr  attr;
 } TuiStyle;
 
-/** @brief Construct a TuiStyle inline. */
 #define TUI_STYLE(fg_color, bg_color, attrs) \
-    ((TuiStyle){ (uint8_t)(fg_color), (uint8_t)(bg_color), (attrs) })
+    ((TuiStyle){ TUI_COLOR_INDEX(fg_color), TUI_COLOR_INDEX(bg_color), (attrs) })
+
+#define TUI_STYLE_RGB(fg_r,fg_g,fg_b, bg_r,bg_g,bg_b, attrs) \
+    ((TuiStyle){ TUI_COLOR_RGB(fg_r,fg_g,fg_b), TUI_COLOR_RGB(bg_r,bg_g,bg_b), (attrs) })
+
+TuiStyle tui_style_make(TuiColor fg, TuiColor bg, TuiAttr attr);
 
 #define TUI_STYLE_NONE TUI_STYLE(0, 0, TUI_ATTR_NONE)
 

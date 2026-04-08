@@ -1,5 +1,14 @@
 #include "tui_style.h"
 
+TuiStyle tui_style_make(TuiColor fg, TuiColor bg, TuiAttr attr)
+{
+    TuiStyle s;
+    s.fg   = fg;
+    s.bg   = bg;
+    s.attr = attr;
+    return s;
+}
+
 TuiTheme tui_theme_default(void)
 {
     TuiTheme theme;

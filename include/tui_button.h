@@ -21,10 +21,10 @@ typedef void (*TuiButtonCallback)(TuiWidget *widget, void *user_data);
 typedef struct {
     TuiWidget         base;
     char             *text;
-    uint8_t           fg;
-    uint8_t           bg;
-    uint8_t           fg_focused;
-    uint8_t           bg_focused;
+    TuiColor          fg;
+    TuiColor          bg;
+    TuiColor          fg_focused;
+    TuiColor          bg_focused;
     TuiAttr           attr;
     TuiButtonCallback on_click;
     void             *user_data;
@@ -58,8 +58,8 @@ void tui_button_set_text(TuiButton *button, const char *text);
  * @param fg_focused  Focused foreground.
  * @param bg_focused  Focused background.
  */
-void tui_button_set_colors(TuiButton *button, uint8_t fg, uint8_t bg,
-                           uint8_t fg_focused, uint8_t bg_focused);
+void tui_button_set_colors(TuiButton *button, TuiColor fg, TuiColor bg,
+                           TuiColor fg_focused, TuiColor bg_focused);
 
 /**
  * @brief Set the click callback.

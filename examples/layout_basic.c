@@ -17,7 +17,7 @@ static TuiWidget content;
 static TuiWidget footer;
 
 static void draw_panel(TuiWidget *w, const char *label,
-                       uint8_t fg, uint8_t bg, TuiAttr attr)
+                       TuiColor fg, TuiColor bg, TuiAttr attr)
 {
     if (!w->visible || w->width <= 0 || w->height <= 0) return;
 
@@ -39,21 +39,21 @@ static void draw_frame(int rows, int cols)
 {
     tui_screen_clear();
 
-    tui_screen_fill(0, 0, cols, 1, " ", 15, 4, TUI_ATTR_BOLD);
+    tui_screen_fill(0, 0, cols, 1, " ", TUI_COLOR_INDEX(15), TUI_COLOR_INDEX(4), TUI_ATTR_BOLD);
     tui_screen_write(0, 2, "Phase 6 - Basic Layout (Fixed / Fill / Auto)",
-                     15, 4, TUI_ATTR_BOLD);
+                     TUI_COLOR_INDEX(15), TUI_COLOR_INDEX(4), TUI_ATTR_BOLD);
 
     char info[64];
     int info_len = snprintf(info, sizeof(info), "%dx%d", cols, rows);
-    tui_screen_write(0, cols - info_len - 1, info, 15, 4, TUI_ATTR_BOLD);
+    tui_screen_write(0, cols - info_len - 1, info, TUI_COLOR_INDEX(15), TUI_COLOR_INDEX(4), TUI_ATTR_BOLD);
 
     tui_widget_render(&root_layout.base);
 
-    draw_panel(&header, "Header [Fixed h=1]", 15, 236, TUI_ATTR_BOLD);
-    draw_panel(&sidebar, "Sidebar [Fixed w=20]", 0, 24, TUI_ATTR_NONE);
-    draw_panel(&content, "Content [Fill]", 0, 240, TUI_ATTR_NONE);
+    draw_panel(&header, "Header [Fixed h=1]", TUI_COLOR_INDEX(15), TUI_COLOR_INDEX(236), TUI_ATTR_BOLD);
+    draw_panel(&sidebar, "Sidebar [Fixed w=20]", TUI_COLOR_INDEX(0), TUI_COLOR_INDEX(24), TUI_ATTR_NONE);
+    draw_panel(&content, "Content [Fill]", TUI_COLOR_INDEX(0), TUI_COLOR_INDEX(240), TUI_ATTR_NONE);
     draw_panel(&footer, "Footer [Fixed h=1]  |  Press 'q' or Escape to quit",
-               15, 236, TUI_ATTR_BOLD);
+               TUI_COLOR_INDEX(15), TUI_COLOR_INDEX(236), TUI_ATTR_BOLD);
 
     tui_screen_render();
 }

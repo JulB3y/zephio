@@ -15,8 +15,8 @@ static void list_render(TuiWidget *widget)
         int idx = list->scroll_offset + i;
         if (idx >= list->item_count) break;
 
-        uint8_t fg;
-        uint8_t bg;
+        TuiColor fg;
+        TuiColor bg;
         TuiAttr attr;
 
         if (widget->theme) {
@@ -173,10 +173,10 @@ TuiResult tui_list_init(TuiList *list, int x, int y, int width, int height)
     list->item_capacity = 0;
     list->selected      = 0;
     list->scroll_offset = 0;
-    list->fg            = 15;
-    list->bg            = 0;
-    list->fg_selected   = 0;
-    list->bg_selected   = 12;
+    list->fg            = TUI_COLOR_INDEX(15);
+    list->bg            = TUI_COLOR_INDEX(0);
+    list->fg_selected   = TUI_COLOR_INDEX(0);
+    list->bg_selected   = TUI_COLOR_INDEX(12);
     list->attr          = TUI_ATTR_NONE;
     list->on_select     = NULL;
     list->user_data     = NULL;
@@ -250,8 +250,8 @@ const char *tui_list_get_selected_item(TuiList *list)
     return list->items[list->selected];
 }
 
-void tui_list_set_colors(TuiList *list, uint8_t fg, uint8_t bg,
-                         uint8_t fg_selected, uint8_t bg_selected)
+void tui_list_set_colors(TuiList *list, TuiColor fg, TuiColor bg,
+                         TuiColor fg_selected, TuiColor bg_selected)
 {
     if (!list) return;
     list->fg           = fg;

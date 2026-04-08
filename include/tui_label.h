@@ -17,8 +17,8 @@
 typedef struct {
     TuiWidget base;
     char    *text;
-    uint8_t  fg;
-    uint8_t  bg;
+    TuiColor fg;
+    TuiColor bg;
     TuiAttr  attr;
 } TuiLabel;
 
@@ -47,7 +47,7 @@ void tui_label_set_text(TuiLabel *label, const char *text);
 /**
  * @brief Set foreground and background colors.
  */
-void tui_label_set_colors(TuiLabel *label, uint8_t fg, uint8_t bg);
+void tui_label_set_colors(TuiLabel *label, TuiColor fg, TuiColor bg);
 
 /**
  * @brief Set text attributes (bold, underline, etc.).

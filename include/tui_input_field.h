@@ -27,10 +27,10 @@ typedef struct {
     int                  text_capacity;
     int                  cursor_pos;
     int                  scroll_offset;
-    uint8_t              fg;
-    uint8_t              bg;
-    uint8_t              cursor_fg;
-    uint8_t              cursor_bg;
+    TuiColor             fg;
+    TuiColor             bg;
+    TuiColor             cursor_fg;
+    TuiColor             cursor_bg;
     TuiAttr              attr;
     TuiInputFieldCallback on_change;
     TuiInputFieldCallback on_submit;
@@ -63,8 +63,8 @@ void tui_input_field_set_text(TuiInputField *field, const char *text);
 const char *tui_input_field_get_text(TuiInputField *field);
 
 /** @brief Set normal and cursor color pairs. */
-void tui_input_field_set_colors(TuiInputField *field, uint8_t fg, uint8_t bg,
-                                uint8_t cursor_fg, uint8_t cursor_bg);
+void tui_input_field_set_colors(TuiInputField *field, TuiColor fg, TuiColor bg,
+                                TuiColor cursor_fg, TuiColor cursor_bg);
 
 /** @brief Set the text-change callback. */
 void tui_input_field_set_on_change(TuiInputField *field,

@@ -22,6 +22,7 @@ typedef struct {
     int  rows;
     int  cols;
     int  initialized;
+    int  truecolor;
 } Terminal;
 
 /**

@@ -20,6 +20,7 @@
 
 #include "tui.h"
 #include <stdint.h>
+#include <string.h>
 
 /**
  * @brief Text attributes bitmask (bold, underline, etc.).
@@ -37,13 +38,40 @@ typedef uint16_t TuiAttr;
 #define TUI_ATTR_REVERSE       0x0020
 #define TUI_ATTR_STRIKETHROUGH 0x0040
 
+typedef enum {
+    TUI_COLOR_TYPE_INDEX = 0,
+    TUI_COLOR_TYPE_RGB   = 1,
+    TUI_COLOR_TYPE_NONE  = -1
+} TuiColorType;
+
+typedef struct TuiColor {
+    TuiColorType type;
+    union {
+        uint8_t index;
+        struct { uint8_t r, g, b; } rgb;
+    };
+} TuiColor;
+
+#define TUI_COLOR_INDEX(i)   ((TuiColor){ .type = TUI_COLOR_TYPE_INDEX, .index = (uint8_t)(i) })
+#define TUI_COLOR_RGB(r,g,b) ((TuiColor){ .type = TUI_COLOR_TYPE_RGB, .rgb = { (uint8_t)(r), (uint8_t)(g), (uint8_t)(b) } })
+#define TUI_COLOR_NONE       ((TuiColor){ .type = TUI_COLOR_TYPE_NONE, .index = 0 })
+
+static inline int tui_color_eq(TuiColor a, TuiColor b) {
+    if (a.type != b.type) return 0;
+    switch (a.type) {
+    case TUI_COLOR_TYPE_INDEX: return a.index == b.index;
+    case TUI_COLOR_TYPE_RGB:   return a.rgb.r == b.rgb.r && a.rgb.g == b.rgb.g && a.rgb.b == b.rgb.b;
+    default: return 1;
+    }
+}
+
 /**
  * @brief A single terminal cell (character + colors + attributes).
  */
 typedef struct {
     char     ch[4];
-    uint8_t  fg;
-    uint8_t  bg;
+    TuiColor fg;
+    TuiColor bg;
     TuiAttr  attr;
 } TuiCell;
 
@@ -103,7 +131,7 @@ void tui_screen_render(void);
  * @param bg    Background 256-color index.
  * @param attr  Attribute bitmask.
  */
-void tui_screen_set_cell(int row, int col, const char *ch, uint8_t fg, uint8_t bg, TuiAttr attr);
+void tui_screen_set_cell(int row, int col, const char *ch, TuiColor fg, TuiColor bg, TuiAttr attr);
 
 /**
  * @brief Write a UTF-8 string into the back buffer (one row).
@@ -118,7 +146,7 @@ void tui_screen_set_cell(int row, int col, const char *ch, uint8_t fg, uint8_t b
  * @param bg    Background color.
  * @param attr  Attribute bitmask.
  */
-void tui_screen_write(int row, int col, const char *text, uint8_t fg, uint8_t bg, TuiAttr attr);
+void tui_screen_write(int row, int col, const char *text, TuiColor fg, TuiColor bg, TuiAttr attr);
 
 /**
  * @brief Fill a rectangular region with a single character + style.
@@ -132,7 +160,7 @@ void tui_screen_write(int row, int col, const char *text, uint8_t fg, uint8_t bg
  * @param bg      Background color.
  * @param attr    Attribute bitmask.
  */
-void tui_screen_fill(int row, int col, int width, int height, const char *ch, uint8_t fg, uint8_t bg, TuiAttr attr);
+void tui_screen_fill(int row, int col, int width, int height, const char *ch, TuiColor fg, TuiColor bg, TuiAttr attr);
 
 /**
  * @brief Draw a single-line Unicode box border.
@@ -147,14 +175,14 @@ void tui_screen_fill(int row, int col, int width, int height, const char *ch, ui
  * @param bg      Background color.
  * @param attr    Attribute bitmask.
  */
-void tui_screen_box_single(int row, int col, int width, int height, uint8_t fg, uint8_t bg, TuiAttr attr);
+void tui_screen_box_single(int row, int col, int width, int height, TuiColor fg, TuiColor bg, TuiAttr attr);
 
 /**
  * @brief Draw a double-line Unicode box border.
  *
  * Same as tui_screen_box_single but uses double-line box characters.
  */
-void tui_screen_box_double(int row, int col, int width, int height, uint8_t fg, uint8_t bg, TuiAttr attr);
+void tui_screen_box_double(int row, int col, int width, int height, TuiColor fg, TuiColor bg, TuiAttr attr);
 
 /**
  * @brief Return the current screen dimensions.

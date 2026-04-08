@@ -60,7 +60,7 @@ static void on_hello_click(TuiWidget *widget, void *user_data) {
     snprintf(g_w.action_text, sizeof(g_w.action_text), "Hello, World!");
   }
   tui_label_set_text(&g_w.action_label, g_w.action_text);
-  tui_label_set_colors(&g_w.action_label, 10, 0);
+  tui_label_set_colors(&g_w.action_label, TUI_COLOR_INDEX(10), TUI_COLOR_INDEX(0));
 }
 
 static void on_clear_click(TuiWidget *widget, void *user_data) {
@@ -68,7 +68,7 @@ static void on_clear_click(TuiWidget *widget, void *user_data) {
   (void)user_data;
   tui_input_field_set_text(&g_w.name_input, "");
   tui_label_set_text(&g_w.action_label, "Cleared.");
-  tui_label_set_colors(&g_w.action_label, 8, 0);
+  tui_label_set_colors(&g_w.action_label, TUI_COLOR_INDEX(8), TUI_COLOR_INDEX(0));
 }
 
 static void on_name_change(TuiWidget *widget, const char *text,
@@ -77,7 +77,7 @@ static void on_name_change(TuiWidget *widget, const char *text,
   (void)user_data;
   snprintf(g_w.action_text, sizeof(g_w.action_text), "Editing: \"%s\"", text);
   tui_label_set_text(&g_w.action_label, g_w.action_text);
-  tui_label_set_colors(&g_w.action_label, 14, 0);
+  tui_label_set_colors(&g_w.action_label, TUI_COLOR_INDEX(14), TUI_COLOR_INDEX(0));
 }
 
 static void on_name_submit(TuiWidget *widget, const char *text,
@@ -86,7 +86,7 @@ static void on_name_submit(TuiWidget *widget, const char *text,
   (void)user_data;
   snprintf(g_w.action_text, sizeof(g_w.action_text), "Submitted: \"%s\"", text);
   tui_label_set_text(&g_w.action_label, g_w.action_text);
-  tui_label_set_colors(&g_w.action_label, 11, 0);
+  tui_label_set_colors(&g_w.action_label, TUI_COLOR_INDEX(11), TUI_COLOR_INDEX(0));
 }
 
 static void on_list_select(TuiWidget *widget, int index, const char *item,
@@ -97,7 +97,7 @@ static void on_list_select(TuiWidget *widget, int index, const char *item,
   snprintf(g_w.selection_text, sizeof(g_w.selection_text), "Selected: %s",
            item);
   tui_label_set_text(&g_w.selection_label, g_w.selection_text);
-  tui_label_set_colors(&g_w.selection_label, 13, 0);
+  tui_label_set_colors(&g_w.selection_label, TUI_COLOR_INDEX(13), TUI_COLOR_INDEX(0));
 }
 
 static void build_widgets(int rows, int cols) {
@@ -111,17 +111,17 @@ static void build_widgets(int rows, int cols) {
 
   tui_label_init(&g_w.title, ux, y, uw, 1,
                  "Widget Demo — Labels, Buttons, Input, List");
-  tui_label_set_colors(&g_w.title, 14, 0);
+  tui_label_set_colors(&g_w.title, TUI_COLOR_INDEX(14), TUI_COLOR_INDEX(0));
   tui_label_set_attr(&g_w.title, TUI_ATTR_BOLD);
   tui_widget_add_child(&g_w.root, &g_w.title.base);
   y += 2;
 
   tui_label_init(&g_w.name_label, ux, y, 16, 1, "Your Name:");
-  tui_label_set_colors(&g_w.name_label, 15, 0);
+  tui_label_set_colors(&g_w.name_label, TUI_COLOR_INDEX(15), TUI_COLOR_INDEX(0));
   tui_widget_add_child(&g_w.root, &g_w.name_label.base);
 
   tui_input_field_init(&g_w.name_input, ux + 12, y, uw - 14, 128);
-  tui_input_field_set_colors(&g_w.name_input, 15, 235, 0, 12);
+  tui_input_field_set_colors(&g_w.name_input, TUI_COLOR_INDEX(15), TUI_COLOR_INDEX(235), TUI_COLOR_INDEX(0), TUI_COLOR_INDEX(12));
   tui_input_field_set_on_change(&g_w.name_input, on_name_change, NULL);
   tui_input_field_set_on_submit(&g_w.name_input, on_name_submit, NULL);
   g_w.name_input.base.focusable = 1;
@@ -130,7 +130,7 @@ static void build_widgets(int rows, int cols) {
 
   if (y < rows - 8) {
     tui_separator_init_h(&g_w.sep1, ux, y, uw);
-    tui_separator_set_colors(&g_w.sep1, 8, 0);
+    tui_separator_set_colors(&g_w.sep1, TUI_COLOR_INDEX(8), TUI_COLOR_INDEX(0));
     tui_widget_add_child(&g_w.root, &g_w.sep1.base);
     y += 1;
   }
@@ -138,7 +138,7 @@ static void build_widgets(int rows, int cols) {
   if (y < rows - 7) {
     int half = uw / 2 - 1;
     tui_button_init(&g_w.btn_hello, ux, y, half > 6 ? half : 6, 1, "Say Hello");
-    tui_button_set_colors(&g_w.btn_hello, 0, 2, 15, 10);
+    tui_button_set_colors(&g_w.btn_hello, TUI_COLOR_INDEX(0), TUI_COLOR_INDEX(2), TUI_COLOR_INDEX(15), TUI_COLOR_INDEX(10));
     tui_button_set_on_click(&g_w.btn_hello, on_hello_click, NULL);
     g_w.btn_hello.base.focusable = 1;
     tui_widget_add_child(&g_w.root, &g_w.btn_hello.base);
@@ -146,7 +146,7 @@ static void build_widgets(int rows, int cols) {
     int b2x = ux + half + 2;
     if (b2x + 6 < ux + uw) {
       tui_button_init(&g_w.btn_clear, b2x, y, uw - half - 2, 1, "Clear");
-      tui_button_set_colors(&g_w.btn_clear, 0, 1, 15, 9);
+      tui_button_set_colors(&g_w.btn_clear, TUI_COLOR_INDEX(0), TUI_COLOR_INDEX(1), TUI_COLOR_INDEX(15), TUI_COLOR_INDEX(9));
       tui_button_set_on_click(&g_w.btn_clear, on_clear_click, NULL);
       g_w.btn_clear.base.focusable = 1;
       tui_widget_add_child(&g_w.root, &g_w.btn_clear.base);
@@ -156,14 +156,14 @@ static void build_widgets(int rows, int cols) {
 
   if (y < rows - 5) {
     tui_label_init(&g_w.action_label, ux, y, uw, 1, "Actions appear here...");
-    tui_label_set_colors(&g_w.action_label, 8, 0);
+    tui_label_set_colors(&g_w.action_label, TUI_COLOR_INDEX(8), TUI_COLOR_INDEX(0));
     tui_widget_add_child(&g_w.root, &g_w.action_label.base);
     y += 1;
   }
 
   if (y < rows - 5) {
     tui_separator_init_h(&g_w.sep2, ux, y, uw);
-    tui_separator_set_colors(&g_w.sep2, 8, 0);
+    tui_separator_set_colors(&g_w.sep2, TUI_COLOR_INDEX(8), TUI_COLOR_INDEX(0));
     tui_widget_add_child(&g_w.root, &g_w.sep2.base);
     y += 1;
   }
@@ -175,7 +175,7 @@ static void build_widgets(int rows, int cols) {
       list_h = 2;
 
     tui_list_init(&g_w.menu_list, ux, y, uw, list_h);
-    tui_list_set_colors(&g_w.menu_list, 15, 234, 0, 12);
+    tui_list_set_colors(&g_w.menu_list, TUI_COLOR_INDEX(15), TUI_COLOR_INDEX(234), TUI_COLOR_INDEX(0), TUI_COLOR_INDEX(12));
     tui_list_set_on_select(&g_w.menu_list, on_list_select, NULL);
     g_w.menu_list.base.focusable = 1;
     tui_list_add_item(&g_w.menu_list, "Open File...");
@@ -188,14 +188,14 @@ static void build_widgets(int rows, int cols) {
 
     tui_label_init(&g_w.selection_label, ux, y, uw, 1,
                    "Select a menu item above");
-    tui_label_set_colors(&g_w.selection_label, 8, 0);
+    tui_label_set_colors(&g_w.selection_label, TUI_COLOR_INDEX(8), TUI_COLOR_INDEX(0));
     tui_widget_add_child(&g_w.root, &g_w.selection_label.base);
     y += 1;
   }
 
   tui_label_init(&g_w.status, 1, rows - 1, cols - 2, 1,
                  " Tab: next focus | Shift+Tab: prev | q/Esc: quit");
-  tui_label_set_colors(&g_w.status, 15, 236);
+  tui_label_set_colors(&g_w.status, TUI_COLOR_INDEX(15), TUI_COLOR_INDEX(236));
   tui_widget_add_child(&g_w.root, &g_w.status.base);
 
   g_w.initialized = 1;
@@ -213,11 +213,11 @@ static void destroy_widgets(void) {
 
 static void draw_frame(int rows, int cols) {
   tui_screen_clear();
-  tui_screen_fill(0, 0, cols, 1, " ", 15, 4, TUI_ATTR_BOLD);
+  tui_screen_fill(0, 0, cols, 1, " ", TUI_COLOR_INDEX(15), TUI_COLOR_INDEX(4), TUI_ATTR_BOLD);
   tui_screen_write(0, 2,
                    "Widget Demo  |  All interactive widgets  |  q/Esc to quit",
-                   15, 4, TUI_ATTR_BOLD);
-  tui_screen_fill(rows - 1, 0, cols, 1, " ", 15, 236, TUI_ATTR_NONE);
+                   TUI_COLOR_INDEX(15), TUI_COLOR_INDEX(4), TUI_ATTR_BOLD);
+  tui_screen_fill(rows - 1, 0, cols, 1, " ", TUI_COLOR_INDEX(15), TUI_COLOR_INDEX(236), TUI_ATTR_NONE);
   tui_widget_render(&g_w.root);
   tui_screen_render();
 }
