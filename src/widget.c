@@ -22,13 +22,14 @@ TuiResult tui_widget_init(TuiWidget *widget, int x, int y, int width, int height
     widget->abs_x  = x;
     widget->abs_y  = y;
 
-    widget->visible   = 1;
-    widget->dirty     = 1;
-    widget->focusable = 0;
-    widget->focused   = 0;
-    widget->disabled  = 0;
-    widget->hovered   = 0;
-    widget->tab_index = 0;
+    widget->visible          = 1;
+    widget->dirty            = 1;
+    widget->focusable        = 0;
+    widget->focused          = 0;
+    widget->disabled         = 0;
+    widget->hovered          = 0;
+    widget->tab_index        = 0;
+    widget->manages_children = 0;
 
     widget->parent           = NULL;
     widget->children         = NULL;
@@ -143,6 +144,9 @@ void tui_widget_remove_all_children(TuiWidget *parent)
 static void compute_absolute_position(TuiWidget *widget)
 {
     if (widget->parent) {
+        if (widget->parent->manages_children) {
+            return;
+        }
         widget->abs_x = widget->parent->abs_x + widget->x;
         widget->abs_y = widget->parent->abs_y + widget->y;
     } else {
@@ -162,8 +166,10 @@ void tui_widget_render(TuiWidget *widget)
     }
     widget->dirty = 0;
 
-    for (int i = 0; i < widget->child_count; i++) {
-        tui_widget_render(widget->children[i]);
+    if (!widget->manages_children) {
+        for (int i = 0; i < widget->child_count; i++) {
+            tui_widget_render(widget->children[i]);
+        }
     }
 }
 

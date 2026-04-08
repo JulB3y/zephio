@@ -58,6 +58,7 @@ struct TuiWidget {
     int disabled;
     int hovered;
     int tab_index;
+    int manages_children;
 
     TuiWidget  *parent;
     TuiWidget **children;
