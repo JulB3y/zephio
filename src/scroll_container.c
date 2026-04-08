@@ -3,7 +3,7 @@
 #include "tui_scroll_container.h"
 #include "tui_screen.h"
 
-static void clamp_scroll(TuiScrollContainer *sc, int cv_width, int cv_height)
+void tui_scroll_container_clamp_scroll(TuiScrollContainer *sc, int cv_width, int cv_height)
 {
     int max_y = sc->content_height - cv_height;
     if (max_y < 0) max_y = 0;
@@ -19,6 +19,14 @@ static void clamp_scroll(TuiScrollContainer *sc, int cv_width, int cv_height)
 static void render_scrollbars(TuiWidget *widget, TuiScrollContainer *sc,
                               int has_vscroll, int has_hscroll,
                               int cv_width, int cv_height)
+{
+    tui_scroll_container_render_scrollbars(widget, sc, has_vscroll, has_hscroll,
+                                           cv_width, cv_height);
+}
+
+void tui_scroll_container_render_scrollbars(TuiWidget *widget, TuiScrollContainer *sc,
+                                            int has_vscroll, int has_hscroll,
+                                            int cv_width, int cv_height)
 {
     int vx = widget->abs_x;
     int vy = widget->abs_y;
@@ -91,7 +99,7 @@ static void scroll_render(TuiWidget *widget)
     if (cv_width < 0) cv_width = 0;
     if (cv_height < 0) cv_height = 0;
 
-    clamp_scroll(sc, cv_width, cv_height);
+    tui_scroll_container_clamp_scroll(sc, cv_width, cv_height);
 
     TuiStyle style = tui_widget_get_style(widget);
     tui_screen_fill(widget->abs_y, widget->abs_x,
@@ -127,7 +135,7 @@ static void scroll_render(TuiWidget *widget)
     render_scrollbars(widget, sc, has_vscroll, has_hscroll, cv_width, cv_height);
 }
 
-static int scroll_handle_input(TuiWidget *widget, const TuiEvent *event)
+int tui_scroll_container_handle_input(TuiWidget *widget, const TuiEvent *event)
 {
     TuiScrollContainer *sc = (TuiScrollContainer *)widget;
 
@@ -228,7 +236,7 @@ static int scroll_handle_input(TuiWidget *widget, const TuiEvent *event)
     return 0;
 }
 
-static int scroll_handle_mouse(TuiWidget *widget, const TuiMouseEvent *mouse)
+int tui_scroll_container_handle_mouse(TuiWidget *widget, const TuiMouseEvent *mouse)
 {
     TuiScrollContainer *sc = (TuiScrollContainer *)widget;
 
@@ -274,6 +282,7 @@ static int scroll_handle_mouse(TuiWidget *widget, const TuiMouseEvent *mouse)
                 if (rel < 0) rel = 0;
                 sc->scroll_y = rel * max_y / (cv_height - thumb_h);
                 if (sc->scroll_y > max_y) sc->scroll_y = max_y;
+                sc->dragging = 1;
                 widget->dirty = 1;
             }
             return 1;
@@ -290,8 +299,44 @@ static int scroll_handle_mouse(TuiWidget *widget, const TuiMouseEvent *mouse)
                 if (rel < 0) rel = 0;
                 sc->scroll_x = rel * max_x / (cv_width - thumb_w);
                 if (sc->scroll_x > max_x) sc->scroll_x = max_x;
+                sc->dragging = 2;
                 widget->dirty = 1;
             }
+            return 1;
+        }
+    }
+
+    if (sc->dragging == 1 && mouse->action == TUI_MOUSE_MOTION) {
+        int max_y = sc->content_height - cv_height;
+        if (max_y > 0) {
+            int thumb_h = cv_height * cv_height / sc->content_height;
+            if (thumb_h < 1) thumb_h = 1;
+            int rel = mouse->row - widget->abs_y - thumb_h / 2;
+            if (rel < 0) rel = 0;
+            sc->scroll_y = rel * max_y / (cv_height - thumb_h);
+            if (sc->scroll_y > max_y) sc->scroll_y = max_y;
+            widget->dirty = 1;
+        }
+        return 1;
+    }
+
+    if (sc->dragging == 2 && mouse->action == TUI_MOUSE_MOTION) {
+        int max_x = sc->content_width - cv_width;
+        if (max_x > 0) {
+            int thumb_w = cv_width * cv_width / sc->content_width;
+            if (thumb_w < 1) thumb_w = 1;
+            int rel = mouse->col - widget->abs_x - thumb_w / 2;
+            if (rel < 0) rel = 0;
+            sc->scroll_x = rel * max_x / (cv_width - thumb_w);
+            if (sc->scroll_x > max_x) sc->scroll_x = max_x;
+            widget->dirty = 1;
+        }
+        return 1;
+    }
+
+    if (mouse->action == TUI_MOUSE_RELEASE) {
+        if (sc->dragging) {
+            sc->dragging = 0;
             return 1;
         }
     }
@@ -301,8 +346,8 @@ static int scroll_handle_mouse(TuiWidget *widget, const TuiMouseEvent *mouse)
 
 static TuiWidgetVTable scroll_vtable = {
     .render       = scroll_render,
-    .handle_input = scroll_handle_input,
-    .handle_mouse = scroll_handle_mouse,
+    .handle_input = tui_scroll_container_handle_input,
+    .handle_mouse = tui_scroll_container_handle_mouse,
     .destroy      = NULL,
     .on_resize    = NULL,
     .on_focus     = NULL,
@@ -325,6 +370,7 @@ TuiResult tui_scroll_container_init(TuiScrollContainer *sc, int x, int y,
     sc->scroll_y       = 0;
     sc->content_width  = width;
     sc->content_height = height;
+    sc->dragging       = 0;
 
     return TUI_OK;
 }
