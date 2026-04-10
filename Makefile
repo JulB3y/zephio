@@ -22,6 +22,8 @@ CFLAGS  += -O2 -DNDEBUG
 LDFLAGS :=
 endif
 
+LDFLAGS += -lm
+
 .PHONY: all clean examples lib test
 
 all: lib examples

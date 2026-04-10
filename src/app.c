@@ -1,6 +1,7 @@
 #define _POSIX_C_SOURCE 200809L
 
 #include "tui_app.h"
+#include "tui_animator.h"
 #include "tui_terminal.h"
 #include "tui_screen.h"
 #include "tui_mouse.h"
@@ -8,6 +9,14 @@
 #include <poll.h>
 #include <stdlib.h>
 #include <string.h>
+#include <time.h>
+
+static double time_now_ms(void)
+{
+    struct timespec ts;
+    clock_gettime(CLOCK_MONOTONIC, &ts);
+    return ts.tv_sec * 1000.0 + ts.tv_nsec / 1000000.0;
+}
 
 TuiApp *tui_app_new(const TuiAppConfig *config)
 {
@@ -21,13 +30,18 @@ TuiApp *tui_app_new(const TuiAppConfig *config)
     app->running       = 0;
     app->exit_code     = 0;
     app->overlay_count = 0;
+    app->animator      = tui_animator_new();
+    app->last_tick_ms  = 0.0;
 
     return app;
 }
 
 void tui_app_free(TuiApp *app)
 {
-    if (app) free(app);
+    if (app) {
+        tui_animator_free(app->animator);
+        free(app);
+    }
 }
 
 void tui_app_stop(TuiApp *app)
@@ -85,9 +99,19 @@ int tui_app_run(TuiApp *app)
         app->config.on_render(app, app->config.user_data);
     }
 
+    app->last_tick_ms = time_now_ms();
+
     while (app->running) {
         TuiEvent event;
         int has_event = app_poll_event(app, &event);
+
+        if (app->animator) {
+            double now = time_now_ms();
+            double delta = now - app->last_tick_ms;
+            app->last_tick_ms = now;
+            if (delta > 0.0 && delta < 1000.0)
+                tui_animator_update(app->animator, delta);
+        }
 
         if (has_event < 0) {
             continue;
@@ -229,4 +253,10 @@ int tui_app_handle_overlay_mouse(TuiApp *app, const TuiMouseEvent *mouse)
     if (!top) return 0;
 
     return tui_widget_handle_mouse(top, mouse);
+}
+
+TuiAnimator *tui_app_get_animator(TuiApp *app)
+{
+    if (!app) return NULL;
+    return app->animator;
 }

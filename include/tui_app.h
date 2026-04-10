@@ -23,6 +23,7 @@
 
 #define TUI_APP_MAX_OVERLAYS 16
 
+typedef struct TuiAnimator TuiAnimator;
 typedef struct TuiApp TuiApp;
 
 /** @brief Called once after tui_init. Return 0 to continue, non-zero to abort. */
@@ -59,6 +60,9 @@ struct TuiApp {
 
     TuiWidget *overlays[TUI_APP_MAX_OVERLAYS];
     int        overlay_count;
+
+    TuiAnimator *animator;
+    double       last_tick_ms;
 };
 
 /**
@@ -145,5 +149,15 @@ int tui_app_handle_overlay_input(TuiApp *app, const TuiEvent *event);
  * @return 1 if the event was consumed, 0 otherwise.
  */
 int tui_app_handle_overlay_mouse(TuiApp *app, const TuiMouseEvent *mouse);
+
+/**
+ * @brief Return the app's animation manager.
+ *
+ * The animator is auto-updated each tick. Use this to create and
+ * control animations.
+ *
+ * @return Pointer to the animator, or NULL if not initialized.
+ */
+TuiAnimator *tui_app_get_animator(TuiApp *app);
 
 #endif
