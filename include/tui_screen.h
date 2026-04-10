@@ -189,6 +189,17 @@ void tui_screen_box_double(int row, int col, int width, int height, TuiColor fg,
  */
 TuiSize tui_screen_size(void);
 
+/**
+ * @brief Invert a cell's foreground and background colors.
+ *
+ * Used for cursor rendering: after drawing text, invert the cell at the
+ * cursor position to create a block-cursor effect.
+ *
+ * @param row  0-based row.
+ * @param col  0-based column.
+ */
+void tui_screen_invert_cell(int row, int col);
+
 extern TuiScreen g_screen;
 
 #endif

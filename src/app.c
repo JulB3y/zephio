@@ -18,8 +18,10 @@ TuiApp *tui_app_new(const TuiAppConfig *config)
         app->config = *config;
     }
 
-    app->running   = 0;
-    app->exit_code = 0;
+    app->running       = 0;
+    app->exit_code     = 0;
+    app->overlay_count = 0;
+
     return app;
 }
 
@@ -118,7 +120,9 @@ int tui_app_run(TuiApp *app)
         }
 
         if (event.key == TUI_EVENT_MOUSE) {
-            if (app->config.on_mouse) {
+            if (app->overlay_count > 0) {
+                tui_app_handle_overlay_mouse(app, &event.mouse);
+            } else if (app->config.on_mouse) {
                 int ret = app->config.on_mouse(app, &event.mouse,
                                                app->config.user_data);
                 if (ret != 0) {
@@ -133,7 +137,9 @@ int tui_app_run(TuiApp *app)
             continue;
         }
 
-        if (app->config.on_input) {
+        if (app->overlay_count > 0) {
+            tui_app_handle_overlay_input(app, &event);
+        } else if (app->config.on_input) {
             int ret = app->config.on_input(app, &event, app->config.user_data);
             if (ret != 0) {
                 app->exit_code = ret;
@@ -155,4 +161,72 @@ cleanup:
     tui_shutdown();
 
     return app->exit_code;
+}
+
+TuiResult tui_app_push_overlay(TuiApp *app, TuiWidget *widget)
+{
+    if (!app || !widget) return TUI_ERR_MEMORY;
+    if (app->overlay_count >= TUI_APP_MAX_OVERLAYS) return TUI_ERR_MEMORY;
+
+    app->overlays[app->overlay_count++] = widget;
+    widget->dirty = 1;
+
+    if (widget->focusable) {
+        tui_widget_focus(widget);
+    }
+
+    return TUI_OK;
+}
+
+TuiWidget *tui_app_pop_overlay(TuiApp *app)
+{
+    if (!app || app->overlay_count == 0) return NULL;
+
+    TuiWidget *widget = app->overlays[--app->overlay_count];
+    app->overlays[app->overlay_count] = NULL;
+
+    if (widget->focused) {
+        tui_widget_blur(widget);
+    }
+
+    return widget;
+}
+
+TuiWidget *tui_app_top_overlay(TuiApp *app)
+{
+    if (!app || app->overlay_count == 0) return NULL;
+    return app->overlays[app->overlay_count - 1];
+}
+
+void tui_app_render_overlays(TuiApp *app)
+{
+    if (!app) return;
+    for (int i = 0; i < app->overlay_count; i++) {
+        tui_widget_render(app->overlays[i]);
+    }
+}
+
+int tui_app_handle_overlay_input(TuiApp *app, const TuiEvent *event)
+{
+    if (!app || app->overlay_count == 0) return 0;
+
+    TuiWidget *top = app->overlays[app->overlay_count - 1];
+    if (!top) return 0;
+
+    if (top->focused || top->focusable) {
+        if (!top->focused) tui_widget_focus(top);
+        return tui_widget_handle_input(top, event);
+    }
+
+    return 0;
+}
+
+int tui_app_handle_overlay_mouse(TuiApp *app, const TuiMouseEvent *mouse)
+{
+    if (!app || app->overlay_count == 0) return 0;
+
+    TuiWidget *top = app->overlays[app->overlay_count - 1];
+    if (!top) return 0;
+
+    return tui_widget_handle_mouse(top, mouse);
 }

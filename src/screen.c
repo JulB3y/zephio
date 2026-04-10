@@ -256,6 +256,18 @@ void tui_screen_box_double(int row, int col, int width, int height, TuiColor fg,
     }
 }
 
+void tui_screen_invert_cell(int row, int col)
+{
+    if (!g_screen.initialized) return;
+    if (row < 0 || row >= g_screen.rows) return;
+    if (col < 0 || col >= g_screen.cols) return;
+
+    TuiCell *cell = &g_screen.back[row * g_screen.cols + col];
+    TuiColor tmp = cell->fg;
+    cell->fg = cell->bg;
+    cell->bg = tmp;
+}
+
 TuiSize tui_screen_size(void)
 {
     TuiSize s = {g_screen.rows, g_screen.cols};
