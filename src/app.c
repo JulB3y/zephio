@@ -33,12 +33,15 @@ TuiApp *tui_app_new(const TuiAppConfig *config)
     app->animator      = tui_animator_new();
     app->last_tick_ms  = 0.0;
 
+    tui_toast_manager_init(&app->toasts);
+
     return app;
 }
 
 void tui_app_free(TuiApp *app)
 {
     if (app) {
+        tui_toast_manager_free(&app->toasts);
         tui_animator_free(app->animator);
         free(app);
     }
@@ -105,12 +108,15 @@ int tui_app_run(TuiApp *app)
         TuiEvent event;
         int has_event = app_poll_event(app, &event);
 
-        if (app->animator) {
+        {
             double now = time_now_ms();
             double delta = now - app->last_tick_ms;
             app->last_tick_ms = now;
-            if (delta > 0.0 && delta < 1000.0)
+            if (delta < 0.0 || delta > 1000.0) delta = 16.0;
+
+            if (app->animator)
                 tui_animator_update(app->animator, delta);
+            tui_toast_update(&app->toasts, delta);
         }
 
         if (has_event < 0) {
@@ -259,4 +265,24 @@ TuiAnimator *tui_app_get_animator(TuiApp *app)
 {
     if (!app) return NULL;
     return app->animator;
+}
+
+TuiToastManager *tui_app_get_toasts(TuiApp *app)
+{
+    if (!app) return NULL;
+    return &app->toasts;
+}
+
+int tui_app_toast(TuiApp *app, TuiToastSeverity severity,
+                  const char *message, double duration_ms)
+{
+    if (!app) return -1;
+    return tui_toast_show(&app->toasts, severity, message, duration_ms);
+}
+
+void tui_app_render_toasts(TuiApp *app)
+{
+    if (!app) return;
+    TuiSize size = tui_screen_size();
+    tui_toast_render(&app->toasts, size.rows, size.cols);
 }

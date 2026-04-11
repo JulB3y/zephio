@@ -24,7 +24,14 @@ endif
 
 LDFLAGS += -lm
 
-.PHONY: all clean examples lib test
+.PHONY: all clean examples lib test docs
+
+all: lib examples
+
+docs: docs/html/html/index.html
+
+docs/html/html/index.html: docs/Doxyfile include/*.h src/*.c README.md docs/ARCHITECTURE.md
+	doxygen docs/Doxyfile
 
 all: lib examples
 

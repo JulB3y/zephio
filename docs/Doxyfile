@@ -1,0 +1,41 @@
+# Doxyfile for Zephio TUI Framework
+
+PROJECT_NAME           = "Zephio"
+PROJECT_BRIEF          = "Lightweight terminal UI framework in C"
+OUTPUT_DIRECTORY       = docs/html
+INPUT                  = include/ src/ README.md docs/ARCHITECTURE.md
+RECURSIVE              = YES
+FILE_PATTERNS          = *.h *.c *.md
+OPTIMIZE_OUTPUT_JAVA   = NO
+EXTRACT_ALL            = YES
+EXTRACT_PRIVATE        = NO
+EXTRACT_STATIC         = YES
+EXTRACT_LOCAL_METHODS   = NO
+INPUT_ENCODING         = UTF-8
+QUIET                  = YES
+WARNINGS               = YES
+WARN_IF_UNDOCUMENTED  = YES
+WARN_NO_PARAMDOC       = NO
+WARN_FORMAT            = "$file:$line: $text"
+
+GENERATE_HTML          = YES
+HTML_OUTPUT            = html
+HTML_COLORSTYLE        = LIGHT
+GENERATE_LATEX         = NO
+GENERATE_RTF           = NO
+GENERATE_MAN           = NO
+GENERATE_XML           = NO
+GENERATE_DOCSET        = NO
+
+PREDEFINED             = TUI_TEST_CAPTURE=1
+
+STRIP_FROM_PATH        = include/ src/
+
+SOURCE_BROWSER         = YES
+INLINE_SOURCES         = NO
+REFERENCED_BY_RELATION = YES
+REFERENCES_RELATION    = YES
+FULL_SIDEBAR           = NO
+TAB_SIZE               = 4
+MARKDOWN_SUPPORT       = YES
+AUTOLINK_SUPPORT       = YES

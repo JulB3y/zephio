@@ -10,9 +10,12 @@ A lightweight, portable terminal UI framework in C with **zero external dependen
 - Mouse event support (click, drag, scroll, hover)
 - Widget tree with parent-child hierarchy
 - Focus management (Tab / Shift+Tab cycling)
-- Built-in widgets: Label, Button, InputField, List, Container, Box, Separator
+- Built-in widgets: Label, Button, InputField, List, Container, Box, Separator, CheckBox, Radio, Progress, Dropdown, Dialog, MenuBar, ContextMenu, TabBar, StatusBar, Table, TreeView, TextArea, TextView, ScrollContainer
 - Layout engine (vertical/horizontal stacks, weighted sizing)
 - Style system with themes (256-color + truecolor RGB)
+- Animation system (easing, slide/fade effects)
+- Mouse support (click, drag, scroll, hover)
+- Clipboard support (OSC 52)
 - Automatic resize handling
 - Signal-safe cleanup on exit/crash
 - AddressSanitizer and UBSan support via `DEBUG=1`
@@ -121,36 +124,30 @@ int main(void) {
 ## Project Structure
 
 ```
-├── include/          Public headers (API)
-│   ├── tui.h         Core init/shutdown
-│   ├── tui_app.h     High-level app runtime (event loop, lifecycle)
-│   ├── tui_widget.h  Base widget type and tree operations
-│   ├── tui_screen.h  Double-buffered screen
-│   ├── tui_input.h   Keyboard input and event loop
-│   ├── tui_mouse.h   Mouse event types
-│   ├── tui_ansi.h    ANSI escape sequence helpers
-│   ├── tui_style.h   Themes and styles
-│   ├── tui_layout.h  Layout engine
-│   ├── tui_label.h
-│   ├── tui_button.h
-│   ├── tui_input_field.h
-│   ├── tui_list.h
-│   ├── tui_container.h
-│   ├── tui_box.h
-│   ├── tui_separator.h
-│   └── tui_text.h
+├── include/          Public headers (API, 36 files)
+│   ├── tui.h              Core init/shutdown
+│   ├── tui_app.h          High-level app runtime (event loop, lifecycle)
+│   ├── tui_widget.h       Base widget type and tree operations
+│   ├── tui_screen.h       Double-buffered screen
+│   ├── tui_input.h        Keyboard input and event loop
+│   ├── tui_mouse.h        Mouse event types
+│   ├── tui_ansi.h         ANSI escape sequence helpers
+│   ├── tui_style.h        Themes and styles
+│   ├── tui_layout.h       Layout engine
+│   ├── tui_animation.h    Animation system
+│   ├── tui_label.h        tui_button.h   tui_input_field.h  tui_list.h
+│   ├── tui_container.h    tui_box.h      tui_separator.h    tui_text.h
+│   ├── tui_checkbox.h     tui_radio.h    tui_progress.h
+│   ├── tui_dropdown.h     tui_dialog.h   tui_clipboard.h
+│   ├── tui_menubar.h      tui_context_menu.h
+│   ├── tui_tabbar.h       tui_statusbar.h
+│   ├── tui_table.h        tui_tree_view.h
+│   ├── tui_textarea.h     tui_text_view.h  tui_scroll_container.h
+│   └── tui_terminal.h
 ├── src/              Implementation
-├── examples/         Ready-to-run demos
-│   ├── hello.c            ANSI & terminal basics
-│   ├── boxes.c            Box drawing
-│   ├── input_debug.c      Key event inspector
-│   ├── widgets_demo.c     All widgets with focus (low-level API)
-│   ├── mouse_demo.c       Interactive mouse + widgets (high-level API)
-│   ├── layout_basic.c     Basic layout
-│   ├── layout_weights.c   Weighted layout
-│   └── layout_dashboard.c Dashboard-style layout
-├── tests/            Tests (planned)
-├── docs/             Documentation (planned)
+├── examples/         Ready-to-run demos (15 examples)
+├── tests/            Unit tests
+├── docs/             Doxygen API reference, architecture docs, tutorials
 ├── Makefile
 └── roadmap.md
 ```
@@ -166,8 +163,32 @@ int main(void) {
 | **Container** | `tui_container.h` | Background panel with configurable background color |
 | **Box** | `tui_box.h` | Bordered box with optional title |
 | **Separator** | `tui_separator.h` | Horizontal or vertical divider line |
+| **CheckBox** | `tui_checkbox.h` | Toggle checkbox with label |
+| **Radio** | `tui_radio.h` | Single-selection radio button group |
+| **Progress** | `tui_progress.h` | Horizontal progress bar (0-100%) |
+| **Dropdown** | `tui_dropdown.h` | Expandable selection dropdown |
+| **Dialog** | `tui_dialog.h` | Modal dialog with overlay |
+| **MenuBar** | `tui_menubar.h` | Horizontal menu bar with submenus |
+| **ContextMenu** | `tui_context_menu.h` | Right-click context menu |
+| **TabBar** | `tui_tabbar.h` | Tab-based page switching |
+| **StatusBar** | `tui_statusbar.h` | Segmented status bar |
+| **Table** | `tui_table.h` | Column-based data display with headers |
+| **TreeView** | `tui_tree_view.h` | Hierarchical tree with expand/collapse |
+| **TextArea** | `tui_textarea.h` | Multi-line editable text |
+| **TextView** | `tui_text_view.h` | Multi-line read-only text with word wrap |
+| **ScrollContainer** | `tui_scroll_container.h` | Scrollable widget container |
+| **Clipboard** | `tui_clipboard.h` | OSC 52 clipboard copy/paste |
 
 All widgets embed `TuiWidget` as their first member and support the widget tree operations from `tui_widget.h` (add/remove children, render, focus, hit-testing, mouse dispatch).
+
+## Documentation
+
+- [Getting Started](docs/GETTING_STARTED.md) — Build, first project, troubleshooting
+- [Architecture](docs/ARCHITECTURE.md) — Module map, rendering pipeline, event flow
+- [Widget Development](docs/WIDGET_DEVELOPMENT.md) — Creating custom widgets
+- [Layout System](docs/LAYOUT.md) — Fixed/Fill/Auto, weights, nested layouts
+- [Styling & Theming](docs/STYLING.md) — Colors, themes, truecolor fallback
+- [ncurses Migration](docs/MIGRATION_NCURSES.md) — Cheatsheet: ncurses → Zephio mapping
 
 ## License
 

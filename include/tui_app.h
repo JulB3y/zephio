@@ -19,6 +19,9 @@
 #include "tui.h"
 #include "tui_input.h"
 #include "tui_mouse.h"
+#ifdef TUI_FEATURE_TOAST
+#include "tui_toast.h"
+#endif
 #include "tui_widget.h"
 
 #define TUI_APP_MAX_OVERLAYS 16
@@ -63,6 +66,8 @@ struct TuiApp {
 
     TuiAnimator *animator;
     double       last_tick_ms;
+
+    TuiToastManager toasts;
 };
 
 /**
@@ -159,5 +164,34 @@ int tui_app_handle_overlay_mouse(TuiApp *app, const TuiMouseEvent *mouse);
  * @return Pointer to the animator, or NULL if not initialized.
  */
 TuiAnimator *tui_app_get_animator(TuiApp *app);
+
+/**
+ * @brief Return the app's toast manager.
+ *
+ * Use this to show, dismiss, or query toast notifications.
+ *
+ * @return Pointer to the toast manager.
+ */
+TuiToastManager *tui_app_get_toasts(TuiApp *app);
+
+/**
+ * @brief Convenience: show a toast via the app's toast manager.
+ *
+ * @param app         Application.
+ * @param severity    Toast severity level.
+ * @param message     Message text.
+ * @param duration_ms Auto-dismiss time (0 = default 3000ms).
+ * @return Toast ID, or -1 on failure.
+ */
+int tui_app_toast(TuiApp *app, TuiToastSeverity severity,
+                  const char *message, double duration_ms);
+
+/**
+ * @brief Render all active toasts on top of everything else.
+ *
+ * Called automatically by the app's render loop after overlays.
+ * Can also be called manually in custom render loops.
+ */
+void tui_app_render_toasts(TuiApp *app);
 
 #endif
