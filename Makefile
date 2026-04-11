@@ -1,5 +1,5 @@
 CC      := gcc
-CFLAGS  := -std=c11 -Wall -Wextra -Wpedantic -Werror -Iinclude
+CFLAGS  := -std=c11 -Wall -Wextra -Wpedantic -Werror -Iinclude -ffunction-sections -fdata-sections
 AR      := ar
 
 SRCDIR  := src
@@ -22,7 +22,7 @@ CFLAGS  += -O2 -DNDEBUG
 LDFLAGS :=
 endif
 
-LDFLAGS += -lm
+LDFLAGS += -Wl,--gc-sections -lm
 
 .PHONY: all clean examples lib test docs
 

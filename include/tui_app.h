@@ -19,9 +19,7 @@
 #include "tui.h"
 #include "tui_input.h"
 #include "tui_mouse.h"
-#ifdef TUI_FEATURE_TOAST
 #include "tui_toast.h"
-#endif
 #include "tui_widget.h"
 
 #define TUI_APP_MAX_OVERLAYS 16
