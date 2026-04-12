@@ -24,6 +24,7 @@
 #include "tui_input.h"
 #include "tui_screen.h"
 #include "tui_style.h"
+#include <stdint.h>
 
 typedef struct TuiWidget TuiWidget;
 
@@ -51,14 +52,16 @@ struct TuiWidget {
     int width, height;
     int abs_x, abs_y;
 
-    int visible;
-    int dirty;
-    int focusable;
-    int focused;
-    int disabled;
-    int hovered;
-    int tab_index;
-    int manages_children;
+    struct {
+        unsigned int visible          : 1;
+        unsigned int dirty            : 1;
+        unsigned int focusable        : 1;
+        unsigned int focused          : 1;
+        unsigned int disabled         : 1;
+        unsigned int hovered          : 1;
+        unsigned int manages_children : 1;
+    };
+    int16_t tab_index;
 
     TuiWidget  *parent;
     TuiWidget **children;

@@ -6,6 +6,7 @@
 #include <string.h>
 
 #define CHILDREN_INITIAL_CAPACITY 8
+#define MAX_FOCUS_CHAIN 128
 
 TuiResult tui_widget_init(TuiWidget *widget, int x, int y, int width, int height,
                           TuiWidgetVTable *vtable, void *data)
@@ -191,17 +192,26 @@ int tui_widget_handle_input(TuiWidget *widget, const TuiEvent *event)
     return 0;
 }
 
-/* Forward declarations — needed for auto-blur in tui_widget_focus() */
-extern void tui_widget_blur(TuiWidget *widget);
-extern TuiWidget *tui_widget_get_focused(TuiWidget *root);
+static void update_focused_child_chain(TuiWidget *widget, int child_idx)
+{
+    TuiWidget *current = widget;
+    TuiWidget *parent  = current->parent;
+    while (parent) {
+        for (int i = 0; i < parent->child_count; i++) {
+            if (parent->children[i] == current) {
+                parent->focused_child_idx = child_idx >= 0 ? i : -1;
+                break;
+            }
+        }
+        current = parent;
+        parent  = current->parent;
+    }
+}
 
 void tui_widget_focus(TuiWidget *widget)
 {
     if (!widget || widget->focused || !widget->focusable) return;
 
-    /* Blur the previously focused widget (if any) so that only one
-     * widget is focused at a time — required for mouse-click focus
-     * changes where the old widget is not explicitly blurred first. */
     TuiWidget *root = widget;
     while (root->parent)
         root = root->parent;
@@ -213,18 +223,7 @@ void tui_widget_focus(TuiWidget *widget)
     widget->focused = 1;
     widget->dirty   = 1;
 
-    TuiWidget *current = widget;
-    TuiWidget *parent  = current->parent;
-    while (parent) {
-        for (int i = 0; i < parent->child_count; i++) {
-            if (parent->children[i] == current) {
-                parent->focused_child_idx = i;
-                break;
-            }
-        }
-        current = parent;
-        parent  = current->parent;
-    }
+    update_focused_child_chain(widget, 1);
 
     if (widget->vtable && widget->vtable->on_focus) {
         widget->vtable->on_focus(widget);
@@ -260,8 +259,6 @@ void tui_widget_blur(TuiWidget *widget)
     }
 }
 
-#define MAX_FOCUS_CHAIN 128
-
 static int collect_focusable_dfs(TuiWidget *root, TuiWidget **out, int max_count)
 {
     if (!root || !root->visible) return 0;
@@ -277,7 +274,7 @@ static int collect_focusable_dfs(TuiWidget *root, TuiWidget **out, int max_count
     return count;
 }
 
-void tui_widget_focus_next(TuiWidget *root)
+static void focus_by_offset(TuiWidget *root, int offset)
 {
     if (!root || root->child_count == 0) return;
 
@@ -297,32 +294,18 @@ void tui_widget_focus_next(TuiWidget *root)
         tui_widget_blur(chain[current_idx]);
     }
 
-    int next_idx = (current_idx + 1) % count;
-    tui_widget_focus(chain[next_idx]);
+    int target = (current_idx + offset + count) % count;
+    tui_widget_focus(chain[target]);
+}
+
+void tui_widget_focus_next(TuiWidget *root)
+{
+    focus_by_offset(root, 1);
 }
 
 void tui_widget_focus_prev(TuiWidget *root)
 {
-    if (!root || root->child_count == 0) return;
-
-    TuiWidget *chain[MAX_FOCUS_CHAIN];
-    int count = collect_focusable_dfs(root, chain, MAX_FOCUS_CHAIN);
-    if (count == 0) return;
-
-    int current_idx = -1;
-    for (int i = 0; i < count; i++) {
-        if (chain[i]->focused) {
-            current_idx = i;
-            break;
-        }
-    }
-
-    if (current_idx >= 0) {
-        tui_widget_blur(chain[current_idx]);
-    }
-
-    int prev_idx = current_idx <= 0 ? count - 1 : current_idx - 1;
-    tui_widget_focus(chain[prev_idx]);
+    focus_by_offset(root, -1);
 }
 
 TuiWidget *tui_widget_get_focused(TuiWidget *root)
@@ -488,22 +471,10 @@ static void set_hovered_recursive(TuiWidget *widget, int hovered)
     }
 }
 
-static void clear_hover_tree(TuiWidget *root)
-{
-    if (!root) return;
-    if (root->hovered) {
-        root->hovered = 0;
-        root->dirty = 1;
-    }
-    for (int i = 0; i < root->child_count; i++) {
-        clear_hover_tree(root->children[i]);
-    }
-}
-
 void tui_widget_set_hovered(TuiWidget *root, TuiWidget *widget)
 {
     if (!root) return;
-    clear_hover_tree(root);
+    set_hovered_recursive(root, 0);
     if (widget) {
         set_hovered_recursive(widget, 1);
     }

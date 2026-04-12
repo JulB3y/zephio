@@ -73,6 +73,61 @@ static void ensure_visible(TuiTable *table)
     }
 }
 
+static void render_clipped_text(int row, int col, const char *text,
+                                 int max_w, TuiColor fg, TuiColor bg, TuiAttr attr)
+{
+    int len = (int)strlen(text);
+    int w = len < max_w ? len : max_w;
+    char buf[256];
+    int cl = w < (int)sizeof(buf) - 1 ? w : (int)sizeof(buf) - 1;
+    memcpy(buf, text, (size_t)cl);
+    buf[cl] = '\0';
+    tui_screen_write(row, col, buf, fg, bg, attr);
+}
+
+static void render_columns(TuiTable *table, int row, int screen_row,
+                            int wx, int widget_width, TuiColor fg, TuiColor bg, TuiAttr attr)
+{
+    int col_x = wx - table->scroll_x;
+    for (int c = 0; c < table->col_count; c++) {
+        int cw = table->columns[c].width;
+        if (col_x + cw <= wx) { col_x += cw; continue; }
+        if (col_x >= wx + widget_width) break;
+
+        const char *cell = (c < table->col_count && table->rows[row] && table->rows[row][c])
+                               ? table->rows[row][c] : "";
+        int text_x = col_x < wx ? wx : col_x;
+        int max_w = (col_x + cw) - text_x;
+        if (max_w > widget_width - (text_x - wx))
+            max_w = widget_width - (text_x - wx);
+        if (max_w > 0 && cell[0]) {
+            render_clipped_text(screen_row, text_x, cell, max_w, fg, bg, attr);
+        }
+        col_x += cw;
+    }
+}
+
+static void resolve_style(TuiWidget *widget, int logical, int selected,
+                           TuiColor fg_def, TuiColor bg_def,
+                           TuiColor fg_sel, TuiColor bg_sel,
+                           TuiColor *fg, TuiColor *bg, TuiAttr *attr)
+{
+    if (widget->theme) {
+        TuiWidgetState state = TUI_STATE_NORMAL;
+        if (widget->disabled)
+            state = TUI_STATE_DISABLED;
+        else if (logical == selected && widget->focused)
+            state = TUI_STATE_FOCUSED;
+        TuiStyle s = widget->theme->styles[state];
+        *fg = s.fg; *bg = s.bg; *attr = s.attr;
+    } else {
+        *fg = fg_def; *bg = bg_def; *attr = TUI_ATTR_NONE;
+        if (logical == selected && widget->focused) {
+            *fg = fg_sel; *bg = bg_sel;
+        }
+    }
+}
+
 static void table_render(TuiWidget *widget)
 {
     TuiTable *table = (TuiTable *)widget;
@@ -133,49 +188,15 @@ static void table_render(TuiWidget *widget)
 
             TuiColor fg, bg;
             TuiAttr  attr;
-
-            if (widget->theme) {
-                TuiWidgetState state = TUI_STATE_NORMAL;
-                if (widget->disabled)
-                    state = TUI_STATE_DISABLED;
-                else if (logical == table->selected && widget->focused)
-                    state = TUI_STATE_FOCUSED;
-                TuiStyle s = widget->theme->styles[state];
-                fg = s.fg; bg = s.bg; attr = s.attr;
-            } else {
-                fg = table->fg; bg = table->bg; attr = TUI_ATTR_NONE;
-                if (logical == table->selected && widget->focused) {
-                    fg = table->fg_selected; bg = table->bg_selected;
-                }
-            }
+            resolve_style(widget, logical, table->selected,
+                          table->fg, table->bg,
+                          table->fg_selected, table->bg_selected,
+                          &fg, &bg, &attr);
 
             tui_screen_fill(wy + 1 + i, wx, widget->width, 1, " ", fg, bg, attr);
 
             if (!table->rows[r]) continue;
-
-            int col_x = wx - table->scroll_x;
-            for (int c = 0; c < table->col_count; c++) {
-                int cw = table->columns[c].width;
-                if (col_x + cw <= wx) { col_x += cw; continue; }
-                if (col_x >= wx + widget->width) break;
-
-                const char *cell = (c < table->col_count && table->rows[r][c])
-                                       ? table->rows[r][c] : "";
-                int text_x = col_x < wx ? wx : col_x;
-                int max_w = (col_x + cw) - text_x;
-                if (max_w > widget->width - (text_x - wx))
-                    max_w = widget->width - (text_x - wx);
-                if (max_w > 0 && cell[0]) {
-                    int len = (int)strlen(cell);
-                    int w = len < max_w ? len : max_w;
-                    char buf[256];
-                    int cl = w < (int)sizeof(buf) - 1 ? w : (int)sizeof(buf) - 1;
-                    memcpy(buf, cell, (size_t)cl);
-                    buf[cl] = '\0';
-                    tui_screen_write(wy + 1 + i, text_x, buf, fg, bg, attr);
-                }
-                col_x += cw;
-            }
+            render_columns(table, r, wy + 1 + i, wx, widget->width, fg, bg, attr);
         }
     }
 

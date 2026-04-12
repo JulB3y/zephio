@@ -91,6 +91,35 @@ static int popup_next_item(TuiMenu *menu, int from, int dir)
     return from;
 }
 
+static void popup_navigate(TuiMenuPopup *popup, TuiMenu *menu, int dir, TuiWidget *widget)
+{
+    int next = popup_next_item(menu, popup->highlighted, dir);
+    if (next != popup->highlighted) {
+        popup->highlighted = next;
+        widget->dirty = 1;
+    }
+}
+
+static void popup_switch_menu(TuiMenuPopup *popup, TuiMenuBar *mb, int new_idx)
+{
+    if (new_idx >= 0 && new_idx < mb->menu_count) {
+        menu_popup_close(popup);
+        tui_menubar_open_menu(mb, new_idx);
+    }
+}
+
+static void popup_activate(TuiMenuPopup *popup, TuiMenuBar *mb, TuiMenu *menu)
+{
+    if (popup->highlighted >= 0 && popup->highlighted < menu->item_count) {
+        TuiMenuItem *item = &menu->items[popup->highlighted];
+        if (!item->is_separator && mb->on_select) {
+            mb->on_select(mb, menu->label,
+                          popup->highlighted, item->label, mb->user_data);
+        }
+    }
+    menu_popup_close(popup);
+}
+
 static int popup_handle_input(TuiWidget *widget, const TuiEvent *event)
 {
     TuiMenuPopup *popup = (TuiMenuPopup *)widget;
@@ -103,50 +132,27 @@ static int popup_handle_input(TuiWidget *widget, const TuiEvent *event)
     }
 
     if (event->key == TUI_KEY_UP) {
-        int next = popup_next_item(menu, popup->highlighted, -1);
-        if (next != popup->highlighted) {
-            popup->highlighted = next;
-            widget->dirty = 1;
-        }
+        popup_navigate(popup, menu, -1, widget);
         return 1;
     }
 
     if (event->key == TUI_KEY_DOWN) {
-        int next = popup_next_item(menu, popup->highlighted, 1);
-        if (next != popup->highlighted) {
-            popup->highlighted = next;
-            widget->dirty = 1;
-        }
+        popup_navigate(popup, menu, 1, widget);
         return 1;
     }
 
     if (event->key == TUI_KEY_LEFT) {
-        if (popup->menu_index > 0) {
-            int new_idx = popup->menu_index - 1;
-            menu_popup_close(popup);
-            tui_menubar_open_menu(mb, new_idx);
-        }
+        popup_switch_menu(popup, mb, popup->menu_index - 1);
         return 1;
     }
 
     if (event->key == TUI_KEY_RIGHT) {
-        if (popup->menu_index < mb->menu_count - 1) {
-            int new_idx = popup->menu_index + 1;
-            menu_popup_close(popup);
-            tui_menubar_open_menu(mb, new_idx);
-        }
+        popup_switch_menu(popup, mb, popup->menu_index + 1);
         return 1;
     }
 
     if (event->key == TUI_KEY_ENTER) {
-        if (popup->highlighted >= 0 && popup->highlighted < menu->item_count) {
-            TuiMenuItem *item = &menu->items[popup->highlighted];
-            if (!item->is_separator && mb->on_select) {
-                mb->on_select(mb, menu->label,
-                              popup->highlighted, item->label, mb->user_data);
-            }
-        }
-        menu_popup_close(popup);
+        popup_activate(popup, mb, menu);
         return 1;
     }
 
@@ -420,6 +426,21 @@ int tui_menubar_add_menu(TuiMenuBar *menubar, const char *label, char mnemonic)
     return idx;
 }
 
+static int ensure_item_capacity(TuiMenu *m)
+{
+    if (m->item_count >= m->item_capacity) {
+        int newcap = m->item_capacity == 0
+                     ? TUI_MENU_ITEMS_INIT_CAP
+                     : m->item_capacity * 2;
+        TuiMenuItem *ni = (TuiMenuItem *)realloc(m->items,
+                            (size_t)newcap * sizeof(TuiMenuItem));
+        if (!ni) return -1;
+        m->items        = ni;
+        m->item_capacity = newcap;
+    }
+    return 0;
+}
+
 TuiResult tui_menubar_add_menu_item(TuiMenuBar *menubar, int menu_index,
                                     const char *label)
 {
@@ -427,17 +448,7 @@ TuiResult tui_menubar_add_menu_item(TuiMenuBar *menubar, int menu_index,
         return TUI_ERR_MEMORY;
 
     TuiMenu *m = &menubar->menus[menu_index];
-
-    if (m->item_count >= m->item_capacity) {
-        int newcap = m->item_capacity == 0
-                     ? TUI_MENU_ITEMS_INIT_CAP
-                     : m->item_capacity * 2;
-        TuiMenuItem *ni = (TuiMenuItem *)realloc(m->items,
-                            (size_t)newcap * sizeof(TuiMenuItem));
-        if (!ni) return TUI_ERR_MEMORY;
-        m->items        = ni;
-        m->item_capacity = newcap;
-    }
+    if (ensure_item_capacity(m) < 0) return TUI_ERR_MEMORY;
 
     TuiMenuItem *it = &m->items[m->item_count++];
     it->label        = label ? strdup(label) : NULL;
@@ -452,17 +463,7 @@ void tui_menubar_add_menu_separator(TuiMenuBar *menubar, int menu_index)
     if (!menubar || menu_index < 0 || menu_index >= menubar->menu_count) return;
 
     TuiMenu *m = &menubar->menus[menu_index];
-
-    if (m->item_count >= m->item_capacity) {
-        int newcap = m->item_capacity == 0
-                     ? TUI_MENU_ITEMS_INIT_CAP
-                     : m->item_capacity * 2;
-        TuiMenuItem *ni = (TuiMenuItem *)realloc(m->items,
-                            (size_t)newcap * sizeof(TuiMenuItem));
-        if (!ni) return;
-        m->items        = ni;
-        m->item_capacity = newcap;
-    }
+    if (ensure_item_capacity(m) < 0) return;
 
     TuiMenuItem *it = &m->items[m->item_count++];
     it->label        = NULL;

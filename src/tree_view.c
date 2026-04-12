@@ -86,6 +86,41 @@ static void ensure_visible(TuiTreeView *tv)
     }
 }
 
+static void rebuild_clamp(TuiTreeView *tv)
+{
+    rebuild_visible(tv);
+    if (tv->selected >= tv->visible_count)
+        tv->selected = tv->visible_count - 1;
+    if (tv->selected < 0) tv->selected = 0;
+    ensure_visible(tv);
+    tv->base.dirty = 1;
+}
+
+static void render_scrollbar(TuiWidget *widget, int total, int offset)
+{
+    int wh = widget->height;
+    int scroll_col = widget->abs_x + widget->width - 1;
+    TuiColor track_fg = TUI_COLOR_INDEX(TUI_COLOR_GRAY_DARK);
+    TuiColor track_bg = TUI_COLOR_INDEX(0);
+
+    tui_screen_fill(widget->abs_y, scroll_col, 1, wh, " ",
+                    track_fg, track_bg, TUI_ATTR_DIM);
+
+    int max_scroll = total - wh;
+    if (max_scroll > 0) {
+        int thumb_h = wh * wh / total;
+        if (thumb_h < 1) thumb_h = 1;
+        int thumb_y = offset * (wh - thumb_h) / max_scroll;
+        for (int t = 0; t < thumb_h; t++) {
+            tui_screen_set_cell(widget->abs_y + thumb_y + t, scroll_col,
+                                "\xe2\x96\x88",
+                                TUI_COLOR_INDEX(TUI_COLOR_BRIGHT_WHITE),
+                                TUI_COLOR_INDEX(TUI_COLOR_GRAY_MID),
+                                TUI_ATTR_NONE);
+        }
+    }
+}
+
 static void tree_render(TuiWidget *widget)
 {
     TuiTreeView *tv = (TuiTreeView *)widget;
@@ -183,24 +218,7 @@ static void tree_render(TuiWidget *widget)
     }
 
     if (tv->visible_count > widget->height && widget->height > 0) {
-        int scroll_col = wx + widget->width - 1;
-        TuiColor track_fg = TUI_COLOR_INDEX(TUI_COLOR_GRAY_DARK);
-        tui_screen_fill(wy, scroll_col, 1, widget->height, " ",
-                        track_fg, tv->bg, TUI_ATTR_DIM);
-
-        int max_scroll = tv->visible_count - widget->height;
-        if (max_scroll > 0) {
-            int thumb_h = widget->height * widget->height / tv->visible_count;
-            if (thumb_h < 1) thumb_h = 1;
-            int thumb_y = tv->scroll_offset * (widget->height - thumb_h) / max_scroll;
-            for (int t = 0; t < thumb_h; t++) {
-                tui_screen_set_cell(wy + thumb_y + t, scroll_col,
-                                    "\xe2\x96\x88",
-                                    TUI_COLOR_INDEX(TUI_COLOR_BRIGHT_WHITE),
-                                    TUI_COLOR_INDEX(TUI_COLOR_GRAY_MID),
-                                    TUI_ATTR_NONE);
-            }
-        }
+        render_scrollbar(widget, tv->visible_count, tv->scroll_offset);
     }
 }
 
@@ -464,24 +482,14 @@ void tui_tree_view_expand(TuiTreeView *tv, TuiTreeNode *node)
 {
     if (!tv || !node) return;
     node->expanded = 1;
-    rebuild_visible(tv);
-    if (tv->selected >= tv->visible_count)
-        tv->selected = tv->visible_count - 1;
-    if (tv->selected < 0) tv->selected = 0;
-    ensure_visible(tv);
-    tv->base.dirty = 1;
+    rebuild_clamp(tv);
 }
 
 void tui_tree_view_collapse(TuiTreeView *tv, TuiTreeNode *node)
 {
     if (!tv || !node) return;
     node->expanded = 0;
-    rebuild_visible(tv);
-    if (tv->selected >= tv->visible_count)
-        tv->selected = tv->visible_count - 1;
-    if (tv->selected < 0) tv->selected = 0;
-    ensure_visible(tv);
-    tv->base.dirty = 1;
+    rebuild_clamp(tv);
 }
 
 void tui_tree_view_toggle(TuiTreeView *tv, TuiTreeNode *node)
@@ -513,12 +521,7 @@ void tui_tree_view_expand_all(TuiTreeView *tv)
 {
     if (!tv || !tv->root) return;
     expand_recursive(tv->root);
-    rebuild_visible(tv);
-    if (tv->selected >= tv->visible_count)
-        tv->selected = tv->visible_count - 1;
-    if (tv->selected < 0) tv->selected = 0;
-    ensure_visible(tv);
-    tv->base.dirty = 1;
+    rebuild_clamp(tv);
 }
 
 void tui_tree_view_collapse_all(TuiTreeView *tv)

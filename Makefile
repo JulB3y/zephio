@@ -18,8 +18,8 @@ ifeq ($(DEBUG),1)
 CFLAGS  += -g -O0 -DDEBUG -fsanitize=address -fsanitize=undefined
 LDFLAGS := -fsanitize=address -fsanitize=undefined
 else
-CFLAGS  += -O2 -DNDEBUG
-LDFLAGS :=
+CFLAGS  += -Os -DNDEBUG -flto
+LDFLAGS := -flto -s
 endif
 
 LDFLAGS += -Wl,--gc-sections -lm
@@ -32,8 +32,6 @@ docs: docs/html/html/index.html
 
 docs/html/html/index.html: docs/Doxyfile include/*.h src/*.c README.md docs/ARCHITECTURE.md
 	doxygen docs/Doxyfile
-
-all: lib examples
 
 test: $(TESTS)
 	@for t in $(TESTS); do echo "=== $$t ===" && ./$$t; done

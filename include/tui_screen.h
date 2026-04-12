@@ -27,25 +27,25 @@
  *
  * Combine with bitwise OR: `TUI_ATTR_BOLD | TUI_ATTR_UNDERLINE`.
  */
-typedef uint16_t TuiAttr;
+typedef uint8_t TuiAttr;
 
-#define TUI_ATTR_NONE          0x0000
-#define TUI_ATTR_BOLD          0x0001
-#define TUI_ATTR_DIM           0x0002
-#define TUI_ATTR_ITALIC        0x0004
-#define TUI_ATTR_UNDERLINE     0x0008
-#define TUI_ATTR_BLINK         0x0010
-#define TUI_ATTR_REVERSE       0x0020
-#define TUI_ATTR_STRIKETHROUGH 0x0040
+#define TUI_ATTR_NONE          0x00
+#define TUI_ATTR_BOLD          0x01
+#define TUI_ATTR_DIM           0x02
+#define TUI_ATTR_ITALIC        0x04
+#define TUI_ATTR_UNDERLINE     0x08
+#define TUI_ATTR_BLINK         0x10
+#define TUI_ATTR_REVERSE       0x20
+#define TUI_ATTR_STRIKETHROUGH 0x40
 
-typedef enum {
+enum {
     TUI_COLOR_TYPE_INDEX = 0,
     TUI_COLOR_TYPE_RGB   = 1,
     TUI_COLOR_TYPE_NONE  = -1
-} TuiColorType;
+};
 
 typedef struct TuiColor {
-    TuiColorType type;
+    int8_t type;
     union {
         uint8_t index;
         struct { uint8_t r, g, b; } rgb;
