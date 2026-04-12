@@ -8,14 +8,26 @@
 
 static void input_field_update_scroll(TuiInputField *field)
 {
-    if (field->cursor_pos < field->scroll_offset) {
-        field->scroll_offset = field->cursor_pos;
+    if (!field->text) {
+        field->scroll_offset = 0;
+        return;
     }
 
+    int text_len = (int)strlen(field->text);
     int visible = field->base.width;
-    if (field->cursor_pos >= field->scroll_offset + visible) {
-        field->scroll_offset = field->cursor_pos - visible + 1;
+
+    int cursor_col = tui_text_index_to_col(field->text, (size_t)text_len, (size_t)field->cursor_pos);
+    int scroll_col = tui_text_index_to_col(field->text, (size_t)text_len, (size_t)field->scroll_offset);
+
+    if (cursor_col < scroll_col) {
+        scroll_col = cursor_col;
     }
+
+    if (cursor_col >= scroll_col + visible) {
+        scroll_col = cursor_col - visible + 1;
+    }
+
+    field->scroll_offset = tui_text_col_to_index(field->text, (size_t)text_len, scroll_col);
 }
 
 static void input_field_render(TuiWidget *widget)
@@ -44,12 +56,14 @@ static void input_field_render(TuiWidget *widget)
         int text_len = (int)strlen(field->text);
         int visible = widget->width;
         int start = field->scroll_offset;
-        int end = start + visible;
-        if (end > text_len) end = text_len;
 
         if (start < text_len) {
+            size_t clip_len;
+            tui_text_clip(field->text + start, (size_t)(text_len - start),
+                          visible, &clip_len);
+
             char buf[1024];
-            int copy_len = end - start;
+            int copy_len = (int)clip_len;
             if (copy_len >= (int)sizeof(buf)) copy_len = (int)sizeof(buf) - 1;
             memcpy(buf, field->text + start, (size_t)copy_len);
             buf[copy_len] = '\0';

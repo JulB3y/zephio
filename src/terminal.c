@@ -35,7 +35,7 @@ static void terminal_sig_handler(int sig)
     _exit(0);
 }
 
-TuiResult terminal_raw_mode_enable(Terminal *t)
+static TuiResult terminal_raw_mode_enable(Terminal *t)
 {
     struct termios raw;
 
@@ -59,7 +59,7 @@ TuiResult terminal_raw_mode_enable(Terminal *t)
     return TUI_OK;
 }
 
-TuiResult terminal_raw_mode_disable(Terminal *t)
+static TuiResult terminal_raw_mode_disable(Terminal *t)
 {
     if (!g_termios_saved) {
         return TUI_OK;
@@ -71,38 +71,38 @@ TuiResult terminal_raw_mode_disable(Terminal *t)
     return TUI_OK;
 }
 
-TuiResult terminal_enter_alt_screen(Terminal *t)
+static TuiResult terminal_enter_alt_screen(Terminal *t)
 {
     terminal_write_seq(t, ANSI_ALT_SCREEN_ON, sizeof(ANSI_ALT_SCREEN_ON) - 1);
     return TUI_OK;
 }
 
-TuiResult terminal_exit_alt_screen(Terminal *t)
+static TuiResult terminal_exit_alt_screen(Terminal *t)
 {
     terminal_write_seq(t, ANSI_ALT_SCREEN_OFF, sizeof(ANSI_ALT_SCREEN_OFF) - 1);
     return TUI_OK;
 }
 
-TuiResult terminal_cursor_hide(Terminal *t)
+static TuiResult terminal_cursor_hide(Terminal *t)
 {
     terminal_write_seq(t, ANSI_CURSOR_HIDE, sizeof(ANSI_CURSOR_HIDE) - 1);
     return TUI_OK;
 }
 
-TuiResult terminal_cursor_show(Terminal *t)
+static TuiResult terminal_cursor_show(Terminal *t)
 {
     terminal_write_seq(t, ANSI_CURSOR_SHOW, sizeof(ANSI_CURSOR_SHOW) - 1);
     return TUI_OK;
 }
 
-TuiResult terminal_clear_screen(Terminal *t)
+static TuiResult terminal_clear_screen(Terminal *t)
 {
     terminal_write_seq(t, ANSI_CLEAR_SCREEN, sizeof(ANSI_CLEAR_SCREEN) - 1);
     terminal_write_seq(t, ANSI_CURSOR_HOME, sizeof(ANSI_CURSOR_HOME) - 1);
     return TUI_OK;
 }
 
-TuiResult terminal_get_size(Terminal *t)
+static TuiResult terminal_get_size(Terminal *t)
 {
     struct winsize ws;
 
@@ -121,7 +121,7 @@ void terminal_write_seq(Terminal *t, const char *seq, size_t len)
     }
 }
 
-void terminal_ensure_cleanup(void)
+static void terminal_ensure_cleanup(void)
 {
     if (g_terminal.initialized) {
         tui_mouse_disable();

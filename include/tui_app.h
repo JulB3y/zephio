@@ -95,13 +95,6 @@ void tui_app_free(TuiApp *app);
 int tui_app_run(TuiApp *app);
 
 /**
- * @brief Signal the app to stop.
- *
- * Safe to call from any callback.
- */
-void tui_app_stop(TuiApp *app);
-
-/**
  * @brief Push a widget onto the overlay stack.
  *
  * Overlays render on top of all other widgets. When an overlay is
@@ -124,34 +117,11 @@ TuiResult tui_app_push_overlay(TuiApp *app, TuiWidget *widget);
 TuiWidget *tui_app_pop_overlay(TuiApp *app);
 
 /**
- * @brief Return the topmost overlay, or NULL if none.
- */
-TuiWidget *tui_app_top_overlay(TuiApp *app);
-
-/**
  * @brief Render all overlays in stack order (bottom to top).
  *
  * Called by the app's render logic after the main widget tree.
  */
 void tui_app_render_overlays(TuiApp *app);
-
-/**
- * @brief Dispatch an input event to the topmost overlay.
- *
- * If no overlay is active, returns 0.
- *
- * @return 1 if the event was consumed, 0 otherwise.
- */
-int tui_app_handle_overlay_input(TuiApp *app, const TuiEvent *event);
-
-/**
- * @brief Dispatch a mouse event to the topmost overlay.
- *
- * If no overlay is active, returns 0.
- *
- * @return 1 if the event was consumed, 0 otherwise.
- */
-int tui_app_handle_overlay_mouse(TuiApp *app, const TuiMouseEvent *mouse);
 
 /**
  * @brief Return the app's animation manager.

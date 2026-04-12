@@ -20,7 +20,6 @@
 
 #include "tui.h"
 #include <stdint.h>
-#include <string.h>
 
 /**
  * @brief Text attributes bitmask (bold, underline, etc.).
@@ -70,6 +69,7 @@ static inline int tui_color_eq(TuiColor a, TuiColor b) {
  */
 typedef struct {
     char     ch[4];
+    uint8_t  width;
     TuiColor fg;
     TuiColor bg;
     TuiAttr  attr;

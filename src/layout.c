@@ -7,6 +7,8 @@
 
 #define ITEMS_INITIAL_CAPACITY 8
 
+static void tui_layout_recalculate(TuiLayout *layout);
+
 static void layout_on_resize(TuiWidget *widget, int width, int height);
 static void layout_destroy(TuiWidget *widget);
 
@@ -133,7 +135,7 @@ static int clamp_size(int size, int min_size, int max_size)
     return size;
 }
 
-void tui_layout_recalculate(TuiLayout *layout)
+static void tui_layout_recalculate(TuiLayout *layout)
 {
     if (!layout) return;
 

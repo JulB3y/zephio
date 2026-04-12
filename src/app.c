@@ -11,6 +11,11 @@
 #include <string.h>
 #include <time.h>
 
+static void tui_app_stop(TuiApp *app);
+static TuiWidget *tui_app_top_overlay(TuiApp *app);
+static int tui_app_handle_overlay_input(TuiApp *app, const TuiEvent *event);
+static int tui_app_handle_overlay_mouse(TuiApp *app, const TuiMouseEvent *mouse);
+
 static double time_now_ms(void)
 {
     struct timespec ts;
@@ -47,7 +52,7 @@ void tui_app_free(TuiApp *app)
     }
 }
 
-void tui_app_stop(TuiApp *app)
+static void __attribute__((unused)) tui_app_stop(TuiApp *app)
 {
     if (app) {
         app->running   = 0;
@@ -222,7 +227,7 @@ TuiWidget *tui_app_pop_overlay(TuiApp *app)
     return widget;
 }
 
-TuiWidget *tui_app_top_overlay(TuiApp *app)
+static __attribute__((unused)) TuiWidget *tui_app_top_overlay(TuiApp *app)
 {
     if (!app || app->overlay_count == 0) return NULL;
     return app->overlays[app->overlay_count - 1];
@@ -236,7 +241,7 @@ void tui_app_render_overlays(TuiApp *app)
     }
 }
 
-int tui_app_handle_overlay_input(TuiApp *app, const TuiEvent *event)
+static int tui_app_handle_overlay_input(TuiApp *app, const TuiEvent *event)
 {
     if (!app || app->overlay_count == 0) return 0;
 
@@ -251,7 +256,7 @@ int tui_app_handle_overlay_input(TuiApp *app, const TuiEvent *event)
     return 0;
 }
 
-int tui_app_handle_overlay_mouse(TuiApp *app, const TuiMouseEvent *mouse)
+static int tui_app_handle_overlay_mouse(TuiApp *app, const TuiMouseEvent *mouse)
 {
     if (!app || app->overlay_count == 0) return 0;
 

@@ -2,6 +2,7 @@
 
 #include "tui_screen.h"
 #include "tui_terminal.h"
+#include "tui_text.h"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -26,6 +27,7 @@ static void init_default_cell(void)
     DEFAULT_CELL.ch[1] = 0;
     DEFAULT_CELL.ch[2] = 0;
     DEFAULT_CELL.ch[3] = 0;
+    DEFAULT_CELL.width = 1;
     DEFAULT_CELL.fg.type = TUI_COLOR_TYPE_INDEX;
     DEFAULT_CELL.fg.index = 0;
     DEFAULT_CELL.bg.type = TUI_COLOR_TYPE_INDEX;
@@ -48,6 +50,40 @@ static void cell_set_char(TuiCell *cell, const char *ch)
     int len = utf8_char_len((unsigned char)ch[0]);
     memset(cell->ch, 0, 4);
     memcpy(cell->ch, ch, len);
+}
+
+static int cell_char_width(const char *ch, int len)
+{
+    uint32_t cp = 0;
+    tui_utf8_next(ch, (size_t)len, &cp);
+    int w = tui_utf8_char_width(cp);
+    return w > 0 ? w : 1;
+}
+
+static void clear_continuation(int row, int col)
+{
+    if (row < 0 || row >= g_screen.rows) return;
+    if (col < 0 || col >= g_screen.cols) return;
+    TuiCell *cell = &g_screen.back[row * g_screen.cols + col];
+    if (cell->width == 2 && col + 1 < g_screen.cols) {
+        TuiCell *cont = &g_screen.back[row * g_screen.cols + col + 1];
+        if (cont->width == 0) {
+            *cont = DEFAULT_CELL;
+        }
+    }
+}
+
+static void clear_leader(int row, int col)
+{
+    if (row < 0 || row >= g_screen.rows) return;
+    if (col <= 0 || col >= g_screen.cols) return;
+    TuiCell *cell = &g_screen.back[row * g_screen.cols + col];
+    if (cell->width == 0) {
+        TuiCell *leader = &g_screen.back[row * g_screen.cols + col - 1];
+        if (leader->width == 2) {
+            *leader = DEFAULT_CELL;
+        }
+    }
 }
 
 static void clear_buffer(TuiCell *buf, int count)
@@ -174,34 +210,78 @@ void tui_screen_set_cell(int row, int col, const char *ch, TuiColor fg, TuiColor
     if (col < 0 || col >= g_screen.cols) return;
     if (!ch) return;
 
+    init_default_cell();
+    clear_leader(row, col);
+    clear_continuation(row, col);
+
+    int blen = utf8_char_len((unsigned char)ch[0]);
+    int w = cell_char_width(ch, blen);
+
+    if (w == 2 && col + 1 >= g_screen.cols) {
+        w = 1;
+    }
+
     TuiCell *cell = &g_screen.back[row * g_screen.cols + col];
     cell_set_char(cell, ch);
     cell->fg = fg;
     cell->bg = bg;
     cell->attr = attr;
+    cell->width = (uint8_t)w;
+
+    if (w == 2 && col + 1 < g_screen.cols) {
+        TuiCell *cont = &g_screen.back[row * g_screen.cols + col + 1];
+        clear_leader(row, col + 1);
+        clear_continuation(row, col + 1);
+        memset(cont->ch, 0, 4);
+        cont->fg = fg;
+        cont->bg = bg;
+        cont->attr = attr;
+        cont->width = 0;
+    }
 }
 
 void tui_screen_write(int row, int col, const char *text, TuiColor fg, TuiColor bg, TuiAttr attr)
 {
     if (!g_screen.initialized || !text) return;
 
+    init_default_cell();
     int c = col;
     const unsigned char *p = (const unsigned char *)text;
 
     while (*p && c < g_screen.cols) {
-        int len = utf8_char_len(*p);
+        if (row >= 0 && row < g_screen.rows && c >= 0) {
+            clear_leader(row, c);
+            clear_continuation(row, c);
+        }
+
+        int blen = utf8_char_len(*p);
+        int w = cell_char_width((const char *)p, blen);
+
+        if (c + w > g_screen.cols) break;
 
         if (row >= 0 && row < g_screen.rows && c >= 0) {
             TuiCell *cell = &g_screen.back[row * g_screen.cols + c];
             memset(cell->ch, 0, 4);
-            memcpy(cell->ch, p, len);
+            memcpy(cell->ch, p, blen);
             cell->fg = fg;
             cell->bg = bg;
             cell->attr = attr;
+            cell->width = (uint8_t)w;
+
+            if (w == 2 && c + 1 < g_screen.cols) {
+                TuiCell *cont = &g_screen.back[row * g_screen.cols + c + 1];
+                clear_leader(row, c + 1);
+                clear_continuation(row, c + 1);
+                memset(cont->ch, 0, 4);
+                cont->fg = fg;
+                cont->bg = bg;
+                cont->attr = attr;
+                cont->width = 0;
+            }
         }
 
-        p += len;
-        c++;
+        p += blen;
+        c += w;
     }
 }
 
@@ -263,6 +343,14 @@ void tui_screen_invert_cell(int row, int col)
     if (col < 0 || col >= g_screen.cols) return;
 
     TuiCell *cell = &g_screen.back[row * g_screen.cols + col];
+
+    if (cell->width == 0 && col > 0) {
+        TuiCell *leader = &g_screen.back[row * g_screen.cols + col - 1];
+        if (leader->width == 2) {
+            cell = leader;
+        }
+    }
+
     TuiColor tmp = cell->fg;
     cell->fg = cell->bg;
     cell->bg = tmp;
@@ -275,6 +363,75 @@ TuiSize tui_screen_size(void)
 }
 
 #define RENDER_BUF_SIZE 16384
+
+static int fmt_uint(char *buf, unsigned int v)
+{
+    if (v < 10) { buf[0] = (char)('0' + v); return 1; }
+    if (v < 100) { buf[1] = (char)('0' + v % 10); buf[0] = (char)('0' + v / 10); return 2; }
+    if (v < 1000) {
+        buf[2] = (char)('0' + v % 10); v /= 10;
+        buf[1] = (char)('0' + v % 10); v /= 10;
+        buf[0] = (char)('0' + v);
+        return 3;
+    }
+    buf[3] = (char)('0' + v % 10); v /= 10;
+    buf[2] = (char)('0' + v % 10); v /= 10;
+    buf[1] = (char)('0' + v % 10); v /= 10;
+    buf[0] = (char)('0' + v);
+    return 4;
+}
+
+static void render_flush(char *rbuf, size_t *rpos)
+{
+    if (*rpos > 0) {
+        terminal_write_seq(&g_terminal, rbuf, *rpos);
+        *rpos = 0;
+    }
+}
+
+static size_t emit_cursor(char *buf, size_t pos, int row, int col)
+{
+    memcpy(buf + pos, "\033[", 2); pos += 2;
+    pos += (size_t)fmt_uint(buf + pos, (unsigned int)(row + 1));
+    buf[pos++] = ';';
+    pos += (size_t)fmt_uint(buf + pos, (unsigned int)(col + 1));
+    buf[pos++] = 'H';
+    return pos;
+}
+
+static size_t emit_fg_256(char *buf, size_t pos, uint8_t idx)
+{
+    memcpy(buf + pos, "\033[38;5;", 7); pos += 7;
+    pos += (size_t)fmt_uint(buf + pos, idx);
+    buf[pos++] = 'm';
+    return pos;
+}
+
+static size_t emit_fg_rgb(char *buf, size_t pos, uint8_t r, uint8_t g, uint8_t b)
+{
+    memcpy(buf + pos, "\033[38;2;", 7); pos += 7;
+    pos += (size_t)fmt_uint(buf + pos, r); buf[pos++] = ';';
+    pos += (size_t)fmt_uint(buf + pos, g); buf[pos++] = ';';
+    pos += (size_t)fmt_uint(buf + pos, b); buf[pos++] = 'm';
+    return pos;
+}
+
+static size_t emit_bg_256(char *buf, size_t pos, uint8_t idx)
+{
+    memcpy(buf + pos, "\033[48;5;", 7); pos += 7;
+    pos += (size_t)fmt_uint(buf + pos, idx);
+    buf[pos++] = 'm';
+    return pos;
+}
+
+static size_t emit_bg_rgb(char *buf, size_t pos, uint8_t r, uint8_t g, uint8_t b)
+{
+    memcpy(buf + pos, "\033[48;2;", 7); pos += 7;
+    pos += (size_t)fmt_uint(buf + pos, r); buf[pos++] = ';';
+    pos += (size_t)fmt_uint(buf + pos, g); buf[pos++] = ';';
+    pos += (size_t)fmt_uint(buf + pos, b); buf[pos++] = 'm';
+    return pos;
+}
 
 void tui_screen_render(void)
 {
@@ -297,24 +454,25 @@ void tui_screen_render(void)
 
     for (int i = 0; i < total; i++) {
         TuiCell *b = &g_screen.back[i];
+
+        if (b->width == 0) continue;
+
         TuiCell *f = &g_screen.front[i];
 
         if (b->ch[0] == f->ch[0] && b->ch[1] == f->ch[1] &&
             b->ch[2] == f->ch[2] && b->ch[3] == f->ch[3] &&
             tui_color_eq(b->fg, f->fg) && tui_color_eq(b->bg, f->bg) &&
-            b->attr == f->attr) continue;
+            b->attr == f->attr && b->width == f->width) continue;
 
         int row = i / g_screen.cols;
         int col = i % g_screen.cols;
 
         if (rpos + 80 > RENDER_BUF_SIZE) {
-            terminal_write_seq(&g_terminal, rbuf, rpos);
-            rpos = 0;
+            render_flush(rbuf, &rpos);
         }
 
         if (row != cur_row || col != cur_col) {
-            rpos += (size_t)snprintf(rbuf + rpos, RENDER_BUF_SIZE - rpos,
-                                     "\033[%d;%dH", row + 1, col + 1);
+            rpos = emit_cursor(rbuf, rpos, row, col);
             cur_row = row;
             cur_col = col;
         }
@@ -337,21 +495,17 @@ void tui_screen_render(void)
 
         if (!tui_color_eq(b->fg, cur_fg)) {
             if (use_truecolor && b->fg.type == TUI_COLOR_TYPE_RGB) {
-                rpos += (size_t)snprintf(rbuf + rpos, RENDER_BUF_SIZE - rpos,
-                                         "\033[38;2;%d;%d;%dm", b->fg.rgb.r, b->fg.rgb.g, b->fg.rgb.b);
+                rpos = emit_fg_rgb(rbuf, rpos, b->fg.rgb.r, b->fg.rgb.g, b->fg.rgb.b);
             } else {
-                rpos += (size_t)snprintf(rbuf + rpos, RENDER_BUF_SIZE - rpos,
-                                         "\033[38;5;%dm", b->fg.type == TUI_COLOR_TYPE_INDEX ? b->fg.index : 0);
+                rpos = emit_fg_256(rbuf, rpos, b->fg.type == TUI_COLOR_TYPE_INDEX ? b->fg.index : 0);
             }
             cur_fg = b->fg;
         }
         if (!tui_color_eq(b->bg, cur_bg)) {
             if (use_truecolor && b->bg.type == TUI_COLOR_TYPE_RGB) {
-                rpos += (size_t)snprintf(rbuf + rpos, RENDER_BUF_SIZE - rpos,
-                                         "\033[48;2;%d;%d;%dm", b->bg.rgb.r, b->bg.rgb.g, b->bg.rgb.b);
+                rpos = emit_bg_rgb(rbuf, rpos, b->bg.rgb.r, b->bg.rgb.g, b->bg.rgb.b);
             } else {
-                rpos += (size_t)snprintf(rbuf + rpos, RENDER_BUF_SIZE - rpos,
-                                         "\033[48;5;%dm", b->bg.type == TUI_COLOR_TYPE_INDEX ? b->bg.index : 0);
+                rpos = emit_bg_256(rbuf, rpos, b->bg.type == TUI_COLOR_TYPE_INDEX ? b->bg.index : 0);
             }
             cur_bg = b->bg;
         }
@@ -360,7 +514,7 @@ void tui_screen_render(void)
         memcpy(rbuf + rpos, b->ch, clen);
         rpos += clen;
 
-        cur_col++;
+        cur_col += b->width;
     }
 
     if (rpos > 0) {

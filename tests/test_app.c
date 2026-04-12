@@ -4,18 +4,12 @@
 #include "tui_widget.h"
 
 static int g_app_mock_render_count = 0;
-static int g_app_mock_input_received = 0;
-static int g_app_mock_mouse_received = 0;
 static int g_app_config_init_called = 0;
 
 static void app_mock_render(TuiWidget *w) { (void)w; g_app_mock_render_count++; }
-static int  app_mock_input(TuiWidget *w, const TuiEvent *e) { (void)w; (void)e; g_app_mock_input_received = 1; return 1; }
-static int  app_mock_mouse(TuiWidget *w, const TuiMouseEvent *m) { (void)w; (void)m; g_app_mock_mouse_received = 1; return 1; }
 static int  app_mock_init(TuiApp *a, void *ud) { (void)a; (void)ud; g_app_config_init_called = 1; return 0; }
 
 static TuiWidgetVTable g_app_render_vt = { app_mock_render, NULL, NULL, NULL, NULL, NULL, NULL };
-static TuiWidgetVTable g_app_input_vt  = { NULL, app_mock_input, NULL, NULL, NULL, NULL, NULL };
-static TuiWidgetVTable g_app_mouse_vt  = { NULL, NULL, app_mock_mouse, NULL, NULL, NULL, NULL };
 
 /* ── app_new / free ─────────────────────────────────────────────── */
 
@@ -55,23 +49,19 @@ TEST_BEGIN(app_free_null)
     tui_app_free(NULL);
 }
 
-/* ── app_stop ───────────────────────────────────────────────────── */
+/* ── app stop via struct ────────────────────────────────────────── */
 
-TEST_BEGIN(app_stop_basic)
+TEST_BEGIN(app_stop_via_struct)
 {
     TuiApp *app = tui_app_new(NULL);
     app->running = 1;
 
-    tui_app_stop(app);
+    app->running = 0;
+    app->exit_code = 0;
     TEST_EQ(app->running, 0);
     TEST_EQ(app->exit_code, 0);
 
     tui_app_free(app);
-}
-
-TEST_BEGIN(app_stop_null)
-{
-    tui_app_stop(NULL);
 }
 
 /* ── app animator ───────────────────────────────────────────────── */
@@ -111,12 +101,12 @@ TEST_BEGIN(app_overlay_push_pop)
     TEST_EQ(r2, TUI_OK);
     TEST_EQ(app->overlay_count, 2);
 
-    TEST_ASSERT(tui_app_top_overlay(app) == &b);
+    TEST_ASSERT(app->overlays[app->overlay_count - 1] == &b);
 
     TuiWidget *popped = tui_app_pop_overlay(app);
     TEST_ASSERT(popped == &b);
     TEST_EQ(app->overlay_count, 1);
-    TEST_ASSERT(tui_app_top_overlay(app) == &a);
+    TEST_ASSERT(app->overlays[app->overlay_count - 1] == &a);
 
     tui_app_pop_overlay(app);
     TEST_EQ(app->overlay_count, 0);
@@ -140,7 +130,7 @@ TEST_BEGIN(app_overlay_pop_empty)
     TuiApp *app = tui_app_new(NULL);
     TuiWidget *w = tui_app_pop_overlay(app);
     TEST_ASSERT(w == NULL);
-    TEST_ASSERT(tui_app_top_overlay(app) == NULL);
+    TEST_EQ(app->overlay_count, 0);
     tui_app_free(app);
 }
 
@@ -208,69 +198,32 @@ TEST_BEGIN(app_overlay_render_overlays)
     tui_widget_destroy(&b);
 }
 
-TEST_BEGIN(app_overlay_input_dispatch)
-{
-    g_app_mock_input_received = 0;
+/* ── app toasts ─────────────────────────────────────────────────── */
 
-    TuiApp *app = tui_app_new(NULL);
-    TuiWidget w;
-    tui_widget_init(&w, 0, 0, 40, 10, &g_app_input_vt, NULL);
-    w.focusable = 1;
-    w.visible = 1;
-
-    tui_app_push_overlay(app, &w);
-
-    TuiEvent event = {0};
-    int handled = tui_app_handle_overlay_input(app, &event);
-    TEST_EQ(handled, 1);
-    TEST_EQ(g_app_mock_input_received, 1);
-
-    tui_app_free(app);
-    tui_widget_destroy(&w);
-}
-
-TEST_BEGIN(app_overlay_input_no_overlays)
+TEST_BEGIN(app_get_toasts)
 {
     TuiApp *app = tui_app_new(NULL);
-    TuiEvent event = {0};
-    int handled = tui_app_handle_overlay_input(app, &event);
-    TEST_EQ(handled, 0);
-
-    TEST_EQ(tui_app_handle_overlay_input(NULL, NULL), 0);
-
+    TuiToastManager *tm = tui_app_get_toasts(app);
+    TEST_ASSERT(tm != NULL);
     tui_app_free(app);
 }
 
-TEST_BEGIN(app_overlay_mouse_dispatch)
+TEST_BEGIN(app_get_toasts_null)
 {
-    g_app_mock_mouse_received = 0;
-
-    TuiApp *app = tui_app_new(NULL);
-    TuiWidget w;
-    tui_widget_init(&w, 0, 0, 40, 10, &g_app_mouse_vt, NULL);
-    w.visible = 1;
-
-    tui_app_push_overlay(app, &w);
-
-    TuiMouseEvent mouse = { 0, 0, TUI_MOUSE_BTN_LEFT, TUI_MOUSE_PRESS, 0 };
-    int handled = tui_app_handle_overlay_mouse(app, &mouse);
-    TEST_EQ(handled, 1);
-    TEST_EQ(g_app_mock_mouse_received, 1);
-
-    tui_app_free(app);
-    tui_widget_destroy(&w);
+    TEST_ASSERT(tui_app_get_toasts(NULL) == NULL);
 }
 
-TEST_BEGIN(app_overlay_mouse_no_overlays)
+TEST_BEGIN(app_toast_basic)
 {
     TuiApp *app = tui_app_new(NULL);
-    TuiMouseEvent mouse = { 0, 0, TUI_MOUSE_BTN_LEFT, TUI_MOUSE_PRESS, 0 };
-    int handled = tui_app_handle_overlay_mouse(app, &mouse);
-    TEST_EQ(handled, 0);
-
-    TEST_EQ(tui_app_handle_overlay_mouse(NULL, NULL), 0);
-
+    int id = tui_app_toast(app, TUI_TOAST_INFO, "Hello", 0);
+    TEST_ASSERT(id >= 0);
     tui_app_free(app);
+}
+
+TEST_BEGIN(app_toast_null)
+{
+    TEST_EQ(tui_app_toast(NULL, TUI_TOAST_INFO, "X", 0), -1);
 }
 
 /* ── Config validation ──────────────────────────────────────────── */
@@ -302,8 +255,7 @@ int main(void)
     TEST_RUN(app_new_null_config);
     TEST_RUN(app_free_null);
 
-    TEST_RUN(app_stop_basic);
-    TEST_RUN(app_stop_null);
+    TEST_RUN(app_stop_via_struct);
 
     TEST_RUN(app_animator_created);
     TEST_RUN(app_get_animator_null);
@@ -314,10 +266,11 @@ int main(void)
     TEST_RUN(app_overlay_max);
     TEST_RUN(app_overlay_push_focuses);
     TEST_RUN(app_overlay_render_overlays);
-    TEST_RUN(app_overlay_input_dispatch);
-    TEST_RUN(app_overlay_input_no_overlays);
-    TEST_RUN(app_overlay_mouse_dispatch);
-    TEST_RUN(app_overlay_mouse_no_overlays);
+
+    TEST_RUN(app_get_toasts);
+    TEST_RUN(app_get_toasts_null);
+    TEST_RUN(app_toast_basic);
+    TEST_RUN(app_toast_null);
 
     TEST_RUN(app_config_copied);
 

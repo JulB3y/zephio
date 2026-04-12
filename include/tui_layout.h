@@ -112,13 +112,6 @@ void tui_layout_remove(TuiLayout *layout, TuiWidget *child);
  */
 void tui_layout_remove_all(TuiLayout *layout);
 
-/**
- * @brief Recompute child positions and sizes based on constraints.
- *
- * Should be called after adding/removing children or resizing.
- */
-void tui_layout_recalculate(TuiLayout *layout);
-
 /** @brief Change the layout direction (triggers recalculate). */
 void tui_layout_set_direction(TuiLayout *layout, TuiLayoutDirection direction);
 

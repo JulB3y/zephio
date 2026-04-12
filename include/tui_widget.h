@@ -22,7 +22,6 @@
 
 #include "tui.h"
 #include "tui_input.h"
-#include "tui_screen.h"
 #include "tui_style.h"
 #include <stdint.h>
 
