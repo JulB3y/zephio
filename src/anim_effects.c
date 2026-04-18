@@ -474,6 +474,7 @@ int tui_effect_color_fade(TuiAnimator *animator, TuiColorFade *fade,
                                  color_fade_update, color_fade_complete, cd);
     if (id == TUI_ANIMATOR_INVALID_ID) {
         free(cd);
+        fade->anim_id = TUI_ANIMATOR_INVALID_ID;
         return TUI_ANIMATOR_INVALID_ID;
     }
 
