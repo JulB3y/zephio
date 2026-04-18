@@ -39,17 +39,18 @@ typedef struct {
 } TuiTextArea;
 
 /**
- * @brief Initialize a text area widget.
+ * @brief Initialize a text area widget with context.
  *
  * @param ta      TextArea struct to initialize.
+ * @param ctx     TUI context.
  * @param x       Column offset.
  * @param y       Row offset.
  * @param width   Width in columns.
  * @param height  Height in rows.
  * @return TUI_OK on success.
  */
-TuiResult tui_textarea_init(TuiTextArea *ta, int x, int y,
-                             int width, int height);
+TuiResult tui_textarea_init_ctx(TuiTextArea *ta, TuiContext *ctx, int x, int y,
+                               int width, int height);
 
 /**
  * @brief Set the text area content (copied).

@@ -155,11 +155,12 @@ void tui_toast_update(TuiToastManager *mgr, double delta_ms);
  * Call after all other rendering (including overlays) so toasts
  * appear on top of everything.
  *
+ * @param ctx        TuiContext for rendering.
  * @param mgr        Toast manager.
- * @param screen_rows  Terminal rows (for positioning).
- * @param screen_cols  Terminal cols (for positioning).
+ * @param screen_rows Terminal rows (for positioning).
+ * @param screen_cols Terminal cols (for positioning).
  */
-void tui_toast_render(TuiToastManager *mgr, int screen_rows, int screen_cols);
+void tui_toast_render(TuiContext *ctx, TuiToastManager *mgr, int screen_rows, int screen_cols);
 
 /**
  * @brief Check if any toast is currently visible.

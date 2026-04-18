@@ -44,10 +44,10 @@ static void dialog_render(TuiWidget *widget)
     TuiColor text_bg   = TUI_COLOR_INDEX(TUI_COLOR_BG_DARK);
     TuiAttr  border_attr = TUI_ATTR_BOLD;
 
-    tui_screen_fill(tui_current_ctx, widget->abs_y, widget->abs_x,
+    tui_screen_fill(widget->ctx, widget->abs_y, widget->abs_x,
                     widget->width, widget->height, " ", text_fg, text_bg, TUI_ATTR_NONE);
 
-    tui_screen_box_double(tui_current_ctx, widget->abs_y, widget->abs_x,
+    tui_screen_box_double(widget->ctx, widget->abs_y, widget->abs_x,
                           widget->width, widget->height,
                           border_fg, border_bg, border_attr);
 
@@ -62,7 +62,7 @@ static void dialog_render(TuiWidget *widget)
         int copy_len = write_len < (int)sizeof(buf) - 1 ? write_len : (int)sizeof(buf) - 1;
         memcpy(buf, dialog->title, (size_t)copy_len);
         buf[copy_len] = '\0';
-        tui_screen_write(tui_current_ctx, widget->abs_y, col, buf, title_fg, border_bg,
+        tui_screen_write(widget->ctx, widget->abs_y, col, buf, title_fg, border_bg,
                          border_attr | TUI_ATTR_BOLD);
     }
 
@@ -83,7 +83,7 @@ static void dialog_render(TuiWidget *widget)
             memcpy(buf, p, (size_t)copy_len);
             buf[copy_len] = '\0';
 
-            tui_screen_write(tui_current_ctx, row, widget->abs_x + 2, buf, text_fg, text_bg,
+            tui_screen_write(widget->ctx, row, widget->abs_x + 2, buf, text_fg, text_bg,
                              TUI_ATTR_NONE);
             row++;
 
@@ -127,11 +127,11 @@ static void dialog_render(TuiWidget *widget)
                 }
             }
 
-            tui_screen_write(tui_current_ctx, btn_row, btn_col, "[",
+            tui_screen_write(widget->ctx, btn_row, btn_col, "[",
                              btn_fg, btn_bg, btn_attr);
-            tui_screen_write(tui_current_ctx, btn_row, btn_col + 1, dialog->button_labels[i],
+            tui_screen_write(widget->ctx, btn_row, btn_col + 1, dialog->button_labels[i],
                              btn_fg, btn_bg, btn_attr);
-            tui_screen_write(tui_current_ctx, btn_row, btn_col + 1 + label_len, "]",
+            tui_screen_write(widget->ctx, btn_row, btn_col + 1 + label_len, "]",
                              btn_fg, btn_bg, btn_attr);
 
             btn_col += btn_width + 2;
@@ -245,8 +245,8 @@ static TuiWidgetVTable dialog_vtable = {
     .on_blur      = NULL
 };
 
-TuiResult tui_dialog_init(TuiDialog *dialog, const char *title,
-                          const char *message)
+TuiResult tui_dialog_init_ctx(TuiDialog *dialog, TuiContext *ctx, const char *title,
+                              const char *message)
 {
     if (!dialog) return TUI_ERR_MEMORY;
 
@@ -266,8 +266,8 @@ TuiResult tui_dialog_init(TuiDialog *dialog, const char *title,
     if (h < 7) h = 7;
     if (h > 23) h = 23;
 
-    TuiResult res = tui_widget_init(&dialog->base, 0, 0, w, h,
-                                    &dialog_vtable, NULL);
+    TuiResult res = tui_widget_init_ctx(&dialog->base, 0, 0, w, h,
+                                        &dialog_vtable, ctx, NULL);
     if (res != TUI_OK) return res;
 
     dialog->base.focusable = 1;
@@ -305,11 +305,11 @@ void tui_dialog_set_on_button(TuiDialog *dialog, TuiDialogCallback callback,
     dialog->user_data = user_data;
 }
 
-void tui_dialog_center(TuiDialog *dialog)
+void tui_dialog_center(TuiContext *ctx, TuiDialog *dialog)
 {
     if (!dialog) return;
 
-    TuiSize size = tui_screen_size(tui_current_ctx);
+    TuiSize size = tui_screen_size(ctx);
     int x = (size.cols - dialog->base.width) / 2;
     int y = (size.rows - dialog->base.height) / 2;
     if (x < 0) x = 0;

@@ -50,7 +50,7 @@ static void input_field_render(TuiWidget *widget)
         attr = field->attr;
     }
 
-    tui_screen_fill(tui_current_ctx, widget->abs_y, widget->abs_x,
+    tui_screen_fill(widget->ctx, widget->abs_y, widget->abs_x,
                     widget->width, 1, " ", fg, bg, attr);
 
     if (field->text && field->text[0]) {
@@ -69,7 +69,7 @@ static void input_field_render(TuiWidget *widget)
             memcpy(buf, field->text + start, (size_t)copy_len);
             buf[copy_len] = '\0';
 
-            tui_screen_write(tui_current_ctx, widget->abs_y, widget->abs_x,
+            tui_screen_write(widget->ctx, widget->abs_y, widget->abs_x,
                              buf, fg, bg, attr);
         }
     }
@@ -97,7 +97,7 @@ static void input_field_render(TuiWidget *widget)
             if (field->cursor_pos < text_len) {
                 cursor_ch = field->text + field->cursor_pos;
             }
-            tui_screen_set_cell(tui_current_ctx, widget->abs_y, widget->abs_x + cursor_col,
+            tui_screen_set_cell(widget->ctx, widget->abs_y, widget->abs_x + cursor_col,
                                 cursor_ch, cursor_fg, cursor_bg,
                                 TUI_ATTR_NONE);
         }
@@ -237,14 +237,14 @@ static TuiWidgetVTable input_field_vtable = {
     .on_blur      = NULL
 };
 
-TuiResult tui_input_field_init(TuiInputField *field, int x, int y, int width,
-                               int capacity)
+TuiResult tui_input_field_init_ctx(TuiInputField *field, TuiContext *ctx, int x, int y, int width,
+                                   int capacity)
 {
     if (!field) return TUI_ERR_MEMORY;
     if (capacity <= 0) capacity = 256;
 
-    TuiResult res = tui_widget_init(&field->base, x, y, width, 1,
-                                    &input_field_vtable, NULL);
+    TuiResult res = tui_widget_init_ctx(&field->base, x, y, width, 1,
+                                        &input_field_vtable, ctx, NULL);
     if (res != TUI_OK) return res;
 
     field->base.focusable = 1;

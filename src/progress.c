@@ -22,7 +22,7 @@ static void progress_render(TuiWidget *widget)
         attr = style.attr;
     }
 
-    tui_screen_fill(tui_current_ctx, widget->abs_y, widget->abs_x,
+    tui_screen_fill(widget->ctx, widget->abs_y, widget->abs_x,
                     widget->width, widget->height, " ",
                     p->fg_empty, p->bg_empty, attr);
 
@@ -35,12 +35,12 @@ static void progress_render(TuiWidget *widget)
         if (max_label < 0) max_label = 0;
         if (label_len > max_label) label_len = max_label;
 
-        tui_screen_write(tui_current_ctx, widget->abs_y, col, p->label,
+        tui_screen_write(widget->ctx, widget->abs_y, col, p->label,
                          p->fg_label, p->bg_label, attr);
         col += label_len;
 
         if (col < widget->abs_x + widget->width) {
-            tui_screen_set_cell(tui_current_ctx, widget->abs_y, col, " ",
+            tui_screen_set_cell(widget->ctx, widget->abs_y, col, " ",
                                 p->fg_label, p->bg_label, attr);
             col++;
         }
@@ -61,17 +61,17 @@ static void progress_render(TuiWidget *widget)
     int fill_width = (p->value * bar_width) / 100;
 
     for (int i = 0; i < fill_width && col + i < widget->abs_x + widget->width; i++) {
-        tui_screen_set_cell(tui_current_ctx, widget->abs_y, col + i, p->fill_char,
+        tui_screen_set_cell(widget->ctx, widget->abs_y, col + i, p->fill_char,
                             fg, bg, attr);
     }
 
     for (int i = fill_width; i < bar_width && col + i < widget->abs_x + widget->width; i++) {
-        tui_screen_set_cell(tui_current_ctx, widget->abs_y, col + i, p->empty_char,
+        tui_screen_set_cell(widget->ctx, widget->abs_y, col + i, p->empty_char,
                             p->fg_empty, p->bg_empty, attr);
     }
 
     if (pct_width > 0) {
-        tui_screen_write(tui_current_ctx, widget->abs_y, col + bar_width, pct_buf,
+        tui_screen_write(widget->ctx, widget->abs_y, col + bar_width, pct_buf,
                          fg, bg, attr);
     }
 }
@@ -93,12 +93,12 @@ static TuiWidgetVTable progress_vtable = {
     .on_blur      = NULL
 };
 
-TuiResult tui_progress_init(TuiProgress *progress, int x, int y, int width, int height)
+TuiResult tui_progress_init_ctx(TuiProgress *progress, TuiContext *ctx, int x, int y, int width, int height)
 {
     if (!progress) return TUI_ERR_MEMORY;
 
-    TuiResult res = tui_widget_init(&progress->base, x, y, width, height,
-                                    &progress_vtable, NULL);
+    TuiResult res = tui_widget_init_ctx(&progress->base, x, y, width, height,
+                                        &progress_vtable, ctx, NULL);
     if (res != TUI_OK) return res;
 
     progress->base.focusable = 0;

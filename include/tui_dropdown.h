@@ -57,7 +57,7 @@ struct TuiDropdown {
     void               *user_data;
 };
 
-TuiResult tui_dropdown_init(TuiDropdown *dropdown, int x, int y, int width);
+TuiResult tui_dropdown_init_ctx(TuiDropdown *dropdown, TuiContext *ctx, int x, int y, int width);
 
 TuiResult tui_dropdown_add_item(TuiDropdown *dropdown, const char *item);
 

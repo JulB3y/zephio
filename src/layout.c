@@ -40,14 +40,14 @@ static void layout_destroy(TuiWidget *widget)
     layout->item_capacity = 0;
 }
 
-TuiResult tui_layout_init(TuiLayout *layout, TuiLayoutDirection direction,
-                          int x, int y, int width, int height)
+TuiResult tui_layout_init_ctx(TuiLayout *layout, TuiContext *ctx, TuiLayoutDirection direction,
+                              int x, int y, int width, int height)
 {
     if (!layout) return TUI_ERR_MEMORY;
     if (width <= 0 || height <= 0) return TUI_ERR_MEMORY;
 
-    TuiResult res = tui_widget_init(&layout->base, x, y, width, height,
-                                    &layout_vtable, NULL);
+    TuiResult res = tui_widget_init_ctx(&layout->base, x, y, width, height,
+                                        &layout_vtable, ctx, NULL);
     if (res != TUI_OK) return res;
 
     layout->direction     = direction;

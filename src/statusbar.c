@@ -19,11 +19,11 @@ static void statusbar_render(TuiWidget *widget)
         bg = sb->bg_message;
     }
 
-    tui_screen_fill(tui_current_ctx, widget->abs_y, widget->abs_x,
+    tui_screen_fill(widget->ctx, widget->abs_y, widget->abs_x,
                     widget->width, widget->height, " ", fg, bg, at);
 
     if (sb->message && sb->message_ticks > 0) {
-        tui_screen_write(tui_current_ctx, widget->abs_y, widget->abs_x,
+        tui_screen_write(widget->ctx, widget->abs_y, widget->abs_x,
                          sb->message, fg, bg, at);
         return;
     }
@@ -39,7 +39,7 @@ static void statusbar_render(TuiWidget *widget)
         int clen = wlen < (int)sizeof(buf) - 1 ? wlen : (int)sizeof(buf) - 1;
         memcpy(buf, sb->text_left, (size_t)clen);
         buf[clen] = '\0';
-        tui_screen_write(tui_current_ctx, widget->abs_y, widget->abs_x + 1, buf, fg, bg, at);
+        tui_screen_write(widget->ctx, widget->abs_y, widget->abs_x + 1, buf, fg, bg, at);
     }
 
     if (center_len > 0) {
@@ -51,7 +51,7 @@ static void statusbar_render(TuiWidget *widget)
         buf[clen] = '\0';
         int cx = (widget->width - wlen) / 2;
         if (cx < 0) cx = 0;
-        tui_screen_write(tui_current_ctx, widget->abs_y, widget->abs_x + cx, buf, fg, bg, at);
+        tui_screen_write(widget->ctx, widget->abs_y, widget->abs_x + cx, buf, fg, bg, at);
     }
 
     if (right_len > 0) {
@@ -63,7 +63,7 @@ static void statusbar_render(TuiWidget *widget)
         buf[clen] = '\0';
         int rx = widget->width - wlen - 1;
         if (rx < 0) rx = 0;
-        tui_screen_write(tui_current_ctx, widget->abs_y, widget->abs_x + rx, buf, fg, bg, at);
+        tui_screen_write(widget->ctx, widget->abs_y, widget->abs_x + rx, buf, fg, bg, at);
     }
 }
 
@@ -90,12 +90,12 @@ static TuiWidgetVTable statusbar_vtable = {
     .on_blur      = NULL
 };
 
-TuiResult tui_statusbar_init(TuiStatusBar *statusbar, int x, int y, int width)
+TuiResult tui_statusbar_init_ctx(TuiStatusBar *statusbar, TuiContext *ctx, int x, int y, int width)
 {
     if (!statusbar) return TUI_ERR_MEMORY;
 
-    TuiResult res = tui_widget_init(&statusbar->base, x, y, width, 1,
-                                    &statusbar_vtable, NULL);
+    TuiResult res = tui_widget_init_ctx(&statusbar->base, x, y, width, 1,
+                                        &statusbar_vtable, ctx, NULL);
     if (res != TUI_OK) return res;
 
     statusbar->base.focusable = 0;
@@ -152,7 +152,7 @@ void tui_statusbar_set_colors(TuiStatusBar *statusbar,
 }
 
 void tui_statusbar_set_message_colors(TuiStatusBar *statusbar,
-                                      TuiColor fg, TuiColor bg)
+                                    TuiColor fg, TuiColor bg)
 {
     if (!statusbar) return;
     statusbar->fg_message = fg;

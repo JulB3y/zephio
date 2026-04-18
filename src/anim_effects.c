@@ -377,7 +377,7 @@ void tui_pulse_render(TuiPulse *pulse)
             fg = pulse->empty_fg;
             bg = pulse->empty_bg;
         }
-        tui_screen_set_cell(tui_current_ctx, abs_y, abs_x + i, " ", fg, bg, TUI_ATTR_NONE);
+        tui_screen_set_cell(pulse->widget->ctx, abs_y, abs_x + i, " ", fg, bg, TUI_ATTR_NONE);
     }
 }
 

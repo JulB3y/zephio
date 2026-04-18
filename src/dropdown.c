@@ -40,9 +40,9 @@ static void popup_render(TuiWidget *widget)
     TuiColor bfg = TUI_COLOR_INDEX(14);
     TuiColor bbg = dd->bg_popup;
 
-    tui_screen_fill(tui_current_ctx, widget->abs_y, widget->abs_x,
+    tui_screen_fill(widget->ctx, widget->abs_y, widget->abs_x,
                     widget->width, widget->height, " ", fg, bg, TUI_ATTR_NONE);
-    tui_screen_box_single(tui_current_ctx, widget->abs_y, widget->abs_x,
+    tui_screen_box_single(widget->ctx, widget->abs_y, widget->abs_x,
                           widget->width, widget->height, bfg, bbg, TUI_ATTR_BOLD);
 
     int visible = dd->item_count < dd->max_visible
@@ -61,7 +61,7 @@ static void popup_render(TuiWidget *widget)
             iat = TUI_ATTR_REVERSE;
         }
 
-        tui_screen_fill(tui_current_ctx, widget->abs_y + 1 + i, widget->abs_x + 1,
+        tui_screen_fill(widget->ctx, widget->abs_y + 1 + i, widget->abs_x + 1,
                         widget->width - 2, 1, " ", ifg, ibg, iat);
 
         if (dd->items[idx]) {
@@ -72,7 +72,7 @@ static void popup_render(TuiWidget *widget)
             int clen = wlen < (int)sizeof(buf) - 1 ? wlen : (int)sizeof(buf) - 1;
             memcpy(buf, dd->items[idx], (size_t)clen);
             buf[clen] = '\0';
-            tui_screen_write(tui_current_ctx, widget->abs_y + 1 + i,
+            tui_screen_write(widget->ctx, widget->abs_y + 1 + i,
                              widget->abs_x + 2, buf, ifg, ibg, iat);
         }
     }
@@ -199,7 +199,7 @@ static void dropdown_render(TuiWidget *widget)
         attr |= TUI_ATTR_REVERSE;
     }
 
-    tui_screen_fill(tui_current_ctx, widget->abs_y, widget->abs_x,
+    tui_screen_fill(widget->ctx, widget->abs_y, widget->abs_x,
                     widget->width, widget->height, " ", fg, bg, attr);
 
     const char *text = "Select...";
@@ -215,8 +215,8 @@ static void dropdown_render(TuiWidget *widget)
     memcpy(buf, text, (size_t)clen);
     buf[clen] = '\0';
 
-    tui_screen_write(tui_current_ctx, widget->abs_y, widget->abs_x + 1, buf, fg, bg, attr);
-    tui_screen_write(tui_current_ctx, widget->abs_y, widget->abs_x + widget->width - 2,
+    tui_screen_write(widget->ctx, widget->abs_y, widget->abs_x + 1, buf, fg, bg, attr);
+    tui_screen_write(widget->ctx, widget->abs_y, widget->abs_x + widget->width - 2,
                      "\xe2\x96\xbc", fg, bg, attr);
 }
 
@@ -283,12 +283,12 @@ static TuiWidgetVTable dropdown_vtable = {
     .on_blur      = NULL
 };
 
-TuiResult tui_dropdown_init(TuiDropdown *dropdown, int x, int y, int width)
+TuiResult tui_dropdown_init_ctx(TuiDropdown *dropdown, TuiContext *ctx, int x, int y, int width)
 {
     if (!dropdown) return TUI_ERR_MEMORY;
 
-    TuiResult res = tui_widget_init(&dropdown->base, x, y, width, 1,
-                                    &dropdown_vtable, NULL);
+    TuiResult res = tui_widget_init_ctx(&dropdown->base, x, y, width, 1,
+                                        &dropdown_vtable, ctx, NULL);
     if (res != TUI_OK) return res;
 
     dropdown->base.focusable = 1;
@@ -433,8 +433,8 @@ void tui_dropdown_open(TuiDropdown *dropdown, void *app)
     int px = dropdown->base.abs_x;
     int py = dropdown->base.abs_y + dropdown->base.height;
 
-    tui_widget_init(&dropdown->popup.base, px, py, pw, ph,
-                    &popup_vtable, NULL);
+    tui_widget_init_ctx(&dropdown->popup.base, px, py, pw, ph,
+                        &popup_vtable, dropdown->base.ctx, NULL);
     dropdown->popup.base.focusable = 1;
     dropdown->popup.owner       = dropdown;
     dropdown->popup.highlighted = dropdown->selected >= 0

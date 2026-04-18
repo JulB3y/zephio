@@ -37,9 +37,10 @@ typedef struct {
 } TuiCheckbox;
 
 /**
- * @brief Initialize a checkbox widget.
+ * @brief Initialize a checkbox widget with context.
  *
  * @param checkbox  Checkbox struct to initialize.
+ * @param ctx       TUI context.
  * @param x         Column offset.
  * @param y         Row offset.
  * @param width     Width in columns (should accommodate "[x] label").
@@ -47,8 +48,8 @@ typedef struct {
  * @param label     Label text (copied; may be NULL).
  * @return TUI_OK on success.
  */
-TuiResult tui_checkbox_init(TuiCheckbox *checkbox, int x, int y,
-                            int width, int height, const char *label);
+TuiResult tui_checkbox_init_ctx(TuiCheckbox *checkbox, TuiContext *ctx, int x, int y,
+                                int width, int height, const char *label);
 
 /**
  * @brief Set the checkbox state.

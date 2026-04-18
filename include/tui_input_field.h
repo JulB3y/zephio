@@ -38,17 +38,18 @@ typedef struct {
 } TuiInputField;
 
 /**
- * @brief Initialize an input field widget.
+ * @brief Initialize an input field widget with context.
  *
  * @param field     Field struct to initialize.
+ * @param ctx       TUI context.
  * @param x         Column offset.
  * @param y         Row offset.
  * @param width     Visible width in columns.
  * @param capacity  Maximum text buffer size (bytes).
  * @return TUI_OK on success.
  */
-TuiResult tui_input_field_init(TuiInputField *field, int x, int y, int width,
-                               int capacity);
+TuiResult tui_input_field_init_ctx(TuiInputField *field, TuiContext *ctx, int x, int y, int width,
+                                  int capacity);
 
 /**
  * @brief Set the field text programmatically.

@@ -24,12 +24,12 @@ static void separator_render(TuiWidget *widget)
 
     if (sep->horizontal) {
         for (int c = 0; c < widget->width; c++) {
-            tui_screen_set_cell(tui_current_ctx, widget->abs_y, widget->abs_x + c,
+            tui_screen_set_cell(widget->ctx, widget->abs_y, widget->abs_x + c,
                                 "\xe2\x94\x80", fg, bg, attr);
         }
     } else {
         for (int r = 0; r < widget->height; r++) {
-            tui_screen_set_cell(tui_current_ctx, widget->abs_y + r, widget->abs_x,
+            tui_screen_set_cell(widget->ctx, widget->abs_y + r, widget->abs_x,
                                 "\xe2\x94\x82", fg, bg, attr);
         }
     }
@@ -45,12 +45,12 @@ static TuiWidgetVTable separator_vtable = {
     .on_blur      = NULL
 };
 
-TuiResult tui_separator_init_h(TuiSeparator *sep, int x, int y, int width)
+TuiResult tui_separator_init_h_ctx(TuiSeparator *sep, TuiContext *ctx, int x, int y, int width)
 {
     if (!sep) return TUI_ERR_MEMORY;
 
-    TuiResult res = tui_widget_init(&sep->base, x, y, width, 1,
-                                    &separator_vtable, NULL);
+    TuiResult res = tui_widget_init_ctx(&sep->base, x, y, width, 1,
+                                        &separator_vtable, ctx, NULL);
     if (res != TUI_OK) return res;
 
     sep->base.focusable = 0;
@@ -62,12 +62,12 @@ TuiResult tui_separator_init_h(TuiSeparator *sep, int x, int y, int width)
     return TUI_OK;
 }
 
-TuiResult tui_separator_init_v(TuiSeparator *sep, int x, int y, int height)
+TuiResult tui_separator_init_v_ctx(TuiSeparator *sep, TuiContext *ctx, int x, int y, int height)
 {
     if (!sep) return TUI_ERR_MEMORY;
 
-    TuiResult res = tui_widget_init(&sep->base, x, y, 1, height,
-                                    &separator_vtable, NULL);
+    TuiResult res = tui_widget_init_ctx(&sep->base, x, y, 1, height,
+                                        &separator_vtable, ctx, NULL);
     if (res != TUI_OK) return res;
 
     sep->base.focusable = 0;

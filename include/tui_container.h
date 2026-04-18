@@ -21,17 +21,18 @@ typedef struct {
 } TuiContainer;
 
 /**
- * @brief Initialize a container widget.
+ * @brief Initialize a container widget with context.
  *
  * @param container  Container struct to initialize.
+ * @param ctx        TUI context.
  * @param x          Column offset.
  * @param y          Row offset.
  * @param width      Width in columns.
  * @param height     Height in rows.
  * @return TUI_OK on success.
  */
-TuiResult tui_container_init(TuiContainer *container, int x, int y,
-                             int width, int height);
+TuiResult tui_container_init_ctx(TuiContainer *container, TuiContext *ctx, int x, int y,
+                               int width, int height);
 
 /**
  * @brief Set the container background color.

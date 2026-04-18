@@ -42,18 +42,19 @@ struct TuiDialog {
 };
 
 /**
- * @brief Initialize a dialog widget.
+ * @brief Initialize a dialog widget with context.
  *
  * The dialog is centered on screen. Width/height are auto-calculated
- * from the message content, or can be overridden with tui_widget_set_size().
+ * from to message content, or can be overridden with tui_widget_set_size().
  *
  * @param dialog     Dialog struct to initialize.
+ * @param ctx        TUI context.
  * @param title      Title string (copied). May be NULL.
  * @param message    Body message (copied). May be NULL.
  * @return TUI_OK on success.
  */
-TuiResult tui_dialog_init(TuiDialog *dialog, const char *title,
-                          const char *message);
+TuiResult tui_dialog_init_ctx(TuiDialog *dialog, TuiContext *ctx, const char *title,
+                              const char *message);
 
 /**
  * @brief Add a button to the dialog.
@@ -75,12 +76,15 @@ void tui_dialog_set_on_button(TuiDialog *dialog, TuiDialogCallback callback,
                               void *user_data);
 
 /**
- * @brief Center the dialog in the terminal.
+ * @brief Center dialog in terminal.
  *
- * Should be called after init, before pushing to the overlay stack.
+ * Should be called after init, before pushing to overlay stack.
  * Recalculates x/y to center based on current screen size.
+ *
+ * @param ctx  TuiContext for screen size query.
+ * @param dialog  Dialog widget.
  */
-void tui_dialog_center(TuiDialog *dialog);
+void tui_dialog_center(TuiContext *ctx, TuiDialog *dialog);
 
 /**
  * @brief Get the selected button index after the dialog closes.

@@ -23,9 +23,10 @@ typedef struct {
 } TuiLabel;
 
 /**
- * @brief Initialize a label widget.
+ * @brief Initialize a label widget with context.
  *
  * @param label   Label struct to initialize.
+ * @param ctx     TUI context.
  * @param x       Column offset.
  * @param y       Row offset.
  * @param width   Width in columns.
@@ -33,11 +34,11 @@ typedef struct {
  * @param text    Initial text (copied; may be NULL).
  * @return TUI_OK on success.
  */
-TuiResult tui_label_init(TuiLabel *label, int x, int y, int width, int height,
-                         const char *text);
+TuiResult tui_label_init_ctx(TuiLabel *label, TuiContext *ctx, int x, int y, int width, int height,
+                             const char *text);
 
 /**
- * @brief Update the label text.
+ * @brief Update label text.
  *
  * @param label  Label widget.
  * @param text   New text (copied; may be NULL).

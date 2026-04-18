@@ -60,7 +60,7 @@ typedef struct {
     void               *user_data;
 } TuiTreeView;
 
-TuiResult tui_tree_view_init(TuiTreeView *tv, int x, int y, int width, int height);
+TuiResult tui_tree_view_init_ctx(TuiTreeView *tv, TuiContext *ctx, int x, int y, int width, int height);
 
 TuiTreeNode *tui_tree_node_create(const char *text, void *user_data);
 

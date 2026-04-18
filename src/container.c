@@ -9,11 +9,11 @@ static void container_render(TuiWidget *widget)
 
     if (widget->theme) {
         TuiStyle style = tui_widget_get_style(widget);
-        tui_screen_fill(tui_current_ctx, widget->abs_y, widget->abs_x,
+        tui_screen_fill(widget->ctx, widget->abs_y, widget->abs_x,
                         widget->width, widget->height,
                         " ", style.fg, style.bg, style.attr);
     } else {
-        tui_screen_fill(tui_current_ctx, widget->abs_y, widget->abs_x,
+        tui_screen_fill(widget->ctx, widget->abs_y, widget->abs_x,
                         widget->width, widget->height,
                         " ", TUI_COLOR_INDEX(0), container->bg, TUI_ATTR_NONE);
     }
@@ -29,13 +29,13 @@ static TuiWidgetVTable container_vtable = {
     .on_blur      = NULL
 };
 
-TuiResult tui_container_init(TuiContainer *container, int x, int y,
-                             int width, int height)
+TuiResult tui_container_init_ctx(TuiContainer *container, TuiContext *ctx, int x, int y,
+                                  int width, int height)
 {
     if (!container) return TUI_ERR_MEMORY;
 
-    TuiResult res = tui_widget_init(&container->base, x, y, width, height,
-                                    &container_vtable, NULL);
+    TuiResult res = tui_widget_init_ctx(&container->base, x, y, width, height,
+                                        &container_vtable, ctx, NULL);
     if (res != TUI_OK) return res;
 
     container->base.focusable = 0;

@@ -100,7 +100,7 @@ static void textarea_render(TuiWidget *widget)
         attr = style.attr;
     }
 
-    tui_screen_fill(tui_current_ctx, widget->abs_y, widget->abs_x,
+    tui_screen_fill(widget->ctx, widget->abs_y, widget->abs_x,
                     widget->width, widget->height, " ", fg, bg, attr);
 
     char buf[RENDER_BUF_SIZE];
@@ -129,7 +129,7 @@ static void textarea_render(TuiWidget *widget)
                           ? visible_bytes : sizeof(buf) - 1;
             memcpy(buf, line + skip_bytes, copy);
             buf[copy] = '\0';
-            tui_screen_write(tui_current_ctx, widget->abs_y + r, widget->abs_x,
+            tui_screen_write(widget->ctx, widget->abs_y + r, widget->abs_x,
                              buf, fg, bg, attr);
         }
     }
@@ -142,7 +142,7 @@ static void textarea_render(TuiWidget *widget)
                                                         (size_t)ll, (size_t)ta->cursor_col);
             int screen_col = cursor_display - ta->scroll_x;
             if (screen_col >= 0 && screen_col < vp_width) {
-                tui_screen_invert_cell(tui_current_ctx, widget->abs_y + cursor_screen_row,
+                tui_screen_invert_cell(widget->ctx, widget->abs_y + cursor_screen_row,
                                        widget->abs_x + screen_col);
             }
         }
@@ -433,13 +433,13 @@ static TuiWidgetVTable textarea_vtable = {
     .on_blur      = NULL
 };
 
-TuiResult tui_textarea_init(TuiTextArea *ta, int x, int y,
-                             int width, int height)
+TuiResult tui_textarea_init_ctx(TuiTextArea *ta, TuiContext *ctx, int x, int y,
+                                  int width, int height)
 {
     if (!ta) return TUI_ERR_MEMORY;
 
-    TuiResult res = tui_widget_init(&ta->base, x, y, width, height,
-                                     &textarea_vtable, NULL);
+    TuiResult res = tui_widget_init_ctx(&ta->base, x, y, width, height,
+                                        &textarea_vtable, ctx, NULL);
     if (res != TUI_OK) return res;
 
     ta->base.focusable = 1;

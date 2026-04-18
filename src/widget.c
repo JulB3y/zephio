@@ -1,6 +1,7 @@
 #define _POSIX_C_SOURCE 200809L
 
 #include "tui_widget.h"
+#include "tui_context.h"
 
 #include <stdlib.h>
 #include <string.h>
@@ -8,8 +9,8 @@
 #define CHILDREN_INITIAL_CAPACITY 8
 #define MAX_FOCUS_CHAIN 128
 
-TuiResult tui_widget_init(TuiWidget *widget, int x, int y, int width, int height,
-                          TuiWidgetVTable *vtable, void *data)
+TuiResult tui_widget_init_ctx(TuiWidget *widget, int x, int y, int width, int height,
+                              TuiWidgetVTable *vtable, struct TuiContext *ctx, void *data)
 {
     if (!widget) return TUI_ERR_MEMORY;
     if (width <= 0 || height <= 0) return TUI_ERR_MEMORY;
@@ -40,6 +41,7 @@ TuiResult tui_widget_init(TuiWidget *widget, int x, int y, int width, int height
 
     widget->theme  = NULL;
     widget->vtable = vtable;
+    widget->ctx    = ctx;
     widget->data   = data;
 
     return TUI_OK;

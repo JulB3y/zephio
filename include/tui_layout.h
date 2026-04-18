@@ -69,9 +69,10 @@ typedef struct {
 } TuiLayout;
 
 /**
- * @brief Initialize a layout widget.
+ * @brief Initialize a layout widget with context.
  *
  * @param layout     Layout struct to initialize.
+ * @param ctx        TUI context.
  * @param direction  TUI_LAYOUT_HORIZONTAL or TUI_LAYOUT_VERTICAL.
  * @param x          Column offset.
  * @param y          Row offset.
@@ -79,8 +80,8 @@ typedef struct {
  * @param height     Layout height.
  * @return TUI_OK on success.
  */
-TuiResult tui_layout_init(TuiLayout *layout, TuiLayoutDirection direction,
-                          int x, int y, int width, int height);
+TuiResult tui_layout_init_ctx(TuiLayout *layout, TuiContext *ctx, TuiLayoutDirection direction,
+                              int x, int y, int width, int height);
 
 /**
  * @brief Destroy the layout and free internal data.

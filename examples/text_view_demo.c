@@ -120,30 +120,30 @@ static void update_status(void)
     tui_label_set_text(&g_demo.status, g_demo.status_text);
 }
 
-static void build_ui(int rows, int cols)
+static void build_ui(int rows, int cols, TuiContext *ctx)
 {
-    tui_widget_init(&g_demo.root, 0, 0, cols, rows, NULL, NULL);
+    tui_widget_init_ctx(&g_demo.root, 0, 0, cols, rows, NULL, ctx, NULL);
 
-    tui_label_init(&g_demo.header, 0, 0, cols, 1,
+    tui_label_init_ctx(&g_demo.header, ctx, 0, 0, cols, 1,
                    " TextView Demo  |  Phase 13  |  Multi-line text with scrolling");
     tui_label_set_colors(&g_demo.header,
-                         TUI_COLOR_INDEX(15), TUI_COLOR_INDEX(4));
+                        TUI_COLOR_INDEX(15), TUI_COLOR_INDEX(4));
     tui_label_set_attr(&g_demo.header, TUI_ATTR_BOLD);
     tui_widget_add_child(&g_demo.root, &g_demo.header.base);
 
     int content_h = rows - 2;
     if (content_h < 3) content_h = 3;
 
-    tui_text_view_init(&g_demo.content, 1, 1, cols - 2, content_h);
+    tui_text_view_init_ctx(&g_demo.content, ctx, 1, 1, cols - 2, content_h);
     tui_text_view_set_colors(&g_demo.content,
                              TUI_COLOR_INDEX(15), TUI_COLOR_INDEX(234));
     g_demo.content.base.base.focusable = 1;
     tui_text_view_set_text(&g_demo.content, g_long_text);
     tui_widget_add_child(&g_demo.root, &g_demo.content.base.base);
 
-    tui_label_init(&g_demo.status, 0, rows - 1, cols, 1, "");
+    tui_label_init_ctx(&g_demo.status, ctx, 0, rows - 1, cols, 1, "");
     tui_label_set_colors(&g_demo.status,
-                         TUI_COLOR_INDEX(15), TUI_COLOR_INDEX(236));
+                        TUI_COLOR_INDEX(15), TUI_COLOR_INDEX(236));
     tui_widget_add_child(&g_demo.root, &g_demo.status.base);
 
     update_status();
@@ -160,30 +160,30 @@ static void destroy_ui(void)
     g_demo.initialized = 0;
 }
 
-static void draw_frame(void)
+static void draw_frame(TuiContext *ctx)
 {
-    tui_screen_clear();
+    tui_screen_clear(ctx);
     tui_widget_render(&g_demo.root);
-    tui_screen_render();
+    tui_screen_render(ctx);
 }
 
 static int input_callback(const TuiEvent *event, void *user_data)
 {
-    (void)user_data;
+    TuiContext *ctx = (TuiContext *)user_data;
 
     if (event->key == TUI_EVENT_RESIZE) {
-        tui_screen_resize(event->size.rows, event->size.cols);
+        tui_screen_resize(ctx, event->size.rows, event->size.cols);
         destroy_ui();
-        build_ui(event->size.rows, event->size.cols);
+        build_ui( event->size.rows, event->size.cols, ctx);
         tui_widget_focus_next(&g_demo.root);
-        draw_frame();
+        draw_frame(ctx);
         return 0;
     }
 
     if (event->key == TUI_EVENT_MOUSE) {
         tui_widget_handle_mouse(&g_demo.root, &event->mouse);
         update_status();
-        draw_frame();
+        draw_frame(ctx);
         return 0;
     }
 
@@ -205,7 +205,7 @@ static int input_callback(const TuiEvent *event, void *user_data)
             tui_text_view_set_word_wrap(&g_demo.content, !wrap);
             update_status();
             tui_widget_mark_dirty_recursive(&g_demo.root);
-            draw_frame();
+            draw_frame(ctx);
             return 0;
         }
     }
@@ -216,34 +216,36 @@ static int input_callback(const TuiEvent *event, void *user_data)
     }
 
     update_status();
-    draw_frame();
+    draw_frame(ctx);
 
     return 0;
 }
 
 int main(void)
 {
-    TuiResult res = tui_init();
+    TuiContext ctx;
+
+    TuiResult res = tui_init(&ctx);
     if (res != TUI_OK) {
         fprintf(stderr, "tui_init failed: %d\n", res);
         return 1;
     }
 
-    tui_input_init();
-    tui_mouse_enable();
+    tui_input_init(&ctx);
+    tui_mouse_enable(&ctx);
 
     build_long_text();
 
-    TuiSize size = tui_screen_size();
-    build_ui(size.rows, size.cols);
+    TuiSize size = tui_screen_size(&ctx);
+    build_ui( size.rows, size.cols, &ctx);
     tui_widget_focus_next(&g_demo.root);
-    draw_frame();
+    draw_frame(&ctx);
 
-    tui_input_loop(input_callback, NULL);
+    tui_input_loop(&ctx, input_callback, &ctx);
 
     destroy_ui();
-    tui_mouse_disable();
-    tui_input_shutdown();
-    tui_shutdown();
+    tui_mouse_disable(&ctx);
+    tui_input_shutdown(&ctx);
+    tui_shutdown(&ctx);
     return 0;
 }

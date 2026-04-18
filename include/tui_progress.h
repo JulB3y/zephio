@@ -28,16 +28,17 @@ typedef struct {
 } TuiProgress;
 
 /**
- * @brief Initialize a progress bar widget.
+ * @brief Initialize a progress bar widget with context.
  *
  * @param progress  Progress struct to initialize.
+ * @param ctx       TUI context.
  * @param x         Column offset.
  * @param y         Row offset.
  * @param width     Width in columns (minimum 4 for "[%%]").
  * @param height    Height in rows (typically 1).
  * @return TUI_OK on success.
  */
-TuiResult tui_progress_init(TuiProgress *progress, int x, int y, int width, int height);
+TuiResult tui_progress_init_ctx(TuiProgress *progress, TuiContext *ctx, int x, int y, int width, int height);
 
 /**
  * @brief Set the progress value (clamped to 0-100).

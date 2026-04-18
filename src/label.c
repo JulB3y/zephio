@@ -13,11 +13,11 @@ static void label_render(TuiWidget *widget)
 
     if (widget->theme) {
         TuiStyle style = tui_widget_get_style(widget);
-        tui_screen_write(tui_current_ctx, widget->abs_y, widget->abs_x,
+        tui_screen_write(widget->ctx, widget->abs_y, widget->abs_x,
                          label->text, style.fg, style.bg, style.attr);
     } else {
-        tui_screen_write(tui_current_ctx, widget->abs_y, widget->abs_x,
-                         label->text, label->fg, label->bg, label->attr);
+        tui_screen_write(widget->ctx, widget->abs_y, widget->abs_x,
+                          label->text, label->fg, label->bg, label->attr);
     }
 }
 
@@ -38,13 +38,13 @@ static TuiWidgetVTable label_vtable = {
     .on_blur      = NULL
 };
 
-TuiResult tui_label_init(TuiLabel *label, int x, int y, int width, int height,
-                         const char *text)
+TuiResult tui_label_init_ctx(TuiLabel *label, TuiContext *ctx, int x, int y, int width, int height,
+                             const char *text)
 {
     if (!label) return TUI_ERR_MEMORY;
 
-    TuiResult res = tui_widget_init(&label->base, x, y, width, height,
-                                    &label_vtable, NULL);
+    TuiResult res = tui_widget_init_ctx(&label->base, x, y, width, height,
+                                        &label_vtable, ctx, NULL);
     if (res != TUI_OK) return res;
 
     label->base.focusable = 0;

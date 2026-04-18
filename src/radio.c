@@ -13,7 +13,7 @@ static void radio_render(TuiWidget *widget)
     for (int i = 0; i < widget->height; i++) {
         int idx = i;
         if (idx >= radio->option_count) {
-            tui_screen_fill(tui_current_ctx, widget->abs_y + i, widget->abs_x,
+            tui_screen_fill(widget->ctx, widget->abs_y + i, widget->abs_x,
                             widget->width, 1, " ",
                             radio->fg, radio->bg, radio->attr);
             continue;
@@ -46,11 +46,11 @@ static void radio_render(TuiWidget *widget)
             }
         }
 
-        tui_screen_fill(tui_current_ctx, widget->abs_y + i, widget->abs_x,
+        tui_screen_fill(widget->ctx, widget->abs_y + i, widget->abs_x,
                         widget->width, 1, " ", fg, bg, attr);
 
         const char *marker = (idx == radio->selected) ? "(x)" : "( )";
-        tui_screen_write(tui_current_ctx, widget->abs_y + i, widget->abs_x,
+        tui_screen_write(widget->ctx, widget->abs_y + i, widget->abs_x,
                           marker, fg, bg, attr);
 
         if (radio->options[idx]) {
@@ -67,7 +67,7 @@ static void radio_render(TuiWidget *widget)
             memcpy(buf, radio->options[idx], (size_t)copy_len);
             buf[copy_len] = '\0';
 
-            tui_screen_write(tui_current_ctx, widget->abs_y + i,
+            tui_screen_write(widget->ctx, widget->abs_y + i,
                               widget->abs_x + label_start,
                               buf, fg, bg, attr);
         }
@@ -164,12 +164,12 @@ static TuiWidgetVTable radio_vtable = {
     .on_blur      = NULL
 };
 
-TuiResult tui_radio_init(TuiRadio *radio, int x, int y, int width, int height)
+TuiResult tui_radio_init_ctx(TuiRadio *radio, TuiContext *ctx, int x, int y, int width, int height)
 {
     if (!radio) return TUI_ERR_MEMORY;
 
-    TuiResult res = tui_widget_init(&radio->base, x, y, width, height,
-                                    &radio_vtable, NULL);
+    TuiResult res = tui_widget_init_ctx(&radio->base, x, y, width, height,
+                                        &radio_vtable, ctx, NULL);
     if (res != TUI_OK) return res;
 
     radio->base.focusable = 1;

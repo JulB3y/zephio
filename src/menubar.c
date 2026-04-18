@@ -40,9 +40,9 @@ static void popup_render(TuiWidget *widget)
     TuiColor bg  = mb->bg_popup;
     TuiColor bfg = TUI_COLOR_INDEX(14);
 
-    tui_screen_fill(tui_current_ctx, widget->abs_y, widget->abs_x,
+    tui_screen_fill(widget->ctx, widget->abs_y, widget->abs_x,
                     widget->width, widget->height, " ", fg, bg, TUI_ATTR_NONE);
-    tui_screen_box_single(tui_current_ctx, widget->abs_y, widget->abs_x,
+    tui_screen_box_single(widget->ctx, widget->abs_y, widget->abs_x,
                           widget->width, widget->height, bfg, bg, TUI_ATTR_BOLD);
 
     for (int i = 0; i < menu->item_count; i++) {
@@ -51,7 +51,7 @@ static void popup_render(TuiWidget *widget)
 
         if (item->is_separator) {
             for (int c = 1; c < widget->width - 1; c++)
-                tui_screen_set_cell(tui_current_ctx, row, widget->abs_x + c,
+                tui_screen_set_cell(widget->ctx, row, widget->abs_x + c,
                                     "\xe2\x94\x80", bfg, bg, TUI_ATTR_DIM);
             continue;
         }
@@ -66,7 +66,7 @@ static void popup_render(TuiWidget *widget)
             iat = TUI_ATTR_REVERSE;
         }
 
-        tui_screen_fill(tui_current_ctx, row, widget->abs_x + 1,
+        tui_screen_fill(widget->ctx, row, widget->abs_x + 1,
                         widget->width - 2, 1, " ", ifg, ibg, iat);
 
         if (item->label) {
@@ -77,7 +77,7 @@ static void popup_render(TuiWidget *widget)
             int clen = wlen < (int)sizeof(buf) - 1 ? wlen : (int)sizeof(buf) - 1;
             memcpy(buf, item->label, (size_t)clen);
             buf[clen] = '\0';
-            tui_screen_write(tui_current_ctx, row, widget->abs_x + 2, buf, ifg, ibg, iat);
+            tui_screen_write(widget->ctx, row, widget->abs_x + 2, buf, ifg, ibg, iat);
         }
     }
 }
@@ -212,7 +212,7 @@ static void menubar_render(TuiWidget *widget)
 {
     TuiMenuBar *mb = (TuiMenuBar *)widget;
 
-    tui_screen_fill(tui_current_ctx, widget->abs_y, widget->abs_x,
+    tui_screen_fill(widget->ctx, widget->abs_y, widget->abs_x,
                     widget->width, widget->height, " ",
                     mb->fg, mb->bg, mb->attr);
 
@@ -243,14 +243,14 @@ static void menubar_render(TuiWidget *widget)
             buf[2] = '\0';
         }
 
-        tui_screen_write(tui_current_ctx, widget->abs_y,
+        tui_screen_write(widget->ctx, widget->abs_y,
                          widget->abs_x + m->start_x,
                          buf, fg, bg, at);
 
         if (m->mnemonic && m->label) {
             for (int j = 0; m->label[j]; j++) {
                 if (tolower((unsigned char)m->label[j]) == tolower((unsigned char)m->mnemonic)) {
-                    tui_screen_set_cell(tui_current_ctx, widget->abs_y,
+                    tui_screen_set_cell(widget->ctx, widget->abs_y,
                                         widget->abs_x + m->start_x + 1 + j,
                                         &m->label[j], fg, bg,
                                         at | TUI_ATTR_UNDERLINE);
@@ -364,12 +364,12 @@ static TuiWidgetVTable menubar_vtable = {
     .on_blur      = NULL
 };
 
-TuiResult tui_menubar_init(TuiMenuBar *menubar, int x, int y, int width)
+TuiResult tui_menubar_init_ctx(TuiMenuBar *menubar, TuiContext *ctx, int x, int y, int width)
 {
     if (!menubar) return TUI_ERR_MEMORY;
 
-    TuiResult res = tui_widget_init(&menubar->base, x, y, width, 1,
-                                    &menubar_vtable, NULL);
+    TuiResult res = tui_widget_init_ctx(&menubar->base, x, y, width, 1,
+                                        &menubar_vtable, ctx, NULL);
     if (res != TUI_OK) return res;
 
     menubar->base.focusable = 1;
@@ -532,8 +532,8 @@ void tui_menubar_open_menu(TuiMenuBar *menubar, int menu_index)
     int px = menubar->base.abs_x + menu->start_x;
     int py = menubar->base.abs_y + menubar->base.height;
 
-    tui_widget_init(&menubar->popup.base, px, py, pw, ph,
-                    &popup_vtable, NULL);
+    tui_widget_init_ctx(&menubar->popup.base, px, py, pw, ph,
+                        &popup_vtable, menubar->base.ctx, NULL);
     menubar->popup.base.focusable = 1;
     menubar->popup.owner       = menubar;
     menubar->popup.menu_index  = menu_index;

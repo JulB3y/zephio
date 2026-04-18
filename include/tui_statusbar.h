@@ -40,7 +40,7 @@ struct TuiStatusBar {
     TuiAttr  attr;
 };
 
-TuiResult tui_statusbar_init(TuiStatusBar *statusbar, int x, int y, int width);
+TuiResult tui_statusbar_init_ctx(TuiStatusBar *statusbar, TuiContext *ctx, int x, int y, int width);
 
 void tui_statusbar_set_text(TuiStatusBar *statusbar,
                             const char *left, const char *center,

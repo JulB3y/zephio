@@ -32,9 +32,10 @@ typedef struct {
 } TuiBox;
 
 /**
- * @brief Initialize a box widget.
+ * @brief Initialize a box widget with context.
  *
  * @param box           Box struct to initialize.
+ * @param ctx           TUI context.
  * @param x             Column offset.
  * @param y             Row offset.
  * @param width         Width in columns.
@@ -42,8 +43,8 @@ typedef struct {
  * @param border_style  TUI_BOX_SINGLE or TUI_BOX_DOUBLE.
  * @return TUI_OK on success.
  */
-TuiResult tui_box_init(TuiBox *box, int x, int y, int width, int height,
-                       int border_style);
+TuiResult tui_box_init_ctx(TuiBox *box, TuiContext *ctx, int x, int y, int width, int height,
+                           int border_style);
 
 /**
  * @brief Set or update the box title (centered in top border).

@@ -34,9 +34,9 @@ static void ctx_render(TuiWidget *widget)
     TuiColor bg  = menu->bg;
     TuiColor bfg = TUI_COLOR_INDEX(14);
 
-    tui_screen_fill(tui_current_ctx, widget->abs_y, widget->abs_x,
+    tui_screen_fill(widget->ctx, widget->abs_y, widget->abs_x,
                     widget->width, widget->height, " ", fg, bg, TUI_ATTR_NONE);
-    tui_screen_box_single(tui_current_ctx, widget->abs_y, widget->abs_x,
+    tui_screen_box_single(widget->ctx, widget->abs_y, widget->abs_x,
                           widget->width, widget->height, bfg, bg, TUI_ATTR_BOLD);
 
     for (int i = 0; i < menu->item_count; i++) {
@@ -45,7 +45,7 @@ static void ctx_render(TuiWidget *widget)
 
         if (item->is_separator) {
             for (int c = 1; c < widget->width - 1; c++)
-                tui_screen_set_cell(tui_current_ctx, row, widget->abs_x + c,
+                tui_screen_set_cell(widget->ctx, row, widget->abs_x + c,
                                     "\xe2\x94\x80", bfg, bg, TUI_ATTR_DIM);
             continue;
         }
@@ -60,7 +60,7 @@ static void ctx_render(TuiWidget *widget)
             iat = TUI_ATTR_REVERSE;
         }
 
-        tui_screen_fill(tui_current_ctx, row, widget->abs_x + 1,
+        tui_screen_fill(widget->ctx, row, widget->abs_x + 1,
                         widget->width - 2, 1, " ", ifg, ibg, iat);
 
         if (item->label) {
@@ -71,7 +71,7 @@ static void ctx_render(TuiWidget *widget)
             int clen = wlen < (int)sizeof(buf) - 1 ? wlen : (int)sizeof(buf) - 1;
             memcpy(buf, item->label, (size_t)clen);
             buf[clen] = '\0';
-            tui_screen_write(tui_current_ctx, row, widget->abs_x + 2, buf, ifg, ibg, iat);
+            tui_screen_write(widget->ctx, row, widget->abs_x + 2, buf, ifg, ibg, iat);
         }
     }
 }
@@ -178,12 +178,12 @@ static TuiWidgetVTable ctx_vtable = {
     .on_blur      = NULL
 };
 
-TuiResult tui_context_menu_init(TuiContextMenu *menu)
+TuiResult tui_context_menu_init_ctx(TuiContextMenu *menu, TuiContext *ctx)
 {
     if (!menu) return TUI_ERR_MEMORY;
 
-    TuiResult res = tui_widget_init(&menu->base, 0, 0, 2, 2,
-                                    &ctx_vtable, NULL);
+    TuiResult res = tui_widget_init_ctx(&menu->base, 0, 0, 2, 2,
+                                        &ctx_vtable, ctx, NULL);
     if (res != TUI_OK) return res;
 
     menu->base.focusable = 1;
@@ -294,7 +294,7 @@ void tui_context_menu_show(TuiContextMenu *menu, void *app,
     int w = max_label_len + 4;
     int h = menu->item_count + 2;
 
-    tui_widget_init(&menu->base, col, row, w, h, &ctx_vtable, NULL);
+    tui_widget_init_ctx(&menu->base, col, row, w, h, &ctx_vtable, menu->base.ctx, NULL);
     menu->base.focusable = 1;
     menu->highlighted    = ctx_next_item(menu, -1, 1);
     menu->is_visible     = 1;

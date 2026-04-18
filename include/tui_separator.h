@@ -23,30 +23,32 @@ typedef struct {
 } TuiSeparator;
 
 /**
- * @brief Initialize a horizontal separator.
+ * @brief Initialize a horizontal separator with context.
  *
  * Height is set to 1.
  *
  * @param sep    Separator struct to initialize.
+ * @param ctx    TUI context.
  * @param x      Column offset.
  * @param y      Row offset.
  * @param width  Line width in columns.
  * @return TUI_OK on success.
  */
-TuiResult tui_separator_init_h(TuiSeparator *sep, int x, int y, int width);
+TuiResult tui_separator_init_h_ctx(TuiSeparator *sep, TuiContext *ctx, int x, int y, int width);
 
 /**
- * @brief Initialize a vertical separator.
+ * @brief Initialize a vertical separator with context.
  *
  * Width is set to 1.
  *
  * @param sep     Separator struct to initialize.
+ * @param ctx     TUI context.
  * @param x       Column offset.
  * @param y       Row offset.
  * @param height  Line height in rows.
  * @return TUI_OK on success.
  */
-TuiResult tui_separator_init_v(TuiSeparator *sep, int x, int y, int height);
+TuiResult tui_separator_init_v_ctx(TuiSeparator *sep, TuiContext *ctx, int x, int y, int height);
 
 /** @brief Set separator colors. */
 void tui_separator_set_colors(TuiSeparator *sep, TuiColor fg, TuiColor bg);

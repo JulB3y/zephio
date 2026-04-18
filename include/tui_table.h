@@ -59,7 +59,7 @@ typedef struct {
     void              *user_data;
 } TuiTable;
 
-TuiResult tui_table_init(TuiTable *table, int x, int y, int width, int height);
+TuiResult tui_table_init_ctx(TuiTable *table, TuiContext *ctx, int x, int y, int width, int height);
 
 TuiResult tui_table_add_column(TuiTable *table, const char *label, int width);
 

@@ -90,46 +90,46 @@ static void update_status(AppWidgets *w, const char *msg)
                          TUI_COLOR_INDEX(15), TUI_COLOR_INDEX(236));
 }
 
-static void build_widgets(AppWidgets *w, int rows, int cols)
+static void build_widgets(AppWidgets *w, TuiContext *ctx, int rows, int cols)
 {
-    tui_widget_init(&w->root, 0, 0, cols, rows, NULL, NULL);
+    tui_widget_init_ctx(&w->root, 0, 0, cols, rows, NULL, ctx, NULL);
 
-    tui_label_init(&w->title, 2, 1, cols - 4, 1,
+    tui_label_init_ctx(&w->title, ctx, 2, 1, cols - 4, 1,
                    "Animation Demo  |  1-4: slide  5: fade  s: spinner  p: pulse  c: color");
     tui_label_set_colors(&w->title, TUI_COLOR_INDEX(14), TUI_COLOR_INDEX(0));
     tui_label_set_attr(&w->title, TUI_ATTR_BOLD);
     tui_widget_add_child(&w->root, &w->title.base);
 
-    tui_label_init(&w->section_slide, 2, 3, 30, 1,
-                   "Slide Effects (keys 1-4):");
+    tui_label_init_ctx(&w->section_slide, ctx, 2, 3, 30, 1,
+                       "Slide Effects (keys 1-4):");
     tui_label_set_colors(&w->section_slide,
                          TUI_COLOR_INDEX(12), TUI_COLOR_INDEX(0));
     tui_label_set_attr(&w->section_slide, TUI_ATTR_BOLD);
     tui_widget_add_child(&w->root, &w->section_slide.base);
 
-    tui_label_init(&w->section_loading, 2, 5, 30, 1,
-                   "Loading Animations (s/p/c):");
+    tui_label_init_ctx(&w->section_loading, ctx, 2, 5, 30, 1,
+                        "Loading Animations (s/p/c):");
     tui_label_set_colors(&w->section_loading,
                          TUI_COLOR_INDEX(12), TUI_COLOR_INDEX(0));
     tui_label_set_attr(&w->section_loading, TUI_ATTR_BOLD);
     tui_widget_add_child(&w->root, &w->section_loading.base);
 
-    tui_label_init(&w->spinner_label, 4, 6, 20, 1, "Spinner: stopped");
+    tui_label_init_ctx(&w->spinner_label, ctx, 4, 6, 20, 1, "Spinner: stopped");
     tui_label_set_colors(&w->spinner_label,
                          TUI_COLOR_INDEX(7), TUI_COLOR_INDEX(0));
     tui_widget_add_child(&w->root, &w->spinner_label.base);
 
-    tui_label_init(&w->pulse_label, 4, 7, 20, 1, "Pulse:   stopped");
+    tui_label_init_ctx(&w->pulse_label, ctx, 4, 7, 20, 1, "Pulse:   stopped");
     tui_label_set_colors(&w->pulse_label,
                          TUI_COLOR_INDEX(7), TUI_COLOR_INDEX(0));
     tui_widget_add_child(&w->root, &w->pulse_label.base);
 
-    tui_label_init(&w->pulse_bar, 4, 8, 20, 1, "");
+    tui_label_init_ctx(&w->pulse_bar, ctx, 4, 8, 20, 1, "");
     tui_label_set_colors(&w->pulse_bar,
                          TUI_COLOR_INDEX(0), TUI_COLOR_INDEX(234));
     tui_widget_add_child(&w->root, &w->pulse_bar.base);
 
-    tui_label_init(&w->hint, 2, 10, cols - 4, 1,
+    tui_label_init_ctx(&w->hint, ctx, 2, 10, cols - 4, 1,
                    "Press 1/2/3/4 to slide a panel in, it slides back out automatically.");
     tui_label_set_colors(&w->hint, TUI_COLOR_INDEX(8), TUI_COLOR_INDEX(0));
     tui_widget_add_child(&w->root, &w->hint.base);
@@ -139,22 +139,22 @@ static void build_widgets(AppWidgets *w, int rows, int cols)
     int panel_x = (cols - panel_w) / 2;
     int panel_y = (rows - panel_h) / 2;
 
-    tui_container_init(&w->slide_panel, panel_x, panel_y, panel_w, panel_h);
+    tui_container_init_ctx(&w->slide_panel, ctx, panel_x, panel_y, panel_w, panel_h);
     tui_container_set_bg(&w->slide_panel, TUI_COLOR_INDEX(236));
     w->slide_panel.base.visible = 0;
     w->panel_home_x = panel_x;
     w->panel_home_y = panel_y;
     tui_widget_add_child(&w->root, &w->slide_panel.base);
 
-    tui_label_init(&w->slide_panel_title, 2, 1, panel_w - 4, 1,
-                   "Sliding Panel — auto-dismiss");
+    tui_label_init_ctx(&w->slide_panel_title, ctx, 2, 1, panel_w - 4, 1,
+                       "Sliding Panel — auto-dismiss");
     tui_label_set_colors(&w->slide_panel_title,
                          TUI_COLOR_INDEX(15), TUI_COLOR_INDEX(236));
     tui_label_set_attr(&w->slide_panel_title, TUI_ATTR_BOLD);
     tui_widget_add_child(&w->slide_panel.base, &w->slide_panel_title.base);
 
-    tui_label_init(&w->slide_panel_hint, 2, 3, panel_w - 4, 1,
-                   "Wait for auto-dismiss...");
+    tui_label_init_ctx(&w->slide_panel_hint, ctx, 2, 3, panel_w - 4, 1,
+                       "Wait for auto-dismiss...");
     tui_label_set_colors(&w->slide_panel_hint,
                          TUI_COLOR_INDEX(8), TUI_COLOR_INDEX(236));
     tui_widget_add_child(&w->slide_panel.base, &w->slide_panel_hint.base);
@@ -164,7 +164,7 @@ static void build_widgets(AppWidgets *w, int rows, int cols)
     int fade_x = (cols - fade_w) / 2;
     int fade_y = (rows - fade_h) / 2;
 
-    tui_container_init(&w->fade_panel, fade_x, fade_y, fade_w, fade_h);
+    tui_container_init_ctx(&w->fade_panel, ctx, fade_x, fade_y, fade_w, fade_h);
     tui_container_set_bg(&w->fade_panel, TUI_COLOR_INDEX(236));
     w->fade_panel.base.visible = 0;
     tui_widget_add_child(&w->root, &w->fade_panel.base);
@@ -176,20 +176,20 @@ static void build_widgets(AppWidgets *w, int rows, int cols)
         int cb_y = (rows - cb_h) / 2;
         if (cb_x < 1) cb_x = 1;
 
-        tui_container_init(&w->color_block, cb_x, cb_y, cb_w, cb_h);
+        tui_container_init_ctx(&w->color_block, ctx, cb_x, cb_y, cb_w, cb_h);
         tui_container_set_bg(&w->color_block, TUI_COLOR_RGB(28, 28, 28));
         w->color_block.base.visible = 0;
         tui_widget_add_child(&w->root, &w->color_block.base);
 
-        tui_label_init(&w->color_block_text, 2, 1, cb_w - 4, 1,
-                       "Press 'c' to animate this block");
+        tui_label_init_ctx(&w->color_block_text, ctx, 2, 1, cb_w - 4, 1,
+                           "Press 'c' to animate this block");
         tui_label_set_colors(&w->color_block_text,
                              TUI_COLOR_RGB(210, 210, 210), TUI_COLOR_RGB(28, 28, 28));
         tui_widget_add_child(&w->color_block.base, &w->color_block_text.base);
     }
 
-    tui_label_init(&w->status, 1, rows - 1, cols - 2, 1,
-                   " Press a key to trigger an animation  |  q/Esc: quit");
+    tui_label_init_ctx(&w->status, ctx, 1, rows - 1, cols - 2, 1,
+                       " Press a key to trigger an animation  |  q/Esc: quit");
     tui_label_set_colors(&w->status,
                          TUI_COLOR_INDEX(15), TUI_COLOR_INDEX(236));
     tui_widget_add_child(&w->root, &w->status.base);
@@ -390,7 +390,7 @@ static int on_init(TuiApp *app, void *user_data)
     w->color_fade_anim_id = TUI_ANIMATOR_INVALID_ID;
 
     TuiSize size = tui_screen_size(app->ctx);
-    build_widgets(w, size.rows, size.cols);
+    build_widgets(w, app->ctx, size.rows, size.cols);
     return 0;
 }
 
@@ -409,10 +409,10 @@ static int on_resize(TuiApp *app, int rows, int cols, void *user_data)
     w->color_fade_anim_id = TUI_ANIMATOR_INVALID_ID;
     w->panel_visible        = 0;
     w->fade_panel_visible   = 0;
-    w->spinner_active       = 0;
-    w->pulse_active         = 0;
+        w->spinner_active       = 0;
+        w->pulse_active         = 0;
 
-    build_widgets(w, rows, cols);
+    build_widgets(w, app->ctx, rows, cols);
     return 0;
 }
 

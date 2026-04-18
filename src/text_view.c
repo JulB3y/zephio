@@ -146,7 +146,7 @@ static void text_view_render(TuiWidget *widget)
 
     tui_scroll_container_clamp_scroll(sc, cv_width, cv_height);
 
-    tui_screen_fill(tui_current_ctx, widget->abs_y, widget->abs_x,
+    tui_screen_fill(widget->ctx, widget->abs_y, widget->abs_x,
                     widget->width, widget->height,
                     " ", tv->fg, tv->bg, tv->attr);
 
@@ -177,7 +177,7 @@ static void text_view_render(TuiWidget *widget)
                           ? visible_bytes : sizeof(buf) - 1;
             memcpy(buf, line_text + skip_bytes, copy);
             buf[copy] = '\0';
-            tui_screen_write(tui_current_ctx, widget->abs_y + r, widget->abs_x,
+            tui_screen_write(widget->ctx, widget->abs_y + r, widget->abs_x,
                              buf, tv->fg, tv->bg, tv->attr);
         }
     }
@@ -219,12 +219,12 @@ static TuiWidgetVTable text_view_vtable = {
     .on_blur      = NULL
 };
 
-TuiResult tui_text_view_init(TuiTextView *tv, int x, int y,
-                              int width, int height)
+TuiResult tui_text_view_init_ctx(TuiTextView *tv, TuiContext *ctx, int x, int y,
+                                  int width, int height)
 {
     if (!tv) return TUI_ERR_MEMORY;
 
-    TuiResult res = tui_scroll_container_init(&tv->base, x, y, width, height);
+    TuiResult res = tui_scroll_container_init_ctx(&tv->base, ctx, x, y, width, height);
     if (res != TUI_OK) return res;
 
     tv->base.base.vtable = &text_view_vtable;

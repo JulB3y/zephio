@@ -39,6 +39,20 @@ TuiResult tui_scroll_container_init(TuiScrollContainer *sc, int x, int y,
                                     int width, int height);
 
 /**
+ * @brief Initialize a scroll container widget with context.
+ *
+ * @param sc      ScrollContainer struct to initialize.
+ * @param ctx     TUI context.
+ * @param x       Column offset.
+ * @param y       Row offset.
+ * @param width   Width in columns.
+ * @param height  Height in rows.
+ * @return TUI_OK on success.
+ */
+TuiResult tui_scroll_container_init_ctx(TuiScrollContainer *sc, TuiContext *ctx, int x, int y,
+                                        int width, int height);
+
+/**
  * @brief Set the virtual content dimensions.
  *
  * When content exceeds the viewport, scrollbars appear automatically.

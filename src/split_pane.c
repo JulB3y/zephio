@@ -35,7 +35,7 @@ static void split_render(TuiWidget *widget)
     clamp_split_pos(pane);
 
     TuiStyle style = tui_widget_get_style(widget);
-    tui_screen_fill(tui_current_ctx, widget->abs_y, widget->abs_x,
+    tui_screen_fill(widget->ctx, widget->abs_y, widget->abs_x,
                     widget->width, widget->height,
                     " ", style.fg, style.bg, style.attr);
 
@@ -55,7 +55,7 @@ static void split_render(TuiWidget *widget)
 
         int sep_x = widget->abs_x + pane->split_pos;
         for (int r = 0; r < widget->height; r++) {
-            tui_screen_set_cell(tui_current_ctx, widget->abs_y + r, sep_x,
+            tui_screen_set_cell(widget->ctx, widget->abs_y + r, sep_x,
                                 "\xe2\x94\x83",
                                 pane->sep_fg, pane->sep_bg,
                                 pane->sep_attr);
@@ -73,7 +73,7 @@ static void split_render(TuiWidget *widget)
 
         int sep_y = widget->abs_y + pane->split_pos;
         for (int c = 0; c < widget->width; c++) {
-            tui_screen_set_cell(tui_current_ctx, sep_y, widget->abs_x + c,
+            tui_screen_set_cell(widget->ctx, sep_y, widget->abs_x + c,
                                 "\xe2\x94\x81",
                                 pane->sep_fg, pane->sep_bg,
                                 pane->sep_attr);
@@ -235,14 +235,14 @@ static TuiWidgetVTable split_vtable = {
     .on_blur      = NULL
 };
 
-TuiResult tui_split_pane_init(TuiSplitPane *pane, int x, int y,
-                              int width, int height,
-                              TuiSplitOrientation orientation)
+TuiResult tui_split_pane_init_ctx(TuiSplitPane *pane, TuiContext *ctx, int x, int y,
+                                  int width, int height,
+                                  TuiSplitOrientation orientation)
 {
     if (!pane) return TUI_ERR_MEMORY;
 
-    TuiResult res = tui_widget_init(&pane->base, x, y, width, height,
-                                    &split_vtable, NULL);
+    TuiResult res = tui_widget_init_ctx(&pane->base, x, y, width, height,
+                                        &split_vtable, ctx, NULL);
     if (res != TUI_OK) return res;
 
     pane->base.focusable        = 0;

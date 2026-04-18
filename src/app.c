@@ -292,5 +292,5 @@ void tui_app_render_toasts(TuiApp *app)
 {
     if (!app) return;
     TuiSize size = tui_screen_size(app->ctx);
-    tui_toast_render(&app->toasts, size.rows, size.cols);
+    tui_toast_render(app->ctx, &app->toasts, size.rows, size.cols);
 }

@@ -74,7 +74,7 @@ static void ensure_visible(TuiTable *table)
     }
 }
 
-static void render_clipped_text(int row, int col, const char *text,
+static void render_clipped_text(TuiContext *ctx, int row, int col, const char *text,
                                  int max_w, TuiColor fg, TuiColor bg, TuiAttr attr)
 {
     int len = (int)strlen(text);
@@ -83,10 +83,10 @@ static void render_clipped_text(int row, int col, const char *text,
     int cl = w < (int)sizeof(buf) - 1 ? w : (int)sizeof(buf) - 1;
     memcpy(buf, text, (size_t)cl);
     buf[cl] = '\0';
-    tui_screen_write(tui_current_ctx, row, col, buf, fg, bg, attr);
+    tui_screen_write(ctx, row, col, buf, fg, bg, attr);
 }
 
-static void render_columns(TuiTable *table, int row, int screen_row,
+static void render_columns(TuiContext *ctx, TuiTable *table, int row, int screen_row,
                             int wx, int widget_width, TuiColor fg, TuiColor bg, TuiAttr attr)
 {
     int col_x = wx - table->scroll_x;
@@ -102,7 +102,7 @@ static void render_columns(TuiTable *table, int row, int screen_row,
         if (max_w > widget_width - (text_x - wx))
             max_w = widget_width - (text_x - wx);
         if (max_w > 0 && cell[0]) {
-            render_clipped_text(screen_row, text_x, cell, max_w, fg, bg, attr);
+            render_clipped_text(ctx, screen_row, text_x, cell, max_w, fg, bg, attr);
         }
         col_x += cw;
     }
@@ -150,7 +150,7 @@ static void table_render(TuiWidget *widget)
             hat = header_style.attr | TUI_ATTR_BOLD;
         }
 
-        tui_screen_fill(tui_current_ctx, wy, wx, widget->width, 1, " ", hfg, hbg, hat);
+        tui_screen_fill(widget->ctx, wy, wx, widget->width, 1, " ", hfg, hbg, hat);
 
         int col_x = wx - table->scroll_x;
         for (int c = 0; c < table->col_count; c++) {
@@ -174,7 +174,7 @@ static void table_render(TuiWidget *widget)
                         buf[cl++] = table->columns[c].sort_order == TUI_SORT_ASC ? '^' : 'v';
                     }
                     buf[cl] = '\0';
-                    tui_screen_write(tui_current_ctx, wy, text_x, buf, hfg, hbg, hat);
+                    tui_screen_write(widget->ctx, wy, text_x, buf, hfg, hbg, hat);
                 }
             }
             col_x += cw;
@@ -194,10 +194,10 @@ static void table_render(TuiWidget *widget)
                           table->fg_selected, table->bg_selected,
                           &fg, &bg, &attr);
 
-            tui_screen_fill(tui_current_ctx, wy + 1 + i, wx, widget->width, 1, " ", fg, bg, attr);
+            tui_screen_fill(widget->ctx, wy + 1 + i, wx, widget->width, 1, " ", fg, bg, attr);
 
             if (!table->rows[r]) continue;
-            render_columns(table, r, wy + 1 + i, wx, widget->width, fg, bg, attr);
+            render_columns(widget->ctx, table, r, wy + 1 + i, wx, widget->width, fg, bg, attr);
         }
     }
 
@@ -205,7 +205,7 @@ static void table_render(TuiWidget *widget)
         int scroll_col = wx + widget->width - 1;
         TuiColor track_fg = TUI_COLOR_INDEX(TUI_COLOR_GRAY_DARK);
         TuiColor track_bg = table->bg;
-        tui_screen_fill(tui_current_ctx, wy + 1, scroll_col, 1, body_height, " ",
+        tui_screen_fill(widget->ctx, wy + 1, scroll_col, 1, body_height, " ",
                         track_fg, track_bg, TUI_ATTR_DIM);
 
         int max_scroll = table->row_count - body_height;
@@ -214,7 +214,7 @@ static void table_render(TuiWidget *widget)
             if (thumb_h < 1) thumb_h = 1;
             int thumb_y = table->scroll_y * (body_height - thumb_h) / max_scroll;
             for (int t = 0; t < thumb_h; t++) {
-                tui_screen_set_cell(tui_current_ctx, wy + 1 + thumb_y + t, scroll_col,
+                tui_screen_set_cell(widget->ctx, wy + 1 + thumb_y + t, scroll_col,
                                     "\xe2\x96\x88",
                                     TUI_COLOR_INDEX(TUI_COLOR_BRIGHT_WHITE),
                                     TUI_COLOR_INDEX(TUI_COLOR_GRAY_MID),
@@ -431,12 +431,12 @@ static TuiWidgetVTable table_vtable = {
     .on_blur      = NULL
 };
 
-TuiResult tui_table_init(TuiTable *table, int x, int y, int width, int height)
+TuiResult tui_table_init_ctx(TuiTable *table, TuiContext *ctx, int x, int y, int width, int height)
 {
     if (!table) return TUI_ERR_MEMORY;
 
-    TuiResult res = tui_widget_init(&table->base, x, y, width, height,
-                                    &table_vtable, NULL);
+    TuiResult res = tui_widget_init_ctx(&table->base, x, y, width, height,
+                                        &table_vtable, ctx, NULL);
     if (res != TUI_OK) return res;
 
     table->base.focusable = 1;

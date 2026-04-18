@@ -31,17 +31,18 @@ typedef struct {
 } TuiTextView;
 
 /**
- * @brief Initialize a text view widget.
+ * @brief Initialize a text view widget with context.
  *
  * @param tv      TextView struct to initialize.
+ * @param ctx     TUI context.
  * @param x       Column offset.
  * @param y       Row offset.
  * @param width   Width in columns.
  * @param height  Height in rows.
  * @return TUI_OK on success.
  */
-TuiResult tui_text_view_init(TuiTextView *tv, int x, int y,
-                              int width, int height);
+TuiResult tui_text_view_init_ctx(TuiTextView *tv, TuiContext *ctx, int x, int y,
+                               int width, int height);
 
 /**
  * @brief Set the display text (copied).

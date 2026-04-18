@@ -31,9 +31,10 @@ typedef struct {
 } TuiButton;
 
 /**
- * @brief Initialize a button widget.
+ * @brief Initialize a button widget with context.
  *
  * @param button  Button struct to initialize.
+ * @param ctx     TUI context.
  * @param x       Column offset.
  * @param y       Row offset.
  * @param width   Width in columns.
@@ -41,8 +42,8 @@ typedef struct {
  * @param text    Button label text (copied).
  * @return TUI_OK on success.
  */
-TuiResult tui_button_init(TuiButton *button, int x, int y, int width, int height,
-                          const char *text);
+TuiResult tui_button_init_ctx(TuiButton *button, TuiContext *ctx, int x, int y, int width, int height,
+                              const char *text);
 
 /**
  * @brief Update the button text.

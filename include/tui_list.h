@@ -38,16 +38,17 @@ typedef struct {
 } TuiList;
 
 /**
- * @brief Initialize a list widget.
+ * @brief Initialize a list widget with context.
  *
  * @param list    List struct to initialize.
+ * @param ctx     TUI context.
  * @param x       Column offset.
  * @param y       Row offset.
  * @param width   Width in columns.
  * @param height  Height in rows.
  * @return TUI_OK on success.
  */
-TuiResult tui_list_init(TuiList *list, int x, int y, int width, int height);
+TuiResult tui_list_init_ctx(TuiList *list, TuiContext *ctx, int x, int y, int width, int height);
 
 /**
  * @brief Add an item to the list.

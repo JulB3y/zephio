@@ -34,16 +34,17 @@ typedef struct {
 } TuiRadio;
 
 /**
- * @brief Initialize a radio group widget.
+ * @brief Initialize a radio group widget with context.
  *
  * @param radio   Radio struct to initialize.
+ * @param ctx     TUI context.
  * @param x       Column offset.
  * @param y       Row offset.
  * @param width   Width in columns.
  * @param height  Height in rows (number of visible options).
  * @return TUI_OK on success.
  */
-TuiResult tui_radio_init(TuiRadio *radio, int x, int y, int width, int height);
+TuiResult tui_radio_init_ctx(TuiRadio *radio, TuiContext *ctx, int x, int y, int width, int height);
 
 /**
  * @brief Add an option to the radio group.

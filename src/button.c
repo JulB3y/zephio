@@ -31,7 +31,7 @@ static void button_render(TuiWidget *widget)
         }
     }
 
-    tui_screen_fill(tui_current_ctx,widget->abs_y, widget->abs_x,
+    tui_screen_fill(widget->ctx, widget->abs_y, widget->abs_x,
                     widget->width, widget->height, " ", fg, bg, attr);
 
     if (button->text) {
@@ -46,7 +46,7 @@ static void button_render(TuiWidget *widget)
         memcpy(buf, button->text, (size_t)copy_len);
         buf[copy_len] = '\0';
 
-        tui_screen_write(tui_current_ctx,widget->abs_y + widget->height / 2, col,
+        tui_screen_write(widget->ctx, widget->abs_y + widget->height / 2, col,
                          buf, fg, bg, attr);
     }
 }
@@ -96,13 +96,13 @@ static TuiWidgetVTable button_vtable = {
     .on_blur      = NULL
 };
 
-TuiResult tui_button_init(TuiButton *button, int x, int y, int width, int height,
-                          const char *text)
+TuiResult tui_button_init_ctx(TuiButton *button, TuiContext *ctx, int x, int y, int width, int height,
+                              const char *text)
 {
     if (!button) return TUI_ERR_MEMORY;
 
-    TuiResult res = tui_widget_init(&button->base, x, y, width, height,
-                                    &button_vtable, NULL);
+    TuiResult res = tui_widget_init_ctx(&button->base, x, y, width, height,
+                                        &button_vtable, ctx, NULL);
     if (res != TUI_OK) return res;
 
     button->base.focusable = 1;

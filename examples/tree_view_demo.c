@@ -114,7 +114,7 @@ static void on_node_select(TuiWidget *widget, TuiTreeNode *node, void *user_data
     update_status(w, buf);
 }
 
-static void build_widgets(AppWidgets *w, int rows, int cols)
+static void build_widgets(AppWidgets *w, int rows, int cols, TuiContext *ctx)
 {
     int uw = cols > 60 ? 56 : cols - 4;
     if (uw < 20) uw = 20;
@@ -122,22 +122,22 @@ static void build_widgets(AppWidgets *w, int rows, int cols)
     if (ux < 1) ux = 1;
     int y = 2;
 
-    tui_widget_init(&w->root, 0, 0, cols, rows, NULL, NULL);
+    tui_widget_init_ctx(&w->root, 0, 0, cols, rows, NULL, ctx, NULL);
 
-    tui_label_init(&w->title, ux, y, uw, 1,
+    tui_label_init_ctx(&w->title, ctx, ux, y, uw, 1,
                    "TreeView Demo  |  Navigate with arrow keys");
     tui_label_set_colors(&w->title, TUI_COLOR_INDEX(14), TUI_COLOR_INDEX(0));
     tui_label_set_attr(&w->title, TUI_ATTR_BOLD);
     tui_widget_add_child(&w->root, &w->title.base);
     y += 2;
 
-    tui_label_init(&w->hint, ux, y, uw, 1,
+    tui_label_init_ctx(&w->hint, ctx, ux, y, uw, 1,
                    "Enter/Right: expand  Left: collapse  e: all  c: none");
     tui_label_set_colors(&w->hint, TUI_COLOR_INDEX(8), TUI_COLOR_INDEX(0));
     tui_widget_add_child(&w->root, &w->hint.base);
     y += 1;
 
-    tui_separator_init_h(&w->sep, ux, y, uw);
+    tui_separator_init_h_ctx(&w->sep, ctx, ux, y, uw);
     tui_separator_set_colors(&w->sep, TUI_COLOR_INDEX(8), TUI_COLOR_INDEX(0));
     tui_widget_add_child(&w->root, &w->sep.base);
     y += 1;
@@ -147,7 +147,7 @@ static void build_widgets(AppWidgets *w, int rows, int cols)
         if (tree_h < 5) tree_h = 5;
         if (tree_h > 20) tree_h = 20;
 
-        tui_tree_view_init(&w->tree, ux, y, uw, tree_h);
+        tui_tree_view_init_ctx(&w->tree, ctx, ux, y, uw, tree_h);
         tui_tree_view_set_colors(&w->tree,
                                  TUI_COLOR_INDEX(15), TUI_COLOR_INDEX(234),
                                  TUI_COLOR_INDEX(0), TUI_COLOR_INDEX(12),
@@ -160,12 +160,12 @@ static void build_widgets(AppWidgets *w, int rows, int cols)
         y += tree_h;
     }
 
-    tui_separator_init_h(&w->sep2, ux, y, uw);
+    tui_separator_init_h_ctx(&w->sep2, ctx, ux, y, uw);
     tui_separator_set_colors(&w->sep2, TUI_COLOR_INDEX(8), TUI_COLOR_INDEX(0));
     tui_widget_add_child(&w->root, &w->sep2.base);
     y += 1;
 
-    tui_label_init(&w->status, 1, rows - 1, cols - 2, 1,
+    tui_label_init_ctx(&w->status, ctx, 1, rows - 1, cols - 2, 1,
                    " Click nodes or use keyboard  |  e: expand all  c: collapse all  |  q/Esc: quit");
     tui_label_set_colors(&w->status, TUI_COLOR_INDEX(15), TUI_COLOR_INDEX(236));
     tui_widget_add_child(&w->root, &w->status.base);
@@ -184,9 +184,9 @@ static int on_init(TuiApp *app, void *user_data)
     AppWidgets *w = (AppWidgets *)user_data;
     memset(w, 0, sizeof(*w));
 
-    TuiSize size = tui_screen_size();
-    build_widgets(w, size.rows, size.cols);
-    return 0;
+  TuiSize size = tui_screen_size(app->ctx);
+  build_widgets(w, size.rows, size.cols, app->ctx);
+  return 0;
 }
 
 static int on_resize(TuiApp *app, int rows, int cols, void *user_data)
@@ -194,7 +194,7 @@ static int on_resize(TuiApp *app, int rows, int cols, void *user_data)
     (void)app;
     AppWidgets *w = (AppWidgets *)user_data;
     destroy_widgets(w);
-    build_widgets(w, rows, cols);
+    build_widgets(w, rows, cols, app->ctx);
     return 0;
 }
 
@@ -202,19 +202,19 @@ static int on_render(TuiApp *app, void *user_data)
 {
     (void)app;
     AppWidgets *w = (AppWidgets *)user_data;
-    TuiSize size = tui_screen_size();
+    TuiSize size = tui_screen_size(app->ctx);
 
-    tui_screen_clear();
-    tui_screen_fill(0, 0, size.cols, 1, " ",
+    tui_screen_clear(app->ctx);
+    tui_screen_fill(app->ctx, 0, 0, size.cols, 1, " ",
                     TUI_COLOR_INDEX(15), TUI_COLOR_INDEX(4), TUI_ATTR_BOLD);
-    tui_screen_write(0, 2,
+    tui_screen_write(app->ctx, 0, 2,
                      "TreeView Demo  |  Expand/collapse hierarchical data",
                      TUI_COLOR_INDEX(15), TUI_COLOR_INDEX(4), TUI_ATTR_BOLD);
-    tui_screen_fill(size.rows - 1, 0, size.cols, 1, " ",
+    tui_screen_fill(app->ctx, size.rows - 1, 0, size.cols, 1, " ",
                     TUI_COLOR_INDEX(15), TUI_COLOR_INDEX(236), TUI_ATTR_NONE);
 
     tui_widget_render(&w->root);
-    tui_screen_render();
+    tui_screen_render(app->ctx);
     return 0;
 }
 
@@ -290,6 +290,8 @@ int main(void)
 {
     AppWidgets widgets;
 
+    TuiContext ctx;
+
     TuiAppConfig config = {
         .on_init     = on_init,
         .on_resize   = on_resize,
@@ -301,7 +303,7 @@ int main(void)
         .tick_rate_ms = 50
     };
 
-    TuiApp *app = tui_app_new(&config);
+    TuiApp *app = tui_app_new(&ctx, &config);
     if (!app) {
         fprintf(stderr, "Failed to create app\n");
         return 1;

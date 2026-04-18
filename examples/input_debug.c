@@ -26,52 +26,51 @@ static void log_event(const char *msg)
     }
 }
 
-static void draw(int rows, int cols)
+static void draw(TuiContext *ctx, int rows, int cols)
 {
-    ansi_clear_screen();
+    ansi_clear_screen(ctx);
 
-    ansi_set_bold();
-    ansi_set_fg(12);
-    ansi_write_at(1, 2, "Phase 2 - Input System Debug", 28);
-    ansi_reset();
+    ansi_set_bold(ctx);
+    ansi_set_fg(ctx, 12);
+    ansi_write_at(ctx, 1, 2, "Phase 2 - Input System Debug", 28);
+    ansi_reset(ctx);
 
-    ansi_set_fg(8);
+    ansi_set_fg(ctx, 8);
     char info[64];
     int info_len = snprintf(info, sizeof(info), "Terminal: %dx%d", cols, rows);
-    ansi_write_at(1, cols - info_len, info, (size_t)info_len);
-    ansi_reset();
+    ansi_write_at(ctx, 1, cols - info_len, info, (size_t)info_len);
+    ansi_reset(ctx);
 
-    ansi_set_fg(6);
-    ansi_write_at(3, 2, "Press keys to see events. Ctrl+C or 'q' to quit.", 48);
-    ansi_reset();
+    ansi_set_fg(ctx, 6);
+    ansi_write_at(ctx, 3, 2, "Press keys to see events. Ctrl+C or 'q' to quit.", 48);
+    ansi_reset(ctx);
 
-    ansi_set_fg(8);
-    ansi_write_at(4, 2, "------------------------------------------------", 48);
-    ansi_reset();
+    ansi_set_fg(ctx, 8);
+    ansi_write_at(ctx, 4, 2, "------------------------------------------------", 48);
+    ansi_reset(ctx);
 
     for (int i = 0; i < g_log_count; i++) {
-        ansi_move_cursor(6 + i, 2);
-        ansi_write(g_log[i], strnlen(g_log[i], 79));
+        ansi_move_cursor(ctx, 6 + i, 2);
+        ansi_write(ctx, g_log[i], strnlen(g_log[i], 79));
     }
 
-    ansi_move_cursor(rows - 1, 2);
-    ansi_set_fg(8);
-    ansi_write("Ready...", 8);
-    ansi_reset();
+    ansi_move_cursor(ctx, rows - 1, 2);
+    ansi_set_fg(ctx, 8);
+    ansi_write(ctx, "Ready...", 8);
+    ansi_reset(ctx);
 }
 
 static int input_callback(const TuiEvent *event, void *user_data)
 {
-    (void)user_data;
+    TuiContext *ctx = (TuiContext *)user_data;
     char buf[80];
 
     if (event->key == TUI_EVENT_RESIZE) {
         snprintf(buf, sizeof(buf), "[Resize] %dx%d", event->size.cols, event->size.rows);
         log_event(buf);
 
-        TuiSize size;
-        tui_get_size(&size);
-        draw(size.rows, size.cols);
+        TuiSize size = tui_screen_size(ctx);
+        draw(ctx, size.rows, size.cols);
         return 0;
     }
 
@@ -97,30 +96,30 @@ static int input_callback(const TuiEvent *event, void *user_data)
         return 1;
     }
 
-    TuiSize size;
-    tui_get_size(&size);
-    draw(size.rows, size.cols);
+    TuiSize size = tui_screen_size(ctx);
+    draw(ctx, size.rows, size.cols);
 
     return 0;
 }
 
 int main(void)
 {
-    TuiResult res = tui_init();
+    TuiContext ctx;
+
+    TuiResult res = tui_init(&ctx);
     if (res != TUI_OK) {
         fprintf(stderr, "tui_init failed: %d\n", res);
         return 1;
     }
 
-    tui_input_init();
+    tui_input_init(&ctx);
 
-    TuiSize size;
-    tui_get_size(&size);
-    draw(size.rows, size.cols);
+    TuiSize size = tui_screen_size(&ctx);
+    draw(&ctx, size.rows, size.cols);
 
-    tui_input_loop(input_callback, NULL);
+    tui_input_loop(&ctx, input_callback, &ctx);
 
-    tui_input_shutdown();
-    tui_shutdown();
+    tui_input_shutdown(&ctx);
+    tui_shutdown(&ctx);
     return 0;
 }

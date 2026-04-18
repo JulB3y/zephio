@@ -27,18 +27,18 @@ static void box_render(TuiWidget *widget)
         attr = box->attr;
     }
 
-    tui_screen_fill(tui_current_ctx,widget->abs_y + 1, widget->abs_x + 1,
+    tui_screen_fill(widget->ctx, widget->abs_y + 1, widget->abs_x + 1,
                     widget->width - 2, widget->height - 2,
                     " ", fg, bg, attr);
 
     if (box->border_style == TUI_BOX_DOUBLE) {
-        tui_screen_box_double(tui_current_ctx,widget->abs_y, widget->abs_x,
-                              widget->width, widget->height,
-                              fg, bg, attr);
+        tui_screen_box_double(widget->ctx, widget->abs_y, widget->abs_x,
+                               widget->width, widget->height,
+                               fg, bg, attr);
     } else {
-        tui_screen_box_single(tui_current_ctx,widget->abs_y, widget->abs_x,
-                              widget->width, widget->height,
-                              fg, bg, attr);
+        tui_screen_box_single(widget->ctx, widget->abs_y, widget->abs_x,
+                               widget->width, widget->height,
+                               fg, bg, attr);
     }
 
     if (box->title) {
@@ -53,7 +53,7 @@ static void box_render(TuiWidget *widget)
             memcpy(buf, box->title, (size_t)copy_len);
             buf[copy_len] = '\0';
 
-            tui_screen_write(tui_current_ctx,widget->abs_y, widget->abs_x + 2,
+            tui_screen_write(widget->ctx, widget->abs_y, widget->abs_x + 2,
                              buf, fg, bg, attr | TUI_ATTR_BOLD);
         }
     }
@@ -94,13 +94,13 @@ static TuiWidgetVTable box_vtable = {
     .on_blur      = NULL
 };
 
-TuiResult tui_box_init(TuiBox *box, int x, int y, int width, int height,
-                       int border_style)
+TuiResult tui_box_init_ctx(TuiBox *box, TuiContext *ctx, int x, int y, int width, int height,
+                            int border_style)
 {
     if (!box) return TUI_ERR_MEMORY;
 
-    TuiResult res = tui_widget_init(&box->base, x, y, width, height,
-                                    &box_vtable, NULL);
+    TuiResult res = tui_widget_init_ctx(&box->base, x, y, width, height,
+                                        &box_vtable, ctx, NULL);
     if (res != TUI_OK) return res;
 
     box->base.focusable = 0;

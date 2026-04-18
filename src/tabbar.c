@@ -38,7 +38,7 @@ static void tabbar_render(TuiWidget *widget)
 {
     TuiTabBar *tb = (TuiTabBar *)widget;
 
-    tui_screen_fill(tui_current_ctx, widget->abs_y, widget->abs_x,
+    tui_screen_fill(widget->ctx, widget->abs_y, widget->abs_x,
                     widget->width, widget->height, " ",
                     tb->fg, tb->bg, tb->attr);
 
@@ -62,16 +62,16 @@ static void tabbar_render(TuiWidget *widget)
             bg = tb->bg_hover;
         }
 
-        int fill_start = screen_x < 0 ? 0 : screen_x;
+        int fill_start = screen_x < 0 ?0 : screen_x;
         int fill_end   = screen_x + tab->tab_width;
         if (fill_end > widget->width) fill_end = widget->width;
         if (fill_start < fill_end) {
-            tui_screen_fill(tui_current_ctx, widget->abs_y, widget->abs_x + fill_start,
+            tui_screen_fill(widget->ctx, widget->abs_y, widget->abs_x + fill_start,
                             fill_end - fill_start, 1, " ", fg, bg, at);
         }
 
         if (tab->label && screen_x >= 0 && screen_x + 2 < widget->width) {
-            int maxw = tab->tab_width - 4;
+            int maxw = tab->tab_width -4;
             if (maxw > widget->width - screen_x - 2)
                 maxw = widget->width - screen_x - 2;
             if (maxw > 0) {
@@ -82,7 +82,7 @@ static void tabbar_render(TuiWidget *widget)
                            ? wlen : (int)sizeof(buf) - 1;
                 memcpy(buf, tab->label, (size_t)clen);
                 buf[clen] = '\0';
-                tui_screen_write(tui_current_ctx, widget->abs_y,
+                tui_screen_write(widget->ctx, widget->abs_y,
                                  widget->abs_x + screen_x + 2,
                                  buf, fg, bg, at);
             }
@@ -90,7 +90,7 @@ static void tabbar_render(TuiWidget *widget)
 
         if (screen_x + tab->tab_width - 1 >= 0 &&
             screen_x + tab->tab_width - 1 < widget->width) {
-            tui_screen_set_cell(tui_current_ctx, widget->abs_y,
+            tui_screen_set_cell(widget->ctx, widget->abs_y,
                                 widget->abs_x + screen_x + tab->tab_width - 1,
                                 "\xe2\x94\x82", tb->fg, tb->bg, TUI_ATTR_DIM);
         }
@@ -220,12 +220,12 @@ static TuiWidgetVTable tabbar_vtable = {
     .on_blur      = NULL
 };
 
-TuiResult tui_tabbar_init(TuiTabBar *tabbar, int x, int y, int width)
+TuiResult tui_tabbar_init_ctx(TuiTabBar *tabbar, TuiContext *ctx, int x, int y, int width)
 {
     if (!tabbar) return TUI_ERR_MEMORY;
 
-    TuiResult res = tui_widget_init(&tabbar->base, x, y, width, 1,
-                                    &tabbar_vtable, NULL);
+    TuiResult res = tui_widget_init_ctx(&tabbar->base, x, y, width, 1,
+                                        &tabbar_vtable, ctx, NULL);
     if (res != TUI_OK) return res;
 
     tabbar->base.focusable = 1;

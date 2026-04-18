@@ -52,7 +52,7 @@ struct TuiContextMenu {
     void                  *user_data;
 };
 
-TuiResult tui_context_menu_init(TuiContextMenu *menu);
+TuiResult tui_context_menu_init_ctx(TuiContextMenu *menu, TuiContext *ctx);
 
 TuiResult tui_context_menu_add_item(TuiContextMenu *menu, const char *label);
 

@@ -79,7 +79,7 @@ struct TuiMenuBar {
     void              *user_data;
 };
 
-TuiResult tui_menubar_init(TuiMenuBar *menubar, int x, int y, int width);
+TuiResult tui_menubar_init_ctx(TuiMenuBar *menubar, TuiContext *ctx, int x, int y, int width);
 
 int tui_menubar_add_menu(TuiMenuBar *menubar, const char *label, char mnemonic);
 

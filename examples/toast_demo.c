@@ -125,29 +125,29 @@ static void on_list_select(TuiWidget *widget, int index, const char *item,
                          TUI_COLOR_INDEX(236));
 }
 
-static void build_widgets(AppWidgets *w, int rows, int cols)
+static void build_widgets(AppWidgets *w, int rows, int cols, TuiContext *ctx)
 {
     int uw = cols > 72 ? 68 : cols - 4;
     int ux = (cols - uw) / 2;
     if (ux < 1) ux = 1;
     int y = 2;
 
-    tui_widget_init(&w->root, 0, 0, cols, rows, NULL, NULL);
+    tui_widget_init_ctx(&w->root, 0, 0, cols, rows, NULL, ctx, NULL);
 
-    tui_label_init(&w->title, ux, y, uw, 1,
+    tui_label_init_ctx(&w->title, ctx, ux, y, uw, 1,
                    "Toast Notification Demo  |  i: info  s: success  w: warning  e: error");
     tui_label_set_colors(&w->title, TUI_COLOR_INDEX(14), TUI_COLOR_INDEX(0));
     tui_label_set_attr(&w->title, TUI_ATTR_BOLD);
     tui_widget_add_child(&w->root, &w->title.base);
     y += 2;
 
-    tui_label_init(&w->hint, ux, y, uw, 1,
+    tui_label_init_ctx(&w->hint, ctx, ux, y, uw, 1,
                    "Click buttons or press i/s/w/e keys. b = burst, d = dismiss all.");
     tui_label_set_colors(&w->hint, TUI_COLOR_INDEX(8), TUI_COLOR_INDEX(0));
     tui_widget_add_child(&w->root, &w->hint.base);
     y += 2;
 
-    tui_separator_init_h(&w->sep, ux, y, uw);
+    tui_separator_init_h_ctx(&w->sep, ctx, ux, y, uw);
     tui_separator_set_colors(&w->sep, TUI_COLOR_INDEX(8), TUI_COLOR_INDEX(0));
     tui_widget_add_child(&w->root, &w->sep.base);
     y += 1;
@@ -157,7 +157,7 @@ static void build_widgets(AppWidgets *w, int rows, int cols)
         if (bw < 12) bw = 12;
         int col = ux;
 
-        tui_button_init(&w->btn_info, col, y, bw, 1, "Info");
+        tui_button_init_ctx(&w->btn_info, ctx, col, y, bw, 1, "Info");
         tui_button_set_colors(&w->btn_info,
                               TUI_COLOR_INDEX(15), TUI_COLOR_INDEX(4),
                               TUI_COLOR_INDEX(0), TUI_COLOR_INDEX(12));
@@ -166,7 +166,7 @@ static void build_widgets(AppWidgets *w, int rows, int cols)
         tui_widget_add_child(&w->root, &w->btn_info.base);
         col += bw + 2;
 
-        tui_button_init(&w->btn_success, col, y, bw, 1, "Success");
+        tui_button_init_ctx(&w->btn_success, ctx, col, y, bw, 1, "Success");
         tui_button_set_colors(&w->btn_success,
                               TUI_COLOR_INDEX(0), TUI_COLOR_INDEX(2),
                               TUI_COLOR_INDEX(15), TUI_COLOR_INDEX(10));
@@ -175,7 +175,7 @@ static void build_widgets(AppWidgets *w, int rows, int cols)
         tui_widget_add_child(&w->root, &w->btn_success.base);
         col += bw + 2;
 
-        tui_button_init(&w->btn_warning, col, y, bw, 1, "Warning");
+        tui_button_init_ctx(&w->btn_warning, ctx, col, y, bw, 1, "Warning");
         tui_button_set_colors(&w->btn_warning,
                               TUI_COLOR_INDEX(0), TUI_COLOR_INDEX(3),
                               TUI_COLOR_INDEX(15), TUI_COLOR_INDEX(11));
@@ -190,7 +190,7 @@ static void build_widgets(AppWidgets *w, int rows, int cols)
         if (bw < 12) bw = 12;
         int col = ux;
 
-        tui_button_init(&w->btn_error, col, y, bw, 1, "Error");
+        tui_button_init_ctx(&w->btn_error, ctx, col, y, bw, 1, "Error");
         tui_button_set_colors(&w->btn_error,
                               TUI_COLOR_INDEX(15), TUI_COLOR_INDEX(1),
                               TUI_COLOR_INDEX(15), TUI_COLOR_INDEX(9));
@@ -199,7 +199,7 @@ static void build_widgets(AppWidgets *w, int rows, int cols)
         tui_widget_add_child(&w->root, &w->btn_error.base);
         col += bw + 2;
 
-        tui_button_init(&w->btn_burst, col, y, bw, 1, "Burst All");
+        tui_button_init_ctx(&w->btn_burst, ctx, col, y, bw, 1, "Burst All");
         tui_button_set_colors(&w->btn_burst,
                               TUI_COLOR_INDEX(0), TUI_COLOR_INDEX(5),
                               TUI_COLOR_INDEX(15), TUI_COLOR_INDEX(13));
@@ -208,7 +208,7 @@ static void build_widgets(AppWidgets *w, int rows, int cols)
         tui_widget_add_child(&w->root, &w->btn_burst.base);
         col += bw + 2;
 
-        tui_button_init(&w->btn_dismiss, col, y, bw, 1, "Dismiss All");
+        tui_button_init_ctx(&w->btn_dismiss, ctx, col, y, bw, 1, "Dismiss All");
         tui_button_set_colors(&w->btn_dismiss,
                               TUI_COLOR_INDEX(15), TUI_COLOR_INDEX(8),
                               TUI_COLOR_INDEX(0), TUI_COLOR_INDEX(7));
@@ -218,7 +218,7 @@ static void build_widgets(AppWidgets *w, int rows, int cols)
     }
     y += 2;
 
-    tui_separator_init_h(&w->sep2, ux, y, uw);
+    tui_separator_init_h_ctx(&w->sep2, ctx, ux, y, uw);
     tui_separator_set_colors(&w->sep2, TUI_COLOR_INDEX(8), TUI_COLOR_INDEX(0));
     tui_widget_add_child(&w->root, &w->sep2.base);
     y += 1;
@@ -228,7 +228,7 @@ static void build_widgets(AppWidgets *w, int rows, int cols)
         if (list_h < 3) list_h = 3;
         if (list_h > 6) list_h = 6;
 
-        tui_list_init(&w->menu, ux, y, uw, list_h);
+        tui_list_init_ctx(&w->menu, ctx, ux, y, uw, list_h);
         tui_list_set_colors(&w->menu, TUI_COLOR_INDEX(15),
                             TUI_COLOR_INDEX(234), TUI_COLOR_INDEX(0),
                             TUI_COLOR_INDEX(12));
@@ -243,7 +243,7 @@ static void build_widgets(AppWidgets *w, int rows, int cols)
         tui_widget_add_child(&w->root, &w->menu.base);
     }
 
-    tui_label_init(&w->status, 1, rows - 1, cols - 2, 1,
+    tui_label_init_ctx(&w->status, ctx, 1, rows - 1, cols - 2, 1,
                    " Press i/s/w/e or click buttons  |  b: burst  d: dismiss  q: quit");
     tui_label_set_colors(&w->status, TUI_COLOR_INDEX(15),
                          TUI_COLOR_INDEX(236));
@@ -264,8 +264,8 @@ static int on_init(TuiApp *app, void *user_data)
     AppWidgets *w = (AppWidgets *)user_data;
     memset(w, 0, sizeof(*w));
 
-    TuiSize size = tui_screen_size();
-    build_widgets(w, size.rows, size.cols);
+    TuiSize size = tui_screen_size(app->ctx);
+    build_widgets(w, size.rows, size.cols, app->ctx);
     return 0;
 }
 
@@ -274,28 +274,28 @@ static int on_resize(TuiApp *app, int rows, int cols, void *user_data)
     (void)app;
     AppWidgets *w = (AppWidgets *)user_data;
     destroy_widgets(w);
-    build_widgets(w, rows, cols);
+    build_widgets(w, rows, cols, app->ctx);
     return 0;
 }
 
 static int on_render(TuiApp *app, void *user_data)
 {
     AppWidgets *w = (AppWidgets *)user_data;
-    TuiSize size = tui_screen_size();
+    TuiSize size = tui_screen_size(app->ctx);
 
-    tui_screen_clear();
-    tui_screen_fill(0, 0, size.cols, 1, " ",
+    tui_screen_clear(app->ctx);
+    tui_screen_fill(app->ctx, 0, 0, size.cols, 1, " ",
                     TUI_COLOR_INDEX(15), TUI_COLOR_INDEX(4), TUI_ATTR_BOLD);
-    tui_screen_write(0, 2,
+    tui_screen_write(app->ctx, 0, 2,
                      "Toast Demo  |  Notification Overlays",
                      TUI_COLOR_INDEX(15), TUI_COLOR_INDEX(4), TUI_ATTR_BOLD);
-    tui_screen_fill(size.rows - 1, 0, size.cols, 1, " ",
+    tui_screen_fill(app->ctx, size.rows - 1, 0, size.cols, 1, " ",
                     TUI_COLOR_INDEX(15), TUI_COLOR_INDEX(236), TUI_ATTR_NONE);
 
     tui_widget_render(&w->root);
     tui_app_render_overlays(app);
     tui_app_render_toasts(app);
-    tui_screen_render();
+    tui_screen_render(app->ctx);
     return 0;
 }
 
@@ -383,6 +383,8 @@ int main(void)
 {
     AppWidgets widgets;
 
+    TuiContext ctx;
+
     TuiAppConfig config = {
         .on_init     = on_init,
         .on_resize   = on_resize,
@@ -394,7 +396,7 @@ int main(void)
         .tick_rate_ms = 50
     };
 
-    TuiApp *app = tui_app_new(&config);
+    TuiApp *app = tui_app_new(&ctx, &config);
     if (!app) {
         fprintf(stderr, "Failed to create app\n");
         return 1;

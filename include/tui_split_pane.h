@@ -51,11 +51,12 @@ typedef struct {
 } TuiSplitPane;
 
 /**
- * @brief Initialize a split pane widget.
+ * @brief Initialize a split pane widget with context.
  *
  * Starts with an even 50/50 split.
  *
  * @param pane         Split pane struct to initialize.
+ * @param ctx          TUI context.
  * @param x            Column offset.
  * @param y            Row offset.
  * @param width        Total width.
@@ -63,9 +64,9 @@ typedef struct {
  * @param orientation  TUI_SPLIT_HORIZONTAL or TUI_SPLIT_VERTICAL.
  * @return TUI_OK on success.
  */
-TuiResult tui_split_pane_init(TuiSplitPane *pane, int x, int y,
-                              int width, int height,
-                              TuiSplitOrientation orientation);
+TuiResult tui_split_pane_init_ctx(TuiSplitPane *pane, TuiContext *ctx, int x, int y,
+                                  int width, int height,
+                                  TuiSplitOrientation orientation);
 
 /**
  * @brief Set the split position (in cells from the left/top edge).

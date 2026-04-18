@@ -71,12 +71,13 @@ struct TuiWidget {
     const TuiTheme  *theme;
     TuiWidgetVTable *vtable;
     void            *data;
+    struct TuiContext *ctx;
 };
 
 /**
- * @brief Initialize a base widget.
+ * @brief Initialize a base widget with context.
  *
- * Sets position, size, vtable, and user-data pointer. The widget starts
+ * Sets position, size, vtable, context, and user-data pointer. The widget starts
  * visible but not focused, not dirty.
  *
  * @param widget   Pointer to the widget struct.
@@ -85,11 +86,12 @@ struct TuiWidget {
  * @param width    Widget width in columns.
  * @param height   Widget height in rows.
  * @param vtable   Pointer to the widget's vtable (may be NULL).
+ * @param ctx      Pointer to the TuiContext (may be NULL for backward compatibility).
  * @param data     Opaque user-data pointer (may be NULL).
  * @return TUI_OK on success, TUI_ERR_MEMORY on allocation failure.
  */
-TuiResult tui_widget_init(TuiWidget *widget, int x, int y, int width, int height,
-                          TuiWidgetVTable *vtable, void *data);
+TuiResult tui_widget_init_ctx(TuiWidget *widget, int x, int y, int width, int height,
+                               TuiWidgetVTable *vtable, struct TuiContext *ctx, void *data);
 
 /**
  * @brief Destroy a widget and all its children.

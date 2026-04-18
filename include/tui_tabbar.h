@@ -60,7 +60,7 @@ struct TuiTabBar {
     void             *user_data;
 };
 
-TuiResult tui_tabbar_init(TuiTabBar *tabbar, int x, int y, int width);
+TuiResult tui_tabbar_init_ctx(TuiTabBar *tabbar, TuiContext *ctx, int x, int y, int width);
 
 int tui_tabbar_add_tab(TuiTabBar *tabbar, const char *label, TuiWidget *content);
 

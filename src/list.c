@@ -43,7 +43,7 @@ static void list_render(TuiWidget *widget)
             }
         }
 
-        tui_screen_fill(tui_current_ctx, widget->abs_y + i, widget->abs_x,
+        tui_screen_fill(widget->ctx, widget->abs_y + i, widget->abs_x,
                         widget->width, 1, " ", fg, bg, attr);
 
         if (list->items[idx]) {
@@ -62,9 +62,9 @@ static void list_render(TuiWidget *widget)
                 prefix[0] = '>';
             }
 
-            tui_screen_write(tui_current_ctx, widget->abs_y + i, widget->abs_x,
+            tui_screen_write(widget->ctx, widget->abs_y + i, widget->abs_x,
                              prefix, fg, bg, attr);
-            tui_screen_write(tui_current_ctx, widget->abs_y + i, widget->abs_x + 1,
+            tui_screen_write(widget->ctx, widget->abs_y + i, widget->abs_x + 1,
                              buf, fg, bg, attr);
         }
     }
@@ -159,12 +159,12 @@ static TuiWidgetVTable list_vtable = {
     .on_blur      = NULL
 };
 
-TuiResult tui_list_init(TuiList *list, int x, int y, int width, int height)
+TuiResult tui_list_init_ctx(TuiList *list, TuiContext *ctx, int x, int y, int width, int height)
 {
     if (!list) return TUI_ERR_MEMORY;
 
-    TuiResult res = tui_widget_init(&list->base, x, y, width, height,
-                                    &list_vtable, NULL);
+    TuiResult res = tui_widget_init_ctx(&list->base, x, y, width, height,
+                                        &list_vtable, ctx, NULL);
     if (res != TUI_OK) return res;
 
     list->base.focusable = 1;

@@ -52,7 +52,7 @@ static void checkbox_render(TuiWidget *widget)
         }
     }
 
-    tui_screen_fill(tui_current_ctx, widget->abs_y, widget->abs_x,
+    tui_screen_fill(widget->ctx, widget->abs_y, widget->abs_x,
                     widget->width, widget->height, " ", fg, bg, attr);
 
     const char *mark;
@@ -62,7 +62,7 @@ static void checkbox_render(TuiWidget *widget)
     default:                      mark = "[ ]"; break;
     }
 
-    tui_screen_write(tui_current_ctx, widget->abs_y, widget->abs_x, mark, fg, bg, attr);
+    tui_screen_write(widget->ctx, widget->abs_y, widget->abs_x, mark, fg, bg, attr);
 
     if (cb->label) {
         int label_start = 4;
@@ -77,8 +77,8 @@ static void checkbox_render(TuiWidget *widget)
         memcpy(buf, cb->label, (size_t)copy_len);
         buf[copy_len] = '\0';
 
-        tui_screen_write(tui_current_ctx, widget->abs_y, widget->abs_x + label_start,
-                          buf, fg, bg, attr);
+        tui_screen_write(widget->ctx, widget->abs_y, widget->abs_x + label_start,
+                           buf, fg, bg, attr);
     }
 }
 
@@ -131,13 +131,13 @@ static TuiWidgetVTable checkbox_vtable = {
     .on_blur      = NULL
 };
 
-TuiResult tui_checkbox_init(TuiCheckbox *checkbox, int x, int y,
-                            int width, int height, const char *label)
+TuiResult tui_checkbox_init_ctx(TuiCheckbox *checkbox, TuiContext *ctx, int x, int y,
+                                int width, int height, const char *label)
 {
     if (!checkbox) return TUI_ERR_MEMORY;
 
-    TuiResult res = tui_widget_init(&checkbox->base, x, y, width, height,
-                                    &checkbox_vtable, NULL);
+    TuiResult res = tui_widget_init_ctx(&checkbox->base, x, y, width, height,
+                                        &checkbox_vtable, ctx, NULL);
     if (res != TUI_OK) return res;
 
     checkbox->base.focusable = 1;
