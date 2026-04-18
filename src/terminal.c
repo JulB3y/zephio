@@ -4,6 +4,7 @@
 #include "tui_ansi.h"
 #include "tui_screen.h"
 #include "tui_mouse.h"
+#include "tui_context.h"
 
 #include <signal.h>
 #include <stdio.h>
@@ -13,20 +14,15 @@
 #include <unistd.h>
 #include <sys/ioctl.h>
 
-Terminal g_terminal = {
-    .fd = -1,
-    .rows = 0,
-    .cols = 0,
-    .initialized = 0,
-    .truecolor = 0
-};
-
+static TuiContext *g_ctx = NULL;
 static struct termios g_orig_termios;
 static int g_termios_saved = 0;
 
 static void terminal_atexit(void)
 {
-    tui_shutdown();
+    if (g_ctx) {
+        tui_shutdown(g_ctx);
+    }
 }
 
 static void terminal_sig_handler(int sig)
@@ -121,48 +117,52 @@ void terminal_write_seq(Terminal *t, const char *seq, size_t len)
     }
 }
 
-static void terminal_ensure_cleanup(void)
+static void terminal_ensure_cleanup(TuiContext *ctx)
 {
-    if (g_terminal.initialized) {
-        tui_mouse_disable();
-        tui_screen_free();
-        terminal_cursor_show(&g_terminal);
-        terminal_clear_screen(&g_terminal);
-        terminal_exit_alt_screen(&g_terminal);
-        terminal_raw_mode_disable(&g_terminal);
-        g_terminal.initialized = 0;
+    Terminal *terminal = &ctx->terminal;
+    if (terminal->initialized) {
+        tui_mouse_disable(ctx);
+        tui_screen_free(ctx);
+        terminal_cursor_show(terminal);
+        terminal_clear_screen(terminal);
+        terminal_exit_alt_screen(terminal);
+        terminal_raw_mode_disable(terminal);
+        terminal->initialized = 0;
     }
 }
 
-TuiResult tui_init(void)
+TuiResult tui_init(TuiContext *ctx)
 {
     TuiResult res;
+    Terminal *terminal = &ctx->terminal;
 
-    g_terminal.fd = STDIN_FILENO;
+    g_ctx = ctx;
+
+    terminal->fd = STDIN_FILENO;
 
     const char *colorterm = getenv("COLORTERM");
-    g_terminal.truecolor = (colorterm != NULL &&
+    terminal->truecolor = (colorterm != NULL &&
         (strcmp(colorterm, "truecolor") == 0 ||
          strcmp(colorterm, "24bit") == 0));
 
-    res = terminal_raw_mode_enable(&g_terminal);
+    res = terminal_raw_mode_enable(terminal);
     if (res != TUI_OK) {
         return res;
     }
 
-    res = terminal_get_size(&g_terminal);
+    res = terminal_get_size(terminal);
     if (res != TUI_OK) {
-        terminal_raw_mode_disable(&g_terminal);
+        terminal_raw_mode_disable(terminal);
         return res;
     }
 
-    terminal_enter_alt_screen(&g_terminal);
-    terminal_clear_screen(&g_terminal);
-    terminal_cursor_hide(&g_terminal);
+    terminal_enter_alt_screen(terminal);
+    terminal_clear_screen(terminal);
+    terminal_cursor_hide(terminal);
 
-    tui_screen_init(g_terminal.rows, g_terminal.cols);
+    tui_screen_init(ctx, terminal->rows, terminal->cols);
 
-    g_terminal.initialized = 1;
+    terminal->initialized = 1;
 
     atexit(terminal_atexit);
 
@@ -185,20 +185,22 @@ TuiResult tui_init(void)
     return TUI_OK;
 }
 
-void tui_shutdown(void)
+void tui_shutdown(TuiContext *ctx)
 {
-    terminal_ensure_cleanup();
+    terminal_ensure_cleanup(ctx);
+    g_ctx = NULL;
 }
 
-TuiResult tui_get_size(TuiSize *size)
+TuiResult tui_get_size(TuiContext *ctx, TuiSize *size)
 {
     TuiResult res;
+    Terminal *terminal = &ctx->terminal;
 
-    res = terminal_get_size(&g_terminal);
+    res = terminal_get_size(terminal);
     if (res != TUI_OK) {
         return res;
     }
-    size->rows = g_terminal.rows;
-    size->cols = g_terminal.cols;
+    size->rows = terminal->rows;
+    size->cols = terminal->cols;
     return TUI_OK;
 }

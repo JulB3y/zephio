@@ -1,6 +1,7 @@
 #define _POSIX_C_SOURCE 200809L
 
 #include "tui_menubar.h"
+#include "tui_context.h"
 #include "tui_app.h"
 #include "tui_screen.h"
 
@@ -39,9 +40,9 @@ static void popup_render(TuiWidget *widget)
     TuiColor bg  = mb->bg_popup;
     TuiColor bfg = TUI_COLOR_INDEX(14);
 
-    tui_screen_fill(widget->abs_y, widget->abs_x,
+    tui_screen_fill(tui_current_ctx, widget->abs_y, widget->abs_x,
                     widget->width, widget->height, " ", fg, bg, TUI_ATTR_NONE);
-    tui_screen_box_single(widget->abs_y, widget->abs_x,
+    tui_screen_box_single(tui_current_ctx, widget->abs_y, widget->abs_x,
                           widget->width, widget->height, bfg, bg, TUI_ATTR_BOLD);
 
     for (int i = 0; i < menu->item_count; i++) {
@@ -50,7 +51,7 @@ static void popup_render(TuiWidget *widget)
 
         if (item->is_separator) {
             for (int c = 1; c < widget->width - 1; c++)
-                tui_screen_set_cell(row, widget->abs_x + c,
+                tui_screen_set_cell(tui_current_ctx, row, widget->abs_x + c,
                                     "\xe2\x94\x80", bfg, bg, TUI_ATTR_DIM);
             continue;
         }
@@ -65,7 +66,7 @@ static void popup_render(TuiWidget *widget)
             iat = TUI_ATTR_REVERSE;
         }
 
-        tui_screen_fill(row, widget->abs_x + 1,
+        tui_screen_fill(tui_current_ctx, row, widget->abs_x + 1,
                         widget->width - 2, 1, " ", ifg, ibg, iat);
 
         if (item->label) {
@@ -76,7 +77,7 @@ static void popup_render(TuiWidget *widget)
             int clen = wlen < (int)sizeof(buf) - 1 ? wlen : (int)sizeof(buf) - 1;
             memcpy(buf, item->label, (size_t)clen);
             buf[clen] = '\0';
-            tui_screen_write(row, widget->abs_x + 2, buf, ifg, ibg, iat);
+            tui_screen_write(tui_current_ctx, row, widget->abs_x + 2, buf, ifg, ibg, iat);
         }
     }
 }
@@ -211,7 +212,7 @@ static void menubar_render(TuiWidget *widget)
 {
     TuiMenuBar *mb = (TuiMenuBar *)widget;
 
-    tui_screen_fill(widget->abs_y, widget->abs_x,
+    tui_screen_fill(tui_current_ctx, widget->abs_y, widget->abs_x,
                     widget->width, widget->height, " ",
                     mb->fg, mb->bg, mb->attr);
 
@@ -242,14 +243,14 @@ static void menubar_render(TuiWidget *widget)
             buf[2] = '\0';
         }
 
-        tui_screen_write(widget->abs_y,
+        tui_screen_write(tui_current_ctx, widget->abs_y,
                          widget->abs_x + m->start_x,
                          buf, fg, bg, at);
 
         if (m->mnemonic && m->label) {
             for (int j = 0; m->label[j]; j++) {
                 if (tolower((unsigned char)m->label[j]) == tolower((unsigned char)m->mnemonic)) {
-                    tui_screen_set_cell(widget->abs_y,
+                    tui_screen_set_cell(tui_current_ctx, widget->abs_y,
                                         widget->abs_x + m->start_x + 1 + j,
                                         &m->label[j], fg, bg,
                                         at | TUI_ATTR_UNDERLINE);

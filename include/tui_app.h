@@ -8,15 +8,15 @@
  *
  * Usage:
  *   1. Fill a TuiAppConfig with callbacks.
- *   2. tui_app_new(&config)  — allocates a TuiApp.
- *   3. tui_app_run(app)       — enters the event loop.
- *   4. tui_app_free(app)      — after run returns.
+ *   2. tui_app_new(ctx, &config)  — allocates a TuiApp.
+ *   3. tui_app_run(app)           — enters the event loop.
+ *   4. tui_app_free(app)          — after run returns.
  */
 
 #ifndef TUI_APP_H
 #define TUI_APP_H
 
-#include "tui.h"
+#include "tui_context.h"
 #include "tui_input.h"
 #include "tui_mouse.h"
 #include "tui_toast.h"
@@ -55,6 +55,7 @@ typedef struct {
 } TuiAppConfig;
 
 struct TuiApp {
+    TuiContext  *ctx;
     TuiAppConfig config;
     int          running;
     int          exit_code;
@@ -74,10 +75,11 @@ struct TuiApp {
  * Copies the config struct. Calls tui_init(), tui_input_init(),
  * tui_mouse_enable(), and config.on_init internally.
  *
+ * @param ctx     TUI context.
  * @param config  Configuration.
  * @return Heap-allocated TuiApp, or NULL on failure.
  */
-TuiApp *tui_app_new(const TuiAppConfig *config);
+TuiApp *tui_app_new(TuiContext *ctx, const TuiAppConfig *config);
 
 /**
  * @brief Free a TuiApp (does NOT call tui_shutdown).

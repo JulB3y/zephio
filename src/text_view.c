@@ -1,6 +1,7 @@
 #define _POSIX_C_SOURCE 200809L
 
 #include "tui_text_view.h"
+#include "tui_context.h"
 #include "tui_text.h"
 #include "tui_screen.h"
 
@@ -145,7 +146,7 @@ static void text_view_render(TuiWidget *widget)
 
     tui_scroll_container_clamp_scroll(sc, cv_width, cv_height);
 
-    tui_screen_fill(widget->abs_y, widget->abs_x,
+    tui_screen_fill(tui_current_ctx, widget->abs_y, widget->abs_x,
                     widget->width, widget->height,
                     " ", tv->fg, tv->bg, tv->attr);
 
@@ -176,7 +177,7 @@ static void text_view_render(TuiWidget *widget)
                           ? visible_bytes : sizeof(buf) - 1;
             memcpy(buf, line_text + skip_bytes, copy);
             buf[copy] = '\0';
-            tui_screen_write(widget->abs_y + r, widget->abs_x,
+            tui_screen_write(tui_current_ctx, widget->abs_y + r, widget->abs_x,
                              buf, tv->fg, tv->bg, tv->attr);
         }
     }

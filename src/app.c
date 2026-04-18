@@ -5,6 +5,7 @@
 #include "tui_terminal.h"
 #include "tui_screen.h"
 #include "tui_mouse.h"
+#include "tui_context.h"
 
 #include <poll.h>
 #include <stdlib.h>
@@ -23,10 +24,12 @@ static double time_now_ms(void)
     return ts.tv_sec * 1000.0 + ts.tv_nsec / 1000000.0;
 }
 
-TuiApp *tui_app_new(const TuiAppConfig *config)
+TuiApp *tui_app_new(TuiContext *ctx, const TuiAppConfig *config)
 {
     TuiApp *app = (TuiApp *)calloc(1, sizeof(TuiApp));
     if (!app) return NULL;
+
+    app->ctx = ctx;
 
     if (config) {
         app->config = *config;
@@ -63,7 +66,7 @@ static void __attribute__((unused)) tui_app_stop(TuiApp *app)
 static int app_poll_event(TuiApp *app, TuiEvent *event)
 {
     if (app->config.tick_rate_ms > 0) {
-        struct pollfd pfd = { g_terminal.fd, POLLIN, 0 };
+        struct pollfd pfd = { app->ctx->terminal.fd, POLLIN, 0 };
         int ret = poll(&pfd, 1, app->config.tick_rate_ms);
 
         if (ret == 0) {
@@ -72,12 +75,12 @@ static int app_poll_event(TuiApp *app, TuiEvent *event)
         }
 
         if (ret < 0) {
-            TuiResult res = tui_input_poll(event);
+            TuiResult res = tui_input_poll(app->ctx, event);
             return (res == TUI_OK) ? 1 : -1;
         }
     }
 
-    TuiResult res = tui_input_poll(event);
+    TuiResult res = tui_input_poll(app->ctx, event);
     if (res != TUI_OK) return -1;
     return 1;
 }
@@ -86,11 +89,11 @@ int tui_app_run(TuiApp *app)
 {
     if (!app) return 1;
 
-    TuiResult res = tui_init();
+    TuiResult res = tui_init(app->ctx);
     if (res != TUI_OK) return 1;
 
-    tui_input_init();
-    tui_mouse_enable();
+    tui_input_init(app->ctx);
+    tui_mouse_enable(app->ctx);
 
     app->running   = 1;
     app->exit_code = 0;
@@ -136,7 +139,7 @@ int tui_app_run(TuiApp *app)
         }
 
         if (event.key == TUI_EVENT_RESIZE) {
-            tui_screen_resize(event.size.rows, event.size.cols);
+            tui_screen_resize(app->ctx, event.size.rows, event.size.cols);
 
             if (app->config.on_resize) {
                 int ret = app->config.on_resize(
@@ -192,8 +195,8 @@ cleanup:
         app->config.on_shutdown(app, app->config.user_data);
     }
 
-    tui_input_shutdown();
-    tui_shutdown();
+    tui_input_shutdown(app->ctx);
+    tui_shutdown(app->ctx);
 
     return app->exit_code;
 }
@@ -288,6 +291,6 @@ int tui_app_toast(TuiApp *app, TuiToastSeverity severity,
 void tui_app_render_toasts(TuiApp *app)
 {
     if (!app) return;
-    TuiSize size = tui_screen_size();
+    TuiSize size = tui_screen_size(app->ctx);
     tui_toast_render(&app->toasts, size.rows, size.cols);
 }

@@ -3,6 +3,7 @@
 #include "tui_input.h"
 #include "tui_terminal.h"
 #include "tui_ansi.h"
+#include "tui_context.h"
 
 #include <poll.h>
 #include <signal.h>
@@ -17,8 +18,9 @@ static void input_sigwinch_handler(int sig)
     g_winch_received = 1;
 }
 
-TuiResult tui_input_init(void)
+TuiResult tui_input_init(TuiContext *ctx)
 {
+    (void)ctx;
     struct sigaction sa;
     memset(&sa, 0, sizeof(sa));
     sa.sa_handler = input_sigwinch_handler;
@@ -29,8 +31,9 @@ TuiResult tui_input_init(void)
     return TUI_OK;
 }
 
-void tui_input_shutdown(void)
+void tui_input_shutdown(TuiContext *ctx)
 {
+    (void)ctx;
     struct sigaction sa;
     memset(&sa, 0, sizeof(sa));
     sa.sa_handler = SIG_IGN;
@@ -150,7 +153,6 @@ static void parse_csi_from(int fd, int first_byte, TuiEvent *event)
     }
 
     if (final_byte == 'Z') {
-        /* Backtab (Shift+Tab): ESC [ Z  or  ESC [ 1;2 Z */
         event->key = TUI_KEY_TAB;
         event->modifiers |= TUI_MOD_SHIFT;
     } else if (final_byte == '~') {
@@ -312,25 +314,25 @@ static int decode_utf8(int first_byte, int fd, uint32_t *out_codepoint)
     return num_bytes;
 }
 
-TuiResult tui_input_poll(TuiEvent *event)
+TuiResult tui_input_poll(TuiContext *ctx, TuiEvent *event)
 {
     memset(event, 0, sizeof(*event));
 
     if (g_winch_received) {
         g_winch_received = 0;
         event->key = TUI_EVENT_RESIZE;
-        tui_get_size(&event->size);
+        tui_get_size(ctx, &event->size);
         return TUI_OK;
     }
 
-    int fd = g_terminal.fd;
+    int fd = ctx->terminal.fd;
     struct pollfd pfd = { fd, POLLIN, 0 };
     int ret = poll(&pfd, 1, -1);
 
     if (g_winch_received) {
         g_winch_received = 0;
         event->key = TUI_EVENT_RESIZE;
-        tui_get_size(&event->size);
+        tui_get_size(ctx, &event->size);
         return TUI_OK;
     }
 
@@ -371,12 +373,12 @@ TuiResult tui_input_poll(TuiEvent *event)
     return TUI_OK;
 }
 
-int tui_input_loop(TuiInputCallback callback, void *user_data)
+int tui_input_loop(TuiContext *ctx, TuiInputCallback callback, void *user_data)
 {
     TuiEvent event;
 
     while (1) {
-        TuiResult res = tui_input_poll(&event);
+        TuiResult res = tui_input_poll(ctx, &event);
         if (res != TUI_OK) {
             return -1;
         }

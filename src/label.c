@@ -1,6 +1,7 @@
 #define _POSIX_C_SOURCE 200809L
 
 #include "tui_label.h"
+#include "tui_context.h"
 
 #include <stdlib.h>
 #include <string.h>
@@ -12,10 +13,10 @@ static void label_render(TuiWidget *widget)
 
     if (widget->theme) {
         TuiStyle style = tui_widget_get_style(widget);
-        tui_screen_write(widget->abs_y, widget->abs_x,
+        tui_screen_write(tui_current_ctx, widget->abs_y, widget->abs_x,
                          label->text, style.fg, style.bg, style.attr);
     } else {
-        tui_screen_write(widget->abs_y, widget->abs_x,
+        tui_screen_write(tui_current_ctx, widget->abs_y, widget->abs_x,
                          label->text, label->fg, label->bg, label->attr);
     }
 }

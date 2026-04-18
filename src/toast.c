@@ -1,6 +1,7 @@
 #define _POSIX_C_SOURCE 200809L
 
 #include "tui_toast.h"
+#include "tui_context.h"
 #include "tui_style.h"
 
 #include <string.h>
@@ -266,38 +267,38 @@ void tui_toast_render(TuiToastManager *mgr, int screen_rows, int screen_cols)
             use_border = TUI_COLOR_INDEX(TUI_COLOR_GRAY_DARK);
         }
 
-        tui_screen_fill(t->row, t->col, t->width, TUI_TOAST_HEIGHT,
+        tui_screen_fill(tui_current_ctx, t->row, t->col, t->width, TUI_TOAST_HEIGHT,
                         " ", use_fg, use_bg, base_attr);
 
-        tui_screen_set_cell(t->row, t->col, "\xe2\x95\x94",
+        tui_screen_set_cell(tui_current_ctx, t->row, t->col, "\xe2\x95\x94",
                             use_border, use_bg, base_attr);
         for (int c = 1; c < t->width - 1; c++) {
-            tui_screen_set_cell(t->row, t->col + c, "\xe2\x95\x90",
+            tui_screen_set_cell(tui_current_ctx, t->row, t->col + c, "\xe2\x95\x90",
                                 use_border, use_bg, base_attr);
         }
-        tui_screen_set_cell(t->row, t->col + t->width - 1, "\xe2\x95\x97",
+        tui_screen_set_cell(tui_current_ctx, t->row, t->col + t->width - 1, "\xe2\x95\x97",
                             use_border, use_bg, base_attr);
 
         for (int r = 1; r < TUI_TOAST_HEIGHT - 1; r++) {
-            tui_screen_set_cell(t->row + r, t->col, "\xe2\x95\x91",
+            tui_screen_set_cell(tui_current_ctx, t->row + r, t->col, "\xe2\x95\x91",
                                 use_border, use_bg, base_attr);
-            tui_screen_set_cell(t->row + r, t->col + t->width - 1,
+            tui_screen_set_cell(tui_current_ctx, t->row + r, t->col + t->width - 1,
                                 "\xe2\x95\x91", use_border, use_bg, base_attr);
         }
 
-        tui_screen_set_cell(t->row + TUI_TOAST_HEIGHT - 1, t->col,
+        tui_screen_set_cell(tui_current_ctx, t->row + TUI_TOAST_HEIGHT - 1, t->col,
                             "\xe2\x95\x9a", use_border, use_bg, base_attr);
         for (int c = 1; c < t->width - 1; c++) {
-            tui_screen_set_cell(t->row + TUI_TOAST_HEIGHT - 1,
+            tui_screen_set_cell(tui_current_ctx, t->row + TUI_TOAST_HEIGHT - 1,
                                 t->col + c, "\xe2\x95\x90",
                                 use_border, use_bg, base_attr);
         }
-        tui_screen_set_cell(t->row + TUI_TOAST_HEIGHT - 1,
+        tui_screen_set_cell(tui_current_ctx, t->row + TUI_TOAST_HEIGHT - 1,
                             t->col + t->width - 1, "\xe2\x95\x9d",
                             use_border, use_bg, base_attr);
 
         int text_row = t->row + 1;
-        tui_screen_write(text_row, t->col + 1, icon,
+        tui_screen_write(tui_current_ctx, text_row, t->col + 1, icon,
                          use_fg, use_bg, TUI_ATTR_BOLD | base_attr);
 
         int msg_col = t->col + 3;
@@ -309,14 +310,14 @@ void tui_toast_render(TuiToastManager *mgr, int screen_rows, int screen_cols)
             if (msg_len >= (int)sizeof(buf)) msg_len = (int)sizeof(buf) - 1;
             memcpy(buf, t->message, (size_t)msg_len);
             buf[msg_len] = '\0';
-            tui_screen_write(text_row, msg_col, buf,
+            tui_screen_write(tui_current_ctx, text_row, msg_col, buf,
                              use_fg, use_bg, base_attr);
         }
 
         if (opacity < 1.0 && opacity > 0.0) {
             int progress_chars = (int)(t->width * opacity);
             for (int c = 0; c < progress_chars && c < t->width; c++) {
-                tui_screen_set_cell(t->row + TUI_TOAST_HEIGHT - 1,
+                tui_screen_set_cell(tui_current_ctx, t->row + TUI_TOAST_HEIGHT - 1,
                                     t->col + c, "\xe2\x96\x88",
                                     use_border, use_bg, TUI_ATTR_DIM);
             }

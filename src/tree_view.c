@@ -1,6 +1,7 @@
 #define _POSIX_C_SOURCE 200809L
 
 #include "tui_tree_view.h"
+#include "tui_context.h"
 #include "tui_screen.h"
 
 #include <stdlib.h>
@@ -103,7 +104,7 @@ static void render_scrollbar(TuiWidget *widget, int total, int offset)
     TuiColor track_fg = TUI_COLOR_INDEX(TUI_COLOR_GRAY_DARK);
     TuiColor track_bg = TUI_COLOR_INDEX(0);
 
-    tui_screen_fill(widget->abs_y, scroll_col, 1, wh, " ",
+    tui_screen_fill(tui_current_ctx, widget->abs_y, scroll_col, 1, wh, " ",
                     track_fg, track_bg, TUI_ATTR_DIM);
 
     int max_scroll = total - wh;
@@ -112,7 +113,7 @@ static void render_scrollbar(TuiWidget *widget, int total, int offset)
         if (thumb_h < 1) thumb_h = 1;
         int thumb_y = offset * (wh - thumb_h) / max_scroll;
         for (int t = 0; t < thumb_h; t++) {
-            tui_screen_set_cell(widget->abs_y + thumb_y + t, scroll_col,
+            tui_screen_set_cell(tui_current_ctx, widget->abs_y + thumb_y + t, scroll_col,
                                 "\xe2\x96\x88",
                                 TUI_COLOR_INDEX(TUI_COLOR_BRIGHT_WHITE),
                                 TUI_COLOR_INDEX(TUI_COLOR_GRAY_MID),
@@ -151,7 +152,7 @@ static void tree_render(TuiWidget *widget)
             }
         }
 
-        tui_screen_fill(wy + i, wx, widget->width, 1, " ", fg, bg, attr);
+        tui_screen_fill(tui_current_ctx, wy + i, wx, widget->width, 1, " ", fg, bg, attr);
 
         int col = wx;
 
@@ -164,19 +165,19 @@ static void tree_render(TuiWidget *widget)
 
             if (d < entry->depth - 1) {
                 if (entry->last_at_depth && !entry->last_at_depth[d + 1]) {
-                    tui_screen_write(wy + i, col, UTF8_PIPE, conn_fg, conn_bg, attr);
+                    tui_screen_write(tui_current_ctx, wy + i, col, UTF8_PIPE, conn_fg, conn_bg, attr);
                 } else {
-                    tui_screen_write(wy + i, col, " ", conn_fg, conn_bg, attr);
+                    tui_screen_write(tui_current_ctx, wy + i, col, " ", conn_fg, conn_bg, attr);
                 }
             } else {
                 if (entry->is_last) {
-                    tui_screen_write(wy + i, col, UTF8_CORNER, conn_fg, conn_bg, attr);
+                    tui_screen_write(tui_current_ctx, wy + i, col, UTF8_CORNER, conn_fg, conn_bg, attr);
                     if (col + 1 < wx + widget->width)
-                        tui_screen_write(wy + i, col + 1, UTF8_HORIZ, conn_fg, conn_bg, attr);
+                        tui_screen_write(tui_current_ctx, wy + i, col + 1, UTF8_HORIZ, conn_fg, conn_bg, attr);
                 } else {
-                    tui_screen_write(wy + i, col, UTF8_TEE, conn_fg, conn_bg, attr);
+                    tui_screen_write(tui_current_ctx, wy + i, col, UTF8_TEE, conn_fg, conn_bg, attr);
                     if (col + 1 < wx + widget->width)
-                        tui_screen_write(wy + i, col + 1, UTF8_HORIZ, conn_fg, conn_bg, attr);
+                        tui_screen_write(tui_current_ctx, wy + i, col + 1, UTF8_HORIZ, conn_fg, conn_bg, attr);
                 }
             }
             col += 2;
@@ -185,7 +186,7 @@ static void tree_render(TuiWidget *widget)
         if (entry->node->child_count > 0) {
             if (col >= wx + widget->width) continue;
             const char *exp = entry->node->expanded ? UTF8_COLLAPSE : UTF8_EXPAND;
-            tui_screen_write(wy + i, col, exp, fg, bg, attr | TUI_ATTR_BOLD);
+            tui_screen_write(tui_current_ctx, wy + i, col, exp, fg, bg, attr | TUI_ATTR_BOLD);
             col += 1;
         } else {
             col += 1;
@@ -201,7 +202,7 @@ static void tree_render(TuiWidget *widget)
             int cl = w < (int)sizeof(buf) - 1 ? w : (int)sizeof(buf) - 1;
             memcpy(buf, entry->node->text, (size_t)cl);
             buf[cl] = '\0';
-            tui_screen_write(wy + i, col, buf, fg, bg, attr);
+            tui_screen_write(tui_current_ctx, wy + i, col, buf, fg, bg, attr);
         }
     }
 
@@ -212,7 +213,7 @@ static void tree_render(TuiWidget *widget)
         int empty_rows = wy + widget->height - empty_start;
 
         if (empty_rows > 0 && tv->bg_empty.type != TUI_COLOR_TYPE_NONE) {
-            tui_screen_fill(empty_start, wx, widget->width, empty_rows,
+            tui_screen_fill(tui_current_ctx, empty_start, wx, widget->width, empty_rows,
                             " ", tv->fg, tv->bg_empty, TUI_ATTR_NONE);
         }
     }

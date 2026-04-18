@@ -1,6 +1,7 @@
 #define _POSIX_C_SOURCE 200809L
 
 #include "tui_input_field.h"
+#include "tui_context.h"
 #include "tui_text.h"
 
 #include <stdlib.h>
@@ -49,7 +50,7 @@ static void input_field_render(TuiWidget *widget)
         attr = field->attr;
     }
 
-    tui_screen_fill(widget->abs_y, widget->abs_x,
+    tui_screen_fill(tui_current_ctx, widget->abs_y, widget->abs_x,
                     widget->width, 1, " ", fg, bg, attr);
 
     if (field->text && field->text[0]) {
@@ -68,7 +69,7 @@ static void input_field_render(TuiWidget *widget)
             memcpy(buf, field->text + start, (size_t)copy_len);
             buf[copy_len] = '\0';
 
-            tui_screen_write(widget->abs_y, widget->abs_x,
+            tui_screen_write(tui_current_ctx, widget->abs_y, widget->abs_x,
                              buf, fg, bg, attr);
         }
     }
@@ -96,7 +97,7 @@ static void input_field_render(TuiWidget *widget)
             if (field->cursor_pos < text_len) {
                 cursor_ch = field->text + field->cursor_pos;
             }
-            tui_screen_set_cell(widget->abs_y, widget->abs_x + cursor_col,
+            tui_screen_set_cell(tui_current_ctx, widget->abs_y, widget->abs_x + cursor_col,
                                 cursor_ch, cursor_fg, cursor_bg,
                                 TUI_ATTR_NONE);
         }

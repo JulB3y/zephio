@@ -1,6 +1,7 @@
 #define _POSIX_C_SOURCE 200809L
 
 #include "tui_split_pane.h"
+#include "tui_context.h"
 #include "tui_screen.h"
 
 static void clamp_split_pos(TuiSplitPane *pane)
@@ -34,7 +35,7 @@ static void split_render(TuiWidget *widget)
     clamp_split_pos(pane);
 
     TuiStyle style = tui_widget_get_style(widget);
-    tui_screen_fill(widget->abs_y, widget->abs_x,
+    tui_screen_fill(tui_current_ctx, widget->abs_y, widget->abs_x,
                     widget->width, widget->height,
                     " ", style.fg, style.bg, style.attr);
 
@@ -54,7 +55,7 @@ static void split_render(TuiWidget *widget)
 
         int sep_x = widget->abs_x + pane->split_pos;
         for (int r = 0; r < widget->height; r++) {
-            tui_screen_set_cell(widget->abs_y + r, sep_x,
+            tui_screen_set_cell(tui_current_ctx, widget->abs_y + r, sep_x,
                                 "\xe2\x94\x83",
                                 pane->sep_fg, pane->sep_bg,
                                 pane->sep_attr);
@@ -72,7 +73,7 @@ static void split_render(TuiWidget *widget)
 
         int sep_y = widget->abs_y + pane->split_pos;
         for (int c = 0; c < widget->width; c++) {
-            tui_screen_set_cell(sep_y, widget->abs_x + c,
+            tui_screen_set_cell(tui_current_ctx, sep_y, widget->abs_x + c,
                                 "\xe2\x94\x81",
                                 pane->sep_fg, pane->sep_bg,
                                 pane->sep_attr);

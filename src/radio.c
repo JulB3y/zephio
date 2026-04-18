@@ -1,6 +1,7 @@
 #define _POSIX_C_SOURCE 200809L
 
 #include "tui_radio.h"
+#include "tui_context.h"
 
 #include <stdlib.h>
 #include <string.h>
@@ -12,7 +13,7 @@ static void radio_render(TuiWidget *widget)
     for (int i = 0; i < widget->height; i++) {
         int idx = i;
         if (idx >= radio->option_count) {
-            tui_screen_fill(widget->abs_y + i, widget->abs_x,
+            tui_screen_fill(tui_current_ctx, widget->abs_y + i, widget->abs_x,
                             widget->width, 1, " ",
                             radio->fg, radio->bg, radio->attr);
             continue;
@@ -45,11 +46,11 @@ static void radio_render(TuiWidget *widget)
             }
         }
 
-        tui_screen_fill(widget->abs_y + i, widget->abs_x,
+        tui_screen_fill(tui_current_ctx, widget->abs_y + i, widget->abs_x,
                         widget->width, 1, " ", fg, bg, attr);
 
         const char *marker = (idx == radio->selected) ? "(x)" : "( )";
-        tui_screen_write(widget->abs_y + i, widget->abs_x,
+        tui_screen_write(tui_current_ctx, widget->abs_y + i, widget->abs_x,
                           marker, fg, bg, attr);
 
         if (radio->options[idx]) {
@@ -66,7 +67,7 @@ static void radio_render(TuiWidget *widget)
             memcpy(buf, radio->options[idx], (size_t)copy_len);
             buf[copy_len] = '\0';
 
-            tui_screen_write(widget->abs_y + i,
+            tui_screen_write(tui_current_ctx, widget->abs_y + i,
                               widget->abs_x + label_start,
                               buf, fg, bg, attr);
         }

@@ -1,6 +1,7 @@
 #define _POSIX_C_SOURCE 200809L
 
 #include "tui_table.h"
+#include "tui_context.h"
 
 #include <stdlib.h>
 #include <string.h>
@@ -82,7 +83,7 @@ static void render_clipped_text(int row, int col, const char *text,
     int cl = w < (int)sizeof(buf) - 1 ? w : (int)sizeof(buf) - 1;
     memcpy(buf, text, (size_t)cl);
     buf[cl] = '\0';
-    tui_screen_write(row, col, buf, fg, bg, attr);
+    tui_screen_write(tui_current_ctx, row, col, buf, fg, bg, attr);
 }
 
 static void render_columns(TuiTable *table, int row, int screen_row,
@@ -149,7 +150,7 @@ static void table_render(TuiWidget *widget)
             hat = header_style.attr | TUI_ATTR_BOLD;
         }
 
-        tui_screen_fill(wy, wx, widget->width, 1, " ", hfg, hbg, hat);
+        tui_screen_fill(tui_current_ctx, wy, wx, widget->width, 1, " ", hfg, hbg, hat);
 
         int col_x = wx - table->scroll_x;
         for (int c = 0; c < table->col_count; c++) {
@@ -173,7 +174,7 @@ static void table_render(TuiWidget *widget)
                         buf[cl++] = table->columns[c].sort_order == TUI_SORT_ASC ? '^' : 'v';
                     }
                     buf[cl] = '\0';
-                    tui_screen_write(wy, text_x, buf, hfg, hbg, hat);
+                    tui_screen_write(tui_current_ctx, wy, text_x, buf, hfg, hbg, hat);
                 }
             }
             col_x += cw;
@@ -193,7 +194,7 @@ static void table_render(TuiWidget *widget)
                           table->fg_selected, table->bg_selected,
                           &fg, &bg, &attr);
 
-            tui_screen_fill(wy + 1 + i, wx, widget->width, 1, " ", fg, bg, attr);
+            tui_screen_fill(tui_current_ctx, wy + 1 + i, wx, widget->width, 1, " ", fg, bg, attr);
 
             if (!table->rows[r]) continue;
             render_columns(table, r, wy + 1 + i, wx, widget->width, fg, bg, attr);
@@ -204,7 +205,7 @@ static void table_render(TuiWidget *widget)
         int scroll_col = wx + widget->width - 1;
         TuiColor track_fg = TUI_COLOR_INDEX(TUI_COLOR_GRAY_DARK);
         TuiColor track_bg = table->bg;
-        tui_screen_fill(wy + 1, scroll_col, 1, body_height, " ",
+        tui_screen_fill(tui_current_ctx, wy + 1, scroll_col, 1, body_height, " ",
                         track_fg, track_bg, TUI_ATTR_DIM);
 
         int max_scroll = table->row_count - body_height;
@@ -213,7 +214,7 @@ static void table_render(TuiWidget *widget)
             if (thumb_h < 1) thumb_h = 1;
             int thumb_y = table->scroll_y * (body_height - thumb_h) / max_scroll;
             for (int t = 0; t < thumb_h; t++) {
-                tui_screen_set_cell(wy + 1 + thumb_y + t, scroll_col,
+                tui_screen_set_cell(tui_current_ctx, wy + 1 + thumb_y + t, scroll_col,
                                     "\xe2\x96\x88",
                                     TUI_COLOR_INDEX(TUI_COLOR_BRIGHT_WHITE),
                                     TUI_COLOR_INDEX(TUI_COLOR_GRAY_MID),

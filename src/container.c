@@ -1,6 +1,7 @@
 #define _POSIX_C_SOURCE 200809L
 
 #include "tui_container.h"
+#include "tui_context.h"
 
 static void container_render(TuiWidget *widget)
 {
@@ -8,11 +9,11 @@ static void container_render(TuiWidget *widget)
 
     if (widget->theme) {
         TuiStyle style = tui_widget_get_style(widget);
-        tui_screen_fill(widget->abs_y, widget->abs_x,
+        tui_screen_fill(tui_current_ctx, widget->abs_y, widget->abs_x,
                         widget->width, widget->height,
                         " ", style.fg, style.bg, style.attr);
     } else {
-        tui_screen_fill(widget->abs_y, widget->abs_x,
+        tui_screen_fill(tui_current_ctx, widget->abs_y, widget->abs_x,
                         widget->width, widget->height,
                         " ", TUI_COLOR_INDEX(0), container->bg, TUI_ATTR_NONE);
     }

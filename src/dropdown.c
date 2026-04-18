@@ -1,6 +1,7 @@
 #define _POSIX_C_SOURCE 200809L
 
 #include "tui_dropdown.h"
+#include "tui_context.h"
 #include "tui_app.h"
 #include "tui_screen.h"
 
@@ -39,9 +40,9 @@ static void popup_render(TuiWidget *widget)
     TuiColor bfg = TUI_COLOR_INDEX(14);
     TuiColor bbg = dd->bg_popup;
 
-    tui_screen_fill(widget->abs_y, widget->abs_x,
+    tui_screen_fill(tui_current_ctx, widget->abs_y, widget->abs_x,
                     widget->width, widget->height, " ", fg, bg, TUI_ATTR_NONE);
-    tui_screen_box_single(widget->abs_y, widget->abs_x,
+    tui_screen_box_single(tui_current_ctx, widget->abs_y, widget->abs_x,
                           widget->width, widget->height, bfg, bbg, TUI_ATTR_BOLD);
 
     int visible = dd->item_count < dd->max_visible
@@ -60,7 +61,7 @@ static void popup_render(TuiWidget *widget)
             iat = TUI_ATTR_REVERSE;
         }
 
-        tui_screen_fill(widget->abs_y + 1 + i, widget->abs_x + 1,
+        tui_screen_fill(tui_current_ctx, widget->abs_y + 1 + i, widget->abs_x + 1,
                         widget->width - 2, 1, " ", ifg, ibg, iat);
 
         if (dd->items[idx]) {
@@ -71,7 +72,7 @@ static void popup_render(TuiWidget *widget)
             int clen = wlen < (int)sizeof(buf) - 1 ? wlen : (int)sizeof(buf) - 1;
             memcpy(buf, dd->items[idx], (size_t)clen);
             buf[clen] = '\0';
-            tui_screen_write(widget->abs_y + 1 + i,
+            tui_screen_write(tui_current_ctx, widget->abs_y + 1 + i,
                              widget->abs_x + 2, buf, ifg, ibg, iat);
         }
     }
@@ -198,7 +199,7 @@ static void dropdown_render(TuiWidget *widget)
         attr |= TUI_ATTR_REVERSE;
     }
 
-    tui_screen_fill(widget->abs_y, widget->abs_x,
+    tui_screen_fill(tui_current_ctx, widget->abs_y, widget->abs_x,
                     widget->width, widget->height, " ", fg, bg, attr);
 
     const char *text = "Select...";
@@ -214,8 +215,8 @@ static void dropdown_render(TuiWidget *widget)
     memcpy(buf, text, (size_t)clen);
     buf[clen] = '\0';
 
-    tui_screen_write(widget->abs_y, widget->abs_x + 1, buf, fg, bg, attr);
-    tui_screen_write(widget->abs_y, widget->abs_x + widget->width - 2,
+    tui_screen_write(tui_current_ctx, widget->abs_y, widget->abs_x + 1, buf, fg, bg, attr);
+    tui_screen_write(tui_current_ctx, widget->abs_y, widget->abs_x + widget->width - 2,
                      "\xe2\x96\xbc", fg, bg, attr);
 }
 

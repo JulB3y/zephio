@@ -13,6 +13,7 @@
 #ifndef TUI_ANSI_H
 #define TUI_ANSI_H
 
+#include "tui_context.h"
 #include <stddef.h>
 
 #define ANSI_ESC        "\033"
@@ -55,61 +56,61 @@
 #define ANSI_STRIKETHROUGH ANSI_CSI "9m"
 
 /** @brief Move the cursor to (row, col), 1-based. */
-void ansi_move_cursor(int row, int col);
+void ansi_move_cursor(TuiContext *ctx, int row, int col);
 /** @brief Move the cursor up by n rows. */
-void ansi_move_up(int n);
+void ansi_move_up(TuiContext *ctx, int n);
 /** @brief Move the cursor down by n rows. */
-void ansi_move_down(int n);
+void ansi_move_down(TuiContext *ctx, int n);
 /** @brief Move the cursor left by n columns. */
-void ansi_move_left(int n);
+void ansi_move_left(TuiContext *ctx, int n);
 /** @brief Move the cursor right by n columns. */
-void ansi_move_right(int n);
+void ansi_move_right(TuiContext *ctx, int n);
 /** @brief Save cursor position (DEC private). */
-void ansi_save_cursor(void);
+void ansi_save_cursor(TuiContext *ctx);
 /** @brief Restore previously saved cursor position. */
-void ansi_restore_cursor(void);
+void ansi_restore_cursor(TuiContext *ctx);
 
 /** @brief Clear the entire screen. */
-void ansi_clear_screen(void);
+void ansi_clear_screen(TuiContext *ctx);
 /** @brief Clear the entire current line. */
-void ansi_clear_line(void);
+void ansi_clear_line(TuiContext *ctx);
 /** @brief Clear from cursor to end of line. */
-void ansi_clear_line_right(void);
+void ansi_clear_line_right(TuiContext *ctx);
 /** @brief Clear from start of line to cursor. */
-void ansi_clear_line_left(void);
+void ansi_clear_line_left(TuiContext *ctx);
 /** @brief Clear from start of screen to cursor. */
-void ansi_clear_screen_above(void);
+void ansi_clear_screen_above(TuiContext *ctx);
 /** @brief Clear from cursor to end of screen. */
-void ansi_clear_screen_below(void);
+void ansi_clear_screen_below(TuiContext *ctx);
 
 /** @brief Set foreground to 256-color index. */
-void ansi_set_fg(int color);
+void ansi_set_fg(TuiContext *ctx, int color);
 /** @brief Set background to 256-color index. */
-void ansi_set_bg(int color);
+void ansi_set_bg(TuiContext *ctx, int color);
 /** @brief Set foreground to 24-bit RGB. */
-void ansi_set_fg_rgb(int r, int g, int b);
+void ansi_set_fg_rgb(TuiContext *ctx, int r, int g, int b);
 /** @brief Set background to 24-bit RGB. */
-void ansi_set_bg_rgb(int r, int g, int b);
+void ansi_set_bg_rgb(TuiContext *ctx, int r, int g, int b);
 /** @brief Reset all attributes and colors. */
-void ansi_reset(void);
+void ansi_reset(TuiContext *ctx);
 /** @brief Enable bold attribute. */
-void ansi_set_bold(void);
+void ansi_set_bold(TuiContext *ctx);
 /** @brief Enable dim/faint attribute. */
-void ansi_set_dim(void);
+void ansi_set_dim(TuiContext *ctx);
 /** @brief Enable italic attribute. */
-void ansi_set_italic(void);
+void ansi_set_italic(TuiContext *ctx);
 /** @brief Enable underline attribute. */
-void ansi_set_underline(void);
+void ansi_set_underline(TuiContext *ctx);
 /** @brief Enable blink attribute. */
-void ansi_set_blink(void);
+void ansi_set_blink(TuiContext *ctx);
 /** @brief Enable reverse video attribute. */
-void ansi_set_reverse(void);
+void ansi_set_reverse(TuiContext *ctx);
 /** @brief Enable strikethrough attribute. */
-void ansi_set_strikethrough(void);
+void ansi_set_strikethrough(TuiContext *ctx);
 
 /** @brief Write raw bytes to the terminal. */
-void ansi_write(const char *text, size_t len);
+void ansi_write(TuiContext *ctx, const char *text, size_t len);
 /** @brief Write raw bytes at a specific position (1-based). */
-void ansi_write_at(int row, int col, const char *text, size_t len);
+void ansi_write_at(TuiContext *ctx, int row, int col, const char *text, size_t len);
 
 #endif

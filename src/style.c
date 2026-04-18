@@ -1,4 +1,5 @@
 #include "tui_style.h"
+#include "tui_context.h"
 
 TuiStyle tui_style_make(TuiColor fg, TuiColor bg, TuiAttr attr)
 {
@@ -32,21 +33,21 @@ TuiTheme tui_theme_create(const TuiStyle *normal, const TuiStyle *focused,
     return theme;
 }
 
-void tui_style_set_cell(int row, int col, const char *ch, const TuiStyle *style)
+void tui_style_set_cell(TuiContext *ctx, int row, int col, const char *ch, const TuiStyle *style)
 {
     if (!style) return;
-    tui_screen_set_cell(row, col, ch, style->fg, style->bg, style->attr);
+    tui_screen_set_cell(ctx, row, col, ch, style->fg, style->bg, style->attr);
 }
 
-void tui_style_write(int row, int col, const char *text, const TuiStyle *style)
+void tui_style_write(TuiContext *ctx, int row, int col, const char *text, const TuiStyle *style)
 {
     if (!style) return;
-    tui_screen_write(row, col, text, style->fg, style->bg, style->attr);
+    tui_screen_write(ctx, row, col, text, style->fg, style->bg, style->attr);
 }
 
-void tui_style_fill(int row, int col, int width, int height,
+void tui_style_fill(TuiContext *ctx, int row, int col, int width, int height,
                     const char *ch, const TuiStyle *style)
 {
     if (!style) return;
-    tui_screen_fill(row, col, width, height, ch, style->fg, style->bg, style->attr);
+    tui_screen_fill(ctx, row, col, width, height, ch, style->fg, style->bg, style->attr);
 }

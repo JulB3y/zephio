@@ -36,6 +36,4 @@ typedef struct {
  */
 void terminal_write_seq(Terminal *t, const char *seq, size_t len);
 
-extern Terminal g_terminal;
-
 #endif

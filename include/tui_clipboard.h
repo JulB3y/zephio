@@ -12,6 +12,7 @@
 #ifndef TUI_CLIPBOARD_H
 #define TUI_CLIPBOARD_H
 
+#include "tui_context.h"
 #include <stddef.h>
 
 /**
@@ -20,18 +21,20 @@
  * Encodes the text as base64 and emits the OSC 52 escape sequence.
  * The terminal must support OSC 52 for this to have any effect.
  *
+ * @param ctx   TUI context.
  * @param text  UTF-8 text to copy (must be NUL-terminated).
  * @return 0 on success, -1 on failure.
  */
-int tui_clipboard_copy(const char *text);
+int tui_clipboard_copy(TuiContext *ctx, const char *text);
 
 /**
  * @brief Copy a bounded byte range to the clipboard using OSC 52.
  *
+ * @param ctx   TUI context.
  * @param data  Pointer to the data.
  * @param len   Number of bytes.
  * @return 0 on success, -1 on failure.
  */
-int tui_clipboard_copy_n(const char *data, size_t len);
+int tui_clipboard_copy_n(TuiContext *ctx, const char *data, size_t len);
 
 #endif

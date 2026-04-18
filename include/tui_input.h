@@ -7,17 +7,17 @@
  * arrow keys, and terminal resize events.
  *
  * Usage:
- *   1. tui_input_init()      — after tui_init()
- *   2. tui_input_poll(&evt)  — blocking poll for a single event
+ *   1. tui_input_init(ctx)          — after tui_init()
+ *   2. tui_input_poll(ctx, &evt)    — blocking poll for a single event
  *      or
- *      tui_input_loop(cb, ud) — event loop with callback
- *   3. tui_input_shutdown()  — before tui_shutdown()
+ *      tui_input_loop(ctx, cb, ud)  — event loop with callback
+ *   3. tui_input_shutdown(ctx)      — before tui_shutdown()
  */
 
 #ifndef TUI_INPUT_H
 #define TUI_INPUT_H
 
-#include "tui.h"
+#include "tui_context.h"
 #include "tui_mouse.h"
 
 /**
@@ -108,35 +108,40 @@ typedef int (*TuiInputCallback)(const TuiEvent *event, void *user_data);
  *
  * Installs a SIGWINCH handler for resize detection.
  *
+ * @param ctx  TUI context.
  * @return TUI_OK on success.
  */
-TuiResult tui_input_init(void);
+TuiResult tui_input_init(TuiContext *ctx);
 
 /**
  * @brief Shut down the input subsystem.
+ *
+ * @param ctx  TUI context.
  */
-void tui_input_shutdown(void);
+void tui_input_shutdown(TuiContext *ctx);
 
 /**
  * @brief Block until an input event is available, then return it.
  *
  * Handles resize events transparently by querying the new terminal size.
  *
+ * @param ctx         TUI context.
  * @param[out] event  Populated with the next input event.
  * @return TUI_OK on success.
  */
-TuiResult tui_input_poll(TuiEvent *event);
+TuiResult tui_input_poll(TuiContext *ctx, TuiEvent *event);
 
 /**
  * @brief Run a blocking input loop with a callback.
  *
  * Returns when the callback returns 1.
  *
- * @param callback  Called for every event.
- * @param user_data Passed through to the callback.
+ * @param ctx        TUI context.
+ * @param callback   Called for every event.
+ * @param user_data  Passed through to the callback.
  * @return TUI_OK on success.
  */
-int tui_input_loop(TuiInputCallback callback, void *user_data);
+int tui_input_loop(TuiContext *ctx, TuiInputCallback callback, void *user_data);
 
 /**
  * @brief Return a human-readable name for a key code.

@@ -1,25 +1,26 @@
 #include "tui_mouse.h"
 #include "tui_terminal.h"
 #include "tui_ansi.h"
+#include "tui_context.h"
 
-TuiResult tui_mouse_enable(void)
+TuiResult tui_mouse_enable(TuiContext *ctx)
 {
-    terminal_write_seq(&g_terminal, ANSI_MOUSE_ENABLE,
+    terminal_write_seq(&ctx->terminal, ANSI_MOUSE_ENABLE,
                        sizeof(ANSI_MOUSE_ENABLE) - 1);
-    terminal_write_seq(&g_terminal, ANSI_MOUSE_DRAG_ENABLE,
+    terminal_write_seq(&ctx->terminal, ANSI_MOUSE_DRAG_ENABLE,
                        sizeof(ANSI_MOUSE_DRAG_ENABLE) - 1);
-    terminal_write_seq(&g_terminal, ANSI_MOUSE_SGR_ENABLE,
+    terminal_write_seq(&ctx->terminal, ANSI_MOUSE_SGR_ENABLE,
                        sizeof(ANSI_MOUSE_SGR_ENABLE) - 1);
     return TUI_OK;
 }
 
-void tui_mouse_disable(void)
+void tui_mouse_disable(TuiContext *ctx)
 {
-    terminal_write_seq(&g_terminal, ANSI_MOUSE_SGR_DISABLE,
+    terminal_write_seq(&ctx->terminal, ANSI_MOUSE_SGR_DISABLE,
                        sizeof(ANSI_MOUSE_SGR_DISABLE) - 1);
-    terminal_write_seq(&g_terminal, ANSI_MOUSE_DRAG_DISABLE,
+    terminal_write_seq(&ctx->terminal, ANSI_MOUSE_DRAG_DISABLE,
                        sizeof(ANSI_MOUSE_DRAG_DISABLE) - 1);
-    terminal_write_seq(&g_terminal, ANSI_MOUSE_DISABLE,
+    terminal_write_seq(&ctx->terminal, ANSI_MOUSE_DISABLE,
                        sizeof(ANSI_MOUSE_DISABLE) - 1);
 }
 

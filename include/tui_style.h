@@ -10,7 +10,7 @@
 #ifndef TUI_STYLE_H
 #define TUI_STYLE_H
 
-#include "tui_screen.h"
+#include "tui_context.h"
 #include <stdint.h>
 
 /**
@@ -107,18 +107,38 @@ TuiTheme tui_theme_create(const TuiStyle *normal, const TuiStyle *focused,
 
 /**
  * @brief Set a single cell with a TuiStyle.
+ *
+ * @param ctx    TUI context.
+ * @param row    0-based row.
+ * @param col    0-based column.
+ * @param ch     Character.
+ * @param style  Style to apply.
  */
-void tui_style_set_cell(int row, int col, const char *ch, const TuiStyle *style);
+void tui_style_set_cell(TuiContext *ctx, int row, int col, const char *ch, const TuiStyle *style);
 
 /**
  * @brief Write text at (row, col) with a TuiStyle.
+ *
+ * @param ctx    TUI context.
+ * @param row    0-based row.
+ * @param col    0-based starting column.
+ * @param text   UTF-8 text to write.
+ * @param style  Style to apply.
  */
-void tui_style_write(int row, int col, const char *text, const TuiStyle *style);
+void tui_style_write(TuiContext *ctx, int row, int col, const char *text, const TuiStyle *style);
 
 /**
  * @brief Fill a rectangular region with a TuiStyle.
+ *
+ * @param ctx     TUI context.
+ * @param row     Top-left row.
+ * @param col     Top-left column.
+ * @param width   Region width.
+ * @param height  Region height.
+ * @param ch      Fill character.
+ * @param style   Style to apply.
  */
-void tui_style_fill(int row, int col, int width, int height,
+void tui_style_fill(TuiContext *ctx, int row, int col, int width, int height,
                     const char *ch, const TuiStyle *style);
 
 #endif

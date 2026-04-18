@@ -1,6 +1,7 @@
 #define _POSIX_C_SOURCE 200809L
 
 #include "tui_tabbar.h"
+#include "tui_context.h"
 
 #include <stdlib.h>
 #include <string.h>
@@ -37,7 +38,7 @@ static void tabbar_render(TuiWidget *widget)
 {
     TuiTabBar *tb = (TuiTabBar *)widget;
 
-    tui_screen_fill(widget->abs_y, widget->abs_x,
+    tui_screen_fill(tui_current_ctx, widget->abs_y, widget->abs_x,
                     widget->width, widget->height, " ",
                     tb->fg, tb->bg, tb->attr);
 
@@ -65,7 +66,7 @@ static void tabbar_render(TuiWidget *widget)
         int fill_end   = screen_x + tab->tab_width;
         if (fill_end > widget->width) fill_end = widget->width;
         if (fill_start < fill_end) {
-            tui_screen_fill(widget->abs_y, widget->abs_x + fill_start,
+            tui_screen_fill(tui_current_ctx, widget->abs_y, widget->abs_x + fill_start,
                             fill_end - fill_start, 1, " ", fg, bg, at);
         }
 
@@ -81,7 +82,7 @@ static void tabbar_render(TuiWidget *widget)
                            ? wlen : (int)sizeof(buf) - 1;
                 memcpy(buf, tab->label, (size_t)clen);
                 buf[clen] = '\0';
-                tui_screen_write(widget->abs_y,
+                tui_screen_write(tui_current_ctx, widget->abs_y,
                                  widget->abs_x + screen_x + 2,
                                  buf, fg, bg, at);
             }
@@ -89,7 +90,7 @@ static void tabbar_render(TuiWidget *widget)
 
         if (screen_x + tab->tab_width - 1 >= 0 &&
             screen_x + tab->tab_width - 1 < widget->width) {
-            tui_screen_set_cell(widget->abs_y,
+            tui_screen_set_cell(tui_current_ctx, widget->abs_y,
                                 widget->abs_x + screen_x + tab->tab_width - 1,
                                 "\xe2\x94\x82", tb->fg, tb->bg, TUI_ATTR_DIM);
         }

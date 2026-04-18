@@ -1,6 +1,7 @@
 #define _POSIX_C_SOURCE 200809L
 
 #include "tui_checkbox.h"
+#include "tui_context.h"
 
 #include <stdlib.h>
 #include <string.h>
@@ -51,7 +52,7 @@ static void checkbox_render(TuiWidget *widget)
         }
     }
 
-    tui_screen_fill(widget->abs_y, widget->abs_x,
+    tui_screen_fill(tui_current_ctx, widget->abs_y, widget->abs_x,
                     widget->width, widget->height, " ", fg, bg, attr);
 
     const char *mark;
@@ -61,7 +62,7 @@ static void checkbox_render(TuiWidget *widget)
     default:                      mark = "[ ]"; break;
     }
 
-    tui_screen_write(widget->abs_y, widget->abs_x, mark, fg, bg, attr);
+    tui_screen_write(tui_current_ctx, widget->abs_y, widget->abs_x, mark, fg, bg, attr);
 
     if (cb->label) {
         int label_start = 4;
@@ -76,7 +77,7 @@ static void checkbox_render(TuiWidget *widget)
         memcpy(buf, cb->label, (size_t)copy_len);
         buf[copy_len] = '\0';
 
-        tui_screen_write(widget->abs_y, widget->abs_x + label_start,
+        tui_screen_write(tui_current_ctx, widget->abs_y, widget->abs_x + label_start,
                           buf, fg, bg, attr);
     }
 }

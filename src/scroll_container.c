@@ -1,6 +1,7 @@
 #define _POSIX_C_SOURCE 200809L
 
 #include "tui_scroll_container.h"
+#include "tui_context.h"
 #include "tui_screen.h"
 
 void tui_scroll_container_clamp_scroll(TuiScrollContainer *sc, int cv_width, int cv_height)
@@ -41,7 +42,7 @@ void tui_scroll_container_render_scrollbars(TuiWidget *widget, TuiScrollContaine
 
     if (has_vscroll) {
         int scroll_col = vx + widget->width - 1;
-        tui_screen_fill(vy, scroll_col, 1, cv_height, " ",
+        tui_screen_fill(tui_current_ctx, vy, scroll_col, 1, cv_height, " ",
                         track_fg, track_bg, track_attr);
 
         int max_scroll = sc->content_height - cv_height;
@@ -53,7 +54,7 @@ void tui_scroll_container_render_scrollbars(TuiWidget *widget, TuiScrollContaine
             int thumb_y = sc->scroll_y * (cv_height - thumb_h) / max_scroll;
 
             for (int r = 0; r < thumb_h; r++) {
-                tui_screen_set_cell(vy + thumb_y + r, scroll_col,
+                tui_screen_set_cell(tui_current_ctx, vy + thumb_y + r, scroll_col,
                                     "\xe2\x96\x88", thumb_fg, thumb_bg,
                                     TUI_ATTR_NONE);
             }
@@ -62,7 +63,7 @@ void tui_scroll_container_render_scrollbars(TuiWidget *widget, TuiScrollContaine
 
     if (has_hscroll) {
         int scroll_row = vy + widget->height - 1;
-        tui_screen_fill(scroll_row, vx, cv_width, 1, " ",
+        tui_screen_fill(tui_current_ctx, scroll_row, vx, cv_width, 1, " ",
                         track_fg, track_bg, track_attr);
 
         int max_scroll = sc->content_width - cv_width;
@@ -74,7 +75,7 @@ void tui_scroll_container_render_scrollbars(TuiWidget *widget, TuiScrollContaine
             int thumb_x = sc->scroll_x * (cv_width - thumb_w) / max_scroll;
 
             for (int c = 0; c < thumb_w; c++) {
-                tui_screen_set_cell(scroll_row, vx + thumb_x + c,
+                tui_screen_set_cell(tui_current_ctx, scroll_row, vx + thumb_x + c,
                                     "\xe2\x96\x88", thumb_fg, thumb_bg,
                                     TUI_ATTR_NONE);
             }
@@ -82,7 +83,7 @@ void tui_scroll_container_render_scrollbars(TuiWidget *widget, TuiScrollContaine
     }
 
     if (has_vscroll && has_hscroll) {
-        tui_screen_set_cell(vy + widget->height - 1,
+        tui_screen_set_cell(tui_current_ctx, vy + widget->height - 1,
                             vx + widget->width - 1, " ",
                             track_fg, track_bg, track_attr);
     }
@@ -102,7 +103,7 @@ static void scroll_render(TuiWidget *widget)
     tui_scroll_container_clamp_scroll(sc, cv_width, cv_height);
 
     TuiStyle style = tui_widget_get_style(widget);
-    tui_screen_fill(widget->abs_y, widget->abs_x,
+    tui_screen_fill(tui_current_ctx, widget->abs_y, widget->abs_x,
                     widget->width, widget->height,
                     " ", style.fg, style.bg, style.attr);
 

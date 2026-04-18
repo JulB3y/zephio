@@ -1,6 +1,7 @@
 #define _POSIX_C_SOURCE 200809L
 
 #include "tui_statusbar.h"
+#include "tui_context.h"
 
 #include <stdlib.h>
 #include <string.h>
@@ -18,11 +19,11 @@ static void statusbar_render(TuiWidget *widget)
         bg = sb->bg_message;
     }
 
-    tui_screen_fill(widget->abs_y, widget->abs_x,
+    tui_screen_fill(tui_current_ctx, widget->abs_y, widget->abs_x,
                     widget->width, widget->height, " ", fg, bg, at);
 
     if (sb->message && sb->message_ticks > 0) {
-        tui_screen_write(widget->abs_y, widget->abs_x,
+        tui_screen_write(tui_current_ctx, widget->abs_y, widget->abs_x,
                          sb->message, fg, bg, at);
         return;
     }
@@ -38,7 +39,7 @@ static void statusbar_render(TuiWidget *widget)
         int clen = wlen < (int)sizeof(buf) - 1 ? wlen : (int)sizeof(buf) - 1;
         memcpy(buf, sb->text_left, (size_t)clen);
         buf[clen] = '\0';
-        tui_screen_write(widget->abs_y, widget->abs_x + 1, buf, fg, bg, at);
+        tui_screen_write(tui_current_ctx, widget->abs_y, widget->abs_x + 1, buf, fg, bg, at);
     }
 
     if (center_len > 0) {
@@ -50,7 +51,7 @@ static void statusbar_render(TuiWidget *widget)
         buf[clen] = '\0';
         int cx = (widget->width - wlen) / 2;
         if (cx < 0) cx = 0;
-        tui_screen_write(widget->abs_y, widget->abs_x + cx, buf, fg, bg, at);
+        tui_screen_write(tui_current_ctx, widget->abs_y, widget->abs_x + cx, buf, fg, bg, at);
     }
 
     if (right_len > 0) {
@@ -62,7 +63,7 @@ static void statusbar_render(TuiWidget *widget)
         buf[clen] = '\0';
         int rx = widget->width - wlen - 1;
         if (rx < 0) rx = 0;
-        tui_screen_write(widget->abs_y, widget->abs_x + rx, buf, fg, bg, at);
+        tui_screen_write(tui_current_ctx, widget->abs_y, widget->abs_x + rx, buf, fg, bg, at);
     }
 }
 

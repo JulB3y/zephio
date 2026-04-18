@@ -7,15 +7,15 @@
  * TuiMouseEvent structs.
  *
  * Usage:
- *   1. tui_mouse_enable()   — after tui_init()
+ *   1. tui_mouse_enable(ctx)   — after tui_init()
  *   2. Handle TUI_EVENT_MOUSE events via tui_input_poll / tui_input_loop
- *   3. tui_mouse_disable()  — before tui_shutdown()
+ *   3. tui_mouse_disable(ctx)  — before tui_shutdown()
  */
 
 #ifndef TUI_MOUSE_H
 #define TUI_MOUSE_H
 
-#include "tui.h"
+#include "tui_context.h"
 
 /**
  * @brief Mouse buttons.
@@ -52,14 +52,17 @@ typedef struct {
 /**
  * @brief Enable mouse tracking (basic + drag + SGR mode).
  *
+ * @param ctx  TUI context.
  * @return TUI_OK on success.
  */
-TuiResult tui_mouse_enable(void);
+TuiResult tui_mouse_enable(TuiContext *ctx);
 
 /**
  * @brief Disable mouse tracking.
+ *
+ * @param ctx  TUI context.
  */
-void tui_mouse_disable(void);
+void tui_mouse_disable(TuiContext *ctx);
 
 /**
  * @brief Return a human-readable mouse action name.

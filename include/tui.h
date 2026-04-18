@@ -16,6 +16,8 @@
 #include <stddef.h>
 #include <stdint.h>
 
+typedef struct TuiContext TuiContext;
+
 /**
  * @brief Terminal dimensions (rows x cols).
  */
@@ -48,7 +50,7 @@ typedef enum {
  *
  * @return TUI_OK on success, or TUI_ERR_* on failure.
  */
-TuiResult tui_init(void);
+TuiResult tui_init(TuiContext *ctx);
 
 /**
  * @brief Shut down the TUI framework.
@@ -57,7 +59,7 @@ TuiResult tui_init(void);
  * the cursor, disables raw mode, disables mouse tracking. Safe to call
  * multiple times.
  */
-void tui_shutdown(void);
+void tui_shutdown(TuiContext *ctx);
 
 /**
  * @brief Query the current terminal size.
@@ -65,6 +67,6 @@ void tui_shutdown(void);
  * @param[out] size  Populated with rows and cols on success.
  * @return TUI_OK on success, or TUI_ERR_IOCTL on failure.
  */
-TuiResult tui_get_size(TuiSize *size);
+TuiResult tui_get_size(TuiContext *ctx, TuiSize *size);
 
 #endif

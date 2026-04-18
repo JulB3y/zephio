@@ -1,6 +1,7 @@
 #define _POSIX_C_SOURCE 200809L
 
 #include "tui_separator.h"
+#include "tui_context.h"
 
 static void separator_render(TuiWidget *widget)
 {
@@ -23,12 +24,12 @@ static void separator_render(TuiWidget *widget)
 
     if (sep->horizontal) {
         for (int c = 0; c < widget->width; c++) {
-            tui_screen_set_cell(widget->abs_y, widget->abs_x + c,
+            tui_screen_set_cell(tui_current_ctx, widget->abs_y, widget->abs_x + c,
                                 "\xe2\x94\x80", fg, bg, attr);
         }
     } else {
         for (int r = 0; r < widget->height; r++) {
-            tui_screen_set_cell(widget->abs_y + r, widget->abs_x,
+            tui_screen_set_cell(tui_current_ctx, widget->abs_y + r, widget->abs_x,
                                 "\xe2\x94\x82", fg, bg, attr);
         }
     }

@@ -1,6 +1,7 @@
 #define _POSIX_C_SOURCE 200809L
 
 #include "tui_anim_effects.h"
+#include "tui_context.h"
 #include "tui_container.h"
 #include "tui_label.h"
 
@@ -376,7 +377,7 @@ void tui_pulse_render(TuiPulse *pulse)
             fg = pulse->empty_fg;
             bg = pulse->empty_bg;
         }
-        tui_screen_set_cell(abs_y, abs_x + i, " ", fg, bg, TUI_ATTR_NONE);
+        tui_screen_set_cell(tui_current_ctx, abs_y, abs_x + i, " ", fg, bg, TUI_ATTR_NONE);
     }
 }
 

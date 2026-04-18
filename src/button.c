@@ -1,6 +1,7 @@
 #define _POSIX_C_SOURCE 200809L
 
 #include "tui_button.h"
+#include "tui_context.h"
 
 #include <stdlib.h>
 #include <string.h>
@@ -30,7 +31,7 @@ static void button_render(TuiWidget *widget)
         }
     }
 
-    tui_screen_fill(widget->abs_y, widget->abs_x,
+    tui_screen_fill(tui_current_ctx,widget->abs_y, widget->abs_x,
                     widget->width, widget->height, " ", fg, bg, attr);
 
     if (button->text) {
@@ -45,7 +46,7 @@ static void button_render(TuiWidget *widget)
         memcpy(buf, button->text, (size_t)copy_len);
         buf[copy_len] = '\0';
 
-        tui_screen_write(widget->abs_y + widget->height / 2, col,
+        tui_screen_write(tui_current_ctx,widget->abs_y + widget->height / 2, col,
                          buf, fg, bg, attr);
     }
 }

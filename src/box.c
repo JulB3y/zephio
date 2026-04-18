@@ -1,6 +1,7 @@
 #define _POSIX_C_SOURCE 200809L
 
 #include "tui_box.h"
+#include "tui_context.h"
 
 #include <stdlib.h>
 #include <string.h>
@@ -26,16 +27,16 @@ static void box_render(TuiWidget *widget)
         attr = box->attr;
     }
 
-    tui_screen_fill(widget->abs_y + 1, widget->abs_x + 1,
+    tui_screen_fill(tui_current_ctx,widget->abs_y + 1, widget->abs_x + 1,
                     widget->width - 2, widget->height - 2,
                     " ", fg, bg, attr);
 
     if (box->border_style == TUI_BOX_DOUBLE) {
-        tui_screen_box_double(widget->abs_y, widget->abs_x,
+        tui_screen_box_double(tui_current_ctx,widget->abs_y, widget->abs_x,
                               widget->width, widget->height,
                               fg, bg, attr);
     } else {
-        tui_screen_box_single(widget->abs_y, widget->abs_x,
+        tui_screen_box_single(tui_current_ctx,widget->abs_y, widget->abs_x,
                               widget->width, widget->height,
                               fg, bg, attr);
     }
@@ -52,7 +53,7 @@ static void box_render(TuiWidget *widget)
             memcpy(buf, box->title, (size_t)copy_len);
             buf[copy_len] = '\0';
 
-            tui_screen_write(widget->abs_y, widget->abs_x + 2,
+            tui_screen_write(tui_current_ctx,widget->abs_y, widget->abs_x + 2,
                              buf, fg, bg, attr | TUI_ATTR_BOLD);
         }
     }

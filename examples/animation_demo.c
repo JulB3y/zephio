@@ -33,6 +33,7 @@
 #include "tui_label.h"
 #include "tui_screen.h"
 #include "tui_widget.h"
+#include "tui_context.h"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -388,7 +389,7 @@ static int on_init(TuiApp *app, void *user_data)
     w->fade_anim_id       = TUI_ANIMATOR_INVALID_ID;
     w->color_fade_anim_id = TUI_ANIMATOR_INVALID_ID;
 
-    TuiSize size = tui_screen_size();
+    TuiSize size = tui_screen_size(app->ctx);
     build_widgets(w, size.rows, size.cols);
     return 0;
 }
@@ -418,15 +419,15 @@ static int on_resize(TuiApp *app, int rows, int cols, void *user_data)
 static int on_render(TuiApp *app, void *user_data)
 {
     AppWidgets *w = (AppWidgets *)user_data;
-    TuiSize size = tui_screen_size();
+    TuiSize size = tui_screen_size(app->ctx);
 
-    tui_screen_clear();
-    tui_screen_fill(0, 0, size.cols, 1, " ",
+    tui_screen_clear(app->ctx);
+    tui_screen_fill(app->ctx, 0, 0, size.cols, 1, " ",
                     TUI_COLOR_INDEX(15), TUI_COLOR_INDEX(4), TUI_ATTR_BOLD);
-    tui_screen_write(0, 2,
+    tui_screen_write(app->ctx, 0, 2,
                      "Animation Demo  |  Phase 21 Effects",
                      TUI_COLOR_INDEX(15), TUI_COLOR_INDEX(4), TUI_ATTR_BOLD);
-    tui_screen_fill(size.rows - 1, 0, size.cols, 1, " ",
+    tui_screen_fill(app->ctx, size.rows - 1, 0, size.cols, 1, " ",
                     TUI_COLOR_INDEX(15), TUI_COLOR_INDEX(236), TUI_ATTR_NONE);
 
     tui_widget_render(&w->root);
@@ -436,7 +437,7 @@ static int on_render(TuiApp *app, void *user_data)
         tui_pulse_render(&w->pulse);
     }
 
-    tui_screen_render();
+    tui_screen_render(app->ctx);
     return 0;
 }
 
@@ -517,6 +518,7 @@ static void on_shutdown(TuiApp *app, void *user_data)
 
 int main(void)
 {
+    TuiContext ctx;
     AppWidgets widgets;
     memset(&widgets, 0, sizeof(widgets));
 
@@ -530,7 +532,7 @@ int main(void)
         .tick_rate_ms = 30
     };
 
-    TuiApp *app = tui_app_new(&config);
+    TuiApp *app = tui_app_new(&ctx, &config);
     if (!app) {
         fprintf(stderr, "Failed to create app\n");
         return 1;
