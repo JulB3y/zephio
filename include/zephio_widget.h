@@ -20,7 +20,7 @@
 #ifndef ZEPHIO_WIDGET_H
 #define ZEPHIO_WIDGET_H
 
-#include "tui.h"
+#include "zephio.h"
 #include "zephio_input.h"
 #include "zephio_style.h"
 #include <stdint.h>

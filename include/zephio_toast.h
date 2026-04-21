@@ -19,7 +19,7 @@
 #ifndef ZEPHIO_TOAST_H
 #define ZEPHIO_TOAST_H
 
-#include "tui.h"
+#include "zephio.h"
 #include "zephio_screen.h"
 
 #define ZEPHIO_TOAST_MAX_COUNT    8

@@ -20,7 +20,7 @@
 
 #define _POSIX_C_SOURCE 200809L
 
-#include "tui.h"
+#include "zephio.h"
 #include "zephio_app.h"
 #include "zephio_button.h"
 #include "zephio_container.h"

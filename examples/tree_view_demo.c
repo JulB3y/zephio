@@ -14,7 +14,7 @@
 
 #define _POSIX_C_SOURCE 200809L
 
-#include "tui.h"
+#include "zephio.h"
 #include "zephio_app.h"
 #include "zephio_label.h"
 #include "zephio_screen.h"
@@ -68,7 +68,7 @@ static ZephioTreeNode *build_tree(void)
 
     ZephioTreeNode *inc = zephio_tree_node_create("include", NULL);
     zephio_tree_node_add_child(root, inc);
-    zephio_tree_node_add_child(inc, zephio_tree_node_create("tui.h", NULL));
+    zephio_tree_node_add_child(inc, zephio_tree_node_create("zephio.h", NULL));
     zephio_tree_node_add_child(inc, zephio_tree_node_create("zephio_app.h", NULL));
     zephio_tree_node_add_child(inc, zephio_tree_node_create("zephio_widget.h", NULL));
     zephio_tree_node_add_child(inc, zephio_tree_node_create("zephio_table.h", NULL));

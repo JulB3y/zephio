@@ -24,7 +24,7 @@
 
 #define _POSIX_C_SOURCE 200809L
 
-#include "tui.h"
+#include "zephio.h"
 #include "zephio_anim_effects.h"
 #include "zephio_animator.h"
 #include "zephio_app.h"

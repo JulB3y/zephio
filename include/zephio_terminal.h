@@ -12,7 +12,7 @@
 #ifndef ZEPHIO_TERMINAL_H
 #define ZEPHIO_TERMINAL_H
 
-#include "tui.h"
+#include "zephio.h"
 
 /**
  * @brief Internal terminal state.

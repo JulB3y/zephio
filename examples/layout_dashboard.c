@@ -1,6 +1,6 @@
 #define _POSIX_C_SOURCE 200809L
 
-#include "tui.h"
+#include "zephio.h"
 #include "zephio_input.h"
 #include "zephio_screen.h"
 #include "zephio_terminal.h"

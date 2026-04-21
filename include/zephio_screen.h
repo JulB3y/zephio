@@ -18,7 +18,7 @@
 #ifndef ZEPHIO_SCREEN_H
 #define ZEPHIO_SCREEN_H
 
-#include "tui.h"
+#include "zephio.h"
 #include <stdint.h>
 
 typedef struct ZephioContext ZephioContext;
