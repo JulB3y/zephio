@@ -94,7 +94,7 @@ static int input_callback(const ZephioEvent *event, void *user_data)
 
 int main(void)
 {
-    ZephioContext ctx;
+    ZephioContext ctx = {0};
 
     ZephioResult res = zephio_init(&ctx);
     if (res != ZEPHIO_OK) {

@@ -518,7 +518,7 @@ static void on_shutdown(ZephioApp *app, void *user_data)
 
 int main(void)
 {
-    ZephioContext ctx;
+    ZephioContext ctx = {0};
     AppWidgets widgets;
     memset(&widgets, 0, sizeof(widgets));
 

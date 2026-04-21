@@ -378,7 +378,7 @@ int main(void)
 {
     AppWidgets widgets;
 
-    ZephioContext ctx;
+    ZephioContext ctx = {0};
 
     ZephioAppConfig config = {
         .on_init     = on_init,

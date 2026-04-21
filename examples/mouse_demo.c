@@ -326,7 +326,7 @@ static void on_shutdown(ZephioApp *app, void *user_data) {
 int main(void) {
   AppWidgets widgets;
 
-  ZephioContext ctx;
+  ZephioContext ctx = {0};
 
   ZephioAppConfig config = {.on_init = on_init,
                          .on_resize = on_resize,
