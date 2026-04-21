@@ -2,7 +2,9 @@
 #include "zephio_app.h"
 #include "zephio_animator.h"
 #include "zephio_widget.h"
+#include "zephio_context.h"
 
+static ZephioContext g_test_ctx;
 static int g_app_mock_render_count = 0;
 static int g_app_config_init_called = 0;
 
@@ -15,7 +17,7 @@ static ZephioWidgetVTable g_app_render_vt = { app_mock_render, NULL, NULL, NULL,
 
 TEST_BEGIN(app_new_basic)
 {
-    ZephioApp *app = zephio_app_new(NULL);
+    ZephioApp *app = zephio_app_new(&g_test_ctx, NULL);
     TEST_ASSERT(app != NULL);
     TEST_EQ(app->running, 0);
     TEST_EQ(app->exit_code, 0);
@@ -29,7 +31,7 @@ TEST_BEGIN(app_new_with_config)
     ZephioAppConfig config = {0};
     config.tick_rate_ms = 50;
 
-    ZephioApp *app = zephio_app_new(&config);
+    ZephioApp *app = zephio_app_new(&g_test_ctx, &config);
     TEST_ASSERT(app != NULL);
     TEST_EQ(app->config.tick_rate_ms, 50);
 
@@ -38,7 +40,7 @@ TEST_BEGIN(app_new_with_config)
 
 TEST_BEGIN(app_new_null_config)
 {
-    ZephioApp *app = zephio_app_new(NULL);
+    ZephioApp *app = zephio_app_new(&g_test_ctx, NULL);
     TEST_ASSERT(app != NULL);
     TEST_EQ(app->config.tick_rate_ms, 0);
     zephio_app_free(app);
@@ -53,7 +55,7 @@ TEST_BEGIN(app_free_null)
 
 TEST_BEGIN(app_stop_via_struct)
 {
-    ZephioApp *app = zephio_app_new(NULL);
+    ZephioApp *app =     zephio_app_new(&g_test_ctx, NULL);
     app->running = 1;
 
     app->running = 0;
@@ -68,7 +70,7 @@ TEST_BEGIN(app_stop_via_struct)
 
 TEST_BEGIN(app_animator_created)
 {
-    ZephioApp *app = zephio_app_new(NULL);
+    ZephioApp *app =     zephio_app_new(&g_test_ctx, NULL);
     TEST_ASSERT(app->animator != NULL);
 
     ZephioAnimator *anim = zephio_app_get_animator(app);
@@ -86,10 +88,10 @@ TEST_BEGIN(app_get_animator_null)
 
 TEST_BEGIN(app_overlay_push_pop)
 {
-    ZephioApp *app = zephio_app_new(NULL);
+    ZephioApp *app =     zephio_app_new(&g_test_ctx, NULL);
     ZephioWidget a, b;
-    zephio_widget_init(&a, 0, 0, 40, 10, NULL, NULL);
-    zephio_widget_init(&b, 0, 0, 40, 10, NULL, NULL);
+    zephio_widget_init_ctx(&a, 0, 0, 40, 10, NULL, &g_test_ctx, NULL);
+    zephio_widget_init_ctx(&b, 0, 0, 40, 10, NULL, &g_test_ctx, NULL);
 
     TEST_EQ(app->overlay_count, 0);
 
@@ -118,7 +120,7 @@ TEST_BEGIN(app_overlay_push_pop)
 
 TEST_BEGIN(app_overlay_push_null)
 {
-    ZephioApp *app = zephio_app_new(NULL);
+    ZephioApp *app =     zephio_app_new(&g_test_ctx, NULL);
     TEST_NE(zephio_app_push_overlay(NULL, NULL), ZEPHIO_OK);
     TEST_NE(zephio_app_push_overlay(app, NULL), ZEPHIO_OK);
     TEST_EQ(app->overlay_count, 0);
@@ -127,7 +129,7 @@ TEST_BEGIN(app_overlay_push_null)
 
 TEST_BEGIN(app_overlay_pop_empty)
 {
-    ZephioApp *app = zephio_app_new(NULL);
+    ZephioApp *app =     zephio_app_new(&g_test_ctx, NULL);
     ZephioWidget *w = zephio_app_pop_overlay(app);
     TEST_ASSERT(w == NULL);
     TEST_EQ(app->overlay_count, 0);
@@ -136,32 +138,32 @@ TEST_BEGIN(app_overlay_pop_empty)
 
 TEST_BEGIN(app_overlay_max)
 {
-    ZephioApp *app = zephio_app_new(NULL);
-    ZephioWidget widgets[TUI_APP_MAX_OVERLAYS + 1];
-    for (int i = 0; i < TUI_APP_MAX_OVERLAYS + 1; i++) {
-        zephio_widget_init(&widgets[i], 0, 0, 10, 5, NULL, NULL);
+    ZephioApp *app =     zephio_app_new(&g_test_ctx, NULL);
+    ZephioWidget widgets[ZEPHIO_APP_MAX_OVERLAYS + 1];
+    for (int i = 0; i < ZEPHIO_APP_MAX_OVERLAYS + 1; i++) {
+        zephio_widget_init_ctx(&widgets[i], 0, 0, 10, 5, NULL, &g_test_ctx, NULL);
     }
 
-    for (int i = 0; i < TUI_APP_MAX_OVERLAYS; i++) {
+    for (int i = 0; i < ZEPHIO_APP_MAX_OVERLAYS; i++) {
         ZephioResult r = zephio_app_push_overlay(app, &widgets[i]);
         TEST_EQ(r, ZEPHIO_OK);
     }
 
-    ZephioResult r = zephio_app_push_overlay(app, &widgets[TUI_APP_MAX_OVERLAYS]);
+    ZephioResult r = zephio_app_push_overlay(app, &widgets[ZEPHIO_APP_MAX_OVERLAYS]);
     TEST_NE(r, ZEPHIO_OK);
-    TEST_EQ(app->overlay_count, TUI_APP_MAX_OVERLAYS);
+    TEST_EQ(app->overlay_count, ZEPHIO_APP_MAX_OVERLAYS);
 
     zephio_app_free(app);
-    for (int i = 0; i < TUI_APP_MAX_OVERLAYS + 1; i++) {
+    for (int i = 0; i < ZEPHIO_APP_MAX_OVERLAYS + 1; i++) {
         zephio_widget_destroy(&widgets[i]);
     }
 }
 
 TEST_BEGIN(app_overlay_push_focuses)
 {
-    ZephioApp *app = zephio_app_new(NULL);
+    ZephioApp *app =     zephio_app_new(&g_test_ctx, NULL);
     ZephioWidget w;
-    zephio_widget_init(&w, 0, 0, 40, 10, NULL, NULL);
+    zephio_widget_init_ctx(&w, 0, 0, 40, 10, NULL, &g_test_ctx, NULL);
     w.focusable = 1;
 
     zephio_app_push_overlay(app, &w);
@@ -177,11 +179,10 @@ TEST_BEGIN(app_overlay_push_focuses)
 TEST_BEGIN(app_overlay_render_overlays)
 {
     g_app_mock_render_count = 0;
-
-    ZephioApp *app = zephio_app_new(NULL);
+    ZephioApp *app =     zephio_app_new(&g_test_ctx, NULL);
     ZephioWidget a, b;
-    zephio_widget_init(&a, 0, 0, 40, 10, &g_app_render_vt, NULL);
-    zephio_widget_init(&b, 0, 0, 40, 10, &g_app_render_vt, NULL);
+    zephio_widget_init_ctx(&a, 0, 0, 40, 10, &g_app_render_vt, &g_test_ctx, NULL);
+    zephio_widget_init_ctx(&b, 0, 0, 40, 10, &g_app_render_vt, &g_test_ctx, NULL);
     a.visible = 1;
     b.visible = 1;
 
@@ -202,7 +203,7 @@ TEST_BEGIN(app_overlay_render_overlays)
 
 TEST_BEGIN(app_get_toasts)
 {
-    ZephioApp *app = zephio_app_new(NULL);
+    ZephioApp *app =     zephio_app_new(&g_test_ctx, NULL);
     ZephioToastManager *tm = zephio_app_get_toasts(app);
     TEST_ASSERT(tm != NULL);
     zephio_app_free(app);
@@ -215,7 +216,7 @@ TEST_BEGIN(app_get_toasts_null)
 
 TEST_BEGIN(app_toast_basic)
 {
-    ZephioApp *app = zephio_app_new(NULL);
+    ZephioApp *app =     zephio_app_new(&g_test_ctx, NULL);
     int id = zephio_app_toast(app, ZEPHIO_TOAST_INFO, "Hello", 0);
     TEST_ASSERT(id >= 0);
     zephio_app_free(app);
@@ -236,7 +237,7 @@ TEST_BEGIN(app_config_copied)
     config.on_init = app_mock_init;
     config.tick_rate_ms = 100;
 
-    ZephioApp *app = zephio_app_new(&config);
+    ZephioApp *app = zephio_app_new(&g_test_ctx, &config);
     TEST_ASSERT(app->config.on_init == app_mock_init);
     TEST_EQ(app->config.tick_rate_ms, 100);
     (void)g_app_config_init_called;

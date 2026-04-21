@@ -1,13 +1,16 @@
 #include "util.h"
 #include "zephio_layout.h"
 #include "zephio_widget.h"
+#include "zephio_context.h"
+
+static ZephioContext g_test_ctx;
 
 /* ── Layout Init ────────────────────────────────────────────────── */
 
 TEST_BEGIN(layout_init_vertical)
 {
     ZephioLayout layout;
-    ZephioResult res = zephio_layout_init(&layout, ZEPHIO_LAYOUT_VERTICAL, 0, 0, 40, 20);
+    ZephioResult res = zephio_layout_init_ctx(&layout, &g_test_ctx, ZEPHIO_LAYOUT_VERTICAL, 0, 0, 40, 20);
     TEST_EQ(res, ZEPHIO_OK);
     TEST_EQ(layout.direction, ZEPHIO_LAYOUT_VERTICAL);
     TEST_EQ(layout.base.width, 40);
@@ -24,7 +27,7 @@ TEST_BEGIN(layout_init_vertical)
 TEST_BEGIN(layout_init_horizontal)
 {
     ZephioLayout layout;
-    ZephioResult res = zephio_layout_init(&layout, ZEPHIO_LAYOUT_HORIZONTAL, 5, 3, 60, 15);
+    ZephioResult res = zephio_layout_init_ctx(&layout, &g_test_ctx, ZEPHIO_LAYOUT_HORIZONTAL, 5, 3, 60, 15);
     TEST_EQ(res, ZEPHIO_OK);
     TEST_EQ(layout.direction, ZEPHIO_LAYOUT_HORIZONTAL);
     TEST_EQ(layout.base.x, 5);
@@ -34,15 +37,15 @@ TEST_BEGIN(layout_init_horizontal)
 
 TEST_BEGIN(layout_init_null)
 {
-    TEST_NE(zephio_layout_init(NULL, ZEPHIO_LAYOUT_VERTICAL, 0, 0, 40, 20), ZEPHIO_OK);
+    TEST_NE(zephio_layout_init_ctx(NULL, &g_test_ctx, ZEPHIO_LAYOUT_VERTICAL, 0, 0, 40, 20), ZEPHIO_OK);
 }
 
 TEST_BEGIN(layout_init_invalid_size)
 {
     ZephioLayout layout;
-    TEST_NE(zephio_layout_init(&layout, ZEPHIO_LAYOUT_VERTICAL, 0, 0, 0, 20), ZEPHIO_OK);
-    TEST_NE(zephio_layout_init(&layout, ZEPHIO_LAYOUT_VERTICAL, 0, 0, 40, 0), ZEPHIO_OK);
-    TEST_NE(zephio_layout_init(&layout, ZEPHIO_LAYOUT_VERTICAL, 0, 0, -5, 20), ZEPHIO_OK);
+    TEST_NE(zephio_layout_init_ctx(&layout, &g_test_ctx, ZEPHIO_LAYOUT_VERTICAL, 0, 0, 0, 20), ZEPHIO_OK);
+    TEST_NE(zephio_layout_init_ctx(&layout, &g_test_ctx, ZEPHIO_LAYOUT_VERTICAL, 0, 0, 40, 0), ZEPHIO_OK);
+    TEST_NE(zephio_layout_init_ctx(&layout, &g_test_ctx, ZEPHIO_LAYOUT_VERTICAL, 0, 0, -5, 20), ZEPHIO_OK);
 }
 
 /* ── Layout Add / Remove ────────────────────────────────────────── */
@@ -50,11 +53,11 @@ TEST_BEGIN(layout_init_invalid_size)
 TEST_BEGIN(layout_add_fixed)
 {
     ZephioLayout layout;
-    zephio_layout_init(&layout, ZEPHIO_LAYOUT_VERTICAL, 0, 0, 40, 20);
+    zephio_layout_init_ctx(&layout, &g_test_ctx, ZEPHIO_LAYOUT_VERTICAL, 0, 0, 40, 20);
 
     ZephioWidget a, b;
-    zephio_widget_init(&a, 0, 0, 40, 5, NULL, NULL);
-    zephio_widget_init(&b, 0, 0, 40, 10, NULL, NULL);
+    zephio_widget_init_ctx(&a, 0, 0, 40, 5, NULL, &g_test_ctx, NULL);
+    zephio_widget_init_ctx(&b, 0, 0, 40, 10, NULL, &g_test_ctx, NULL);
 
     zephio_layout_add(&layout, &a, ZEPHIO_LAYOUT_FIXED(5));
     zephio_layout_add(&layout, &b, ZEPHIO_LAYOUT_FIXED(10));
@@ -70,10 +73,10 @@ TEST_BEGIN(layout_add_fixed)
 TEST_BEGIN(layout_add_null)
 {
     ZephioLayout layout;
-    zephio_layout_init(&layout, ZEPHIO_LAYOUT_VERTICAL, 0, 0, 40, 20);
+    zephio_layout_init_ctx(&layout, &g_test_ctx, ZEPHIO_LAYOUT_VERTICAL, 0, 0, 40, 20);
 
     ZephioWidget w;
-    zephio_widget_init(&w, 0, 0, 10, 5, NULL, NULL);
+    zephio_widget_init_ctx(&w, 0, 0, 10, 5, NULL, &g_test_ctx, NULL);
 
     TEST_NE(zephio_layout_add(NULL, &w, ZEPHIO_LAYOUT_FIXED(5)), ZEPHIO_OK);
     TEST_NE(zephio_layout_add(&layout, NULL, ZEPHIO_LAYOUT_FIXED(5)), ZEPHIO_OK);
@@ -85,10 +88,10 @@ TEST_BEGIN(layout_add_null)
 TEST_BEGIN(layout_add_duplicate)
 {
     ZephioLayout layout;
-    zephio_layout_init(&layout, ZEPHIO_LAYOUT_VERTICAL, 0, 0, 40, 20);
+    zephio_layout_init_ctx(&layout, &g_test_ctx, ZEPHIO_LAYOUT_VERTICAL, 0, 0, 40, 20);
 
     ZephioWidget w;
-    zephio_widget_init(&w, 0, 0, 10, 5, NULL, NULL);
+    zephio_widget_init_ctx(&w, 0, 0, 10, 5, NULL, &g_test_ctx, NULL);
 
     ZephioResult r1 = zephio_layout_add(&layout, &w, ZEPHIO_LAYOUT_FIXED(5));
     TEST_EQ(r1, ZEPHIO_OK);
@@ -104,12 +107,12 @@ TEST_BEGIN(layout_add_duplicate)
 TEST_BEGIN(layout_remove)
 {
     ZephioLayout layout;
-    zephio_layout_init(&layout, ZEPHIO_LAYOUT_VERTICAL, 0, 0, 40, 20);
+    zephio_layout_init_ctx(&layout, &g_test_ctx, ZEPHIO_LAYOUT_VERTICAL, 0, 0, 40, 20);
 
     ZephioWidget a, b, c;
-    zephio_widget_init(&a, 0, 0, 40, 5, NULL, NULL);
-    zephio_widget_init(&b, 0, 0, 40, 5, NULL, NULL);
-    zephio_widget_init(&c, 0, 0, 40, 5, NULL, NULL);
+    zephio_widget_init_ctx(&a, 0, 0, 40, 5, NULL, &g_test_ctx, NULL);
+    zephio_widget_init_ctx(&b, 0, 0, 40, 5, NULL, &g_test_ctx, NULL);
+    zephio_widget_init_ctx(&c, 0, 0, 40, 5, NULL, &g_test_ctx, NULL);
 
     zephio_layout_add(&layout, &a, ZEPHIO_LAYOUT_FIXED(5));
     zephio_layout_add(&layout, &b, ZEPHIO_LAYOUT_FIXED(5));
@@ -129,11 +132,11 @@ TEST_BEGIN(layout_remove)
 TEST_BEGIN(layout_remove_all)
 {
     ZephioLayout layout;
-    zephio_layout_init(&layout, ZEPHIO_LAYOUT_VERTICAL, 0, 0, 40, 20);
+    zephio_layout_init_ctx(&layout, &g_test_ctx, ZEPHIO_LAYOUT_VERTICAL, 0, 0, 40, 20);
 
     ZephioWidget a, b;
-    zephio_widget_init(&a, 0, 0, 40, 5, NULL, NULL);
-    zephio_widget_init(&b, 0, 0, 40, 5, NULL, NULL);
+    zephio_widget_init_ctx(&a, 0, 0, 40, 5, NULL, &g_test_ctx, NULL);
+    zephio_widget_init_ctx(&b, 0, 0, 40, 5, NULL, &g_test_ctx, NULL);
 
     zephio_layout_add(&layout, &a, ZEPHIO_LAYOUT_FIXED(5));
     zephio_layout_add(&layout, &b, ZEPHIO_LAYOUT_FIXED(5));
@@ -154,11 +157,11 @@ TEST_BEGIN(layout_remove_all)
 TEST_BEGIN(layout_vertical_fixed)
 {
     ZephioLayout layout;
-    zephio_layout_init(&layout, ZEPHIO_LAYOUT_VERTICAL, 0, 0, 40, 20);
+    zephio_layout_init_ctx(&layout, &g_test_ctx, ZEPHIO_LAYOUT_VERTICAL, 0, 0, 40, 20);
 
     ZephioWidget a, b;
-    zephio_widget_init(&a, 0, 0, 40, 5, NULL, NULL);
-    zephio_widget_init(&b, 0, 0, 40, 10, NULL, NULL);
+    zephio_widget_init_ctx(&a, 0, 0, 40, 5, NULL, &g_test_ctx, NULL);
+    zephio_widget_init_ctx(&b, 0, 0, 40, 10, NULL, &g_test_ctx, NULL);
 
     zephio_layout_add(&layout, &a, ZEPHIO_LAYOUT_FIXED(8));
     zephio_layout_add(&layout, &b, ZEPHIO_LAYOUT_FIXED(12));
@@ -176,11 +179,11 @@ TEST_BEGIN(layout_vertical_fixed)
 TEST_BEGIN(layout_vertical_fill_equal)
 {
     ZephioLayout layout;
-    zephio_layout_init(&layout, ZEPHIO_LAYOUT_VERTICAL, 0, 0, 40, 20);
+    zephio_layout_init_ctx(&layout, &g_test_ctx, ZEPHIO_LAYOUT_VERTICAL, 0, 0, 40, 20);
 
     ZephioWidget a, b;
-    zephio_widget_init(&a, 0, 0, 40, 1, NULL, NULL);
-    zephio_widget_init(&b, 0, 0, 40, 1, NULL, NULL);
+    zephio_widget_init_ctx(&a, 0, 0, 40, 1, NULL, &g_test_ctx, NULL);
+    zephio_widget_init_ctx(&b, 0, 0, 40, 1, NULL, &g_test_ctx, NULL);
 
     zephio_layout_add(&layout, &a, ZEPHIO_LAYOUT_FILL);
     zephio_layout_add(&layout, &b, ZEPHIO_LAYOUT_FILL);
@@ -198,11 +201,11 @@ TEST_BEGIN(layout_vertical_fill_equal)
 TEST_BEGIN(layout_vertical_fill_weighted)
 {
     ZephioLayout layout;
-    zephio_layout_init(&layout, ZEPHIO_LAYOUT_VERTICAL, 0, 0, 40, 30);
+    zephio_layout_init_ctx(&layout, &g_test_ctx, ZEPHIO_LAYOUT_VERTICAL, 0, 0, 40, 30);
 
     ZephioWidget a, b;
-    zephio_widget_init(&a, 0, 0, 40, 1, NULL, NULL);
-    zephio_widget_init(&b, 0, 0, 40, 1, NULL, NULL);
+    zephio_widget_init_ctx(&a, 0, 0, 40, 1, NULL, &g_test_ctx, NULL);
+    zephio_widget_init_ctx(&b, 0, 0, 40, 1, NULL, &g_test_ctx, NULL);
 
     zephio_layout_add(&layout, &a, ZEPHIO_LAYOUT_FILL_WEIGHT(2.0f));
     zephio_layout_add(&layout, &b, ZEPHIO_LAYOUT_FILL_WEIGHT(1.0f));
@@ -218,10 +221,10 @@ TEST_BEGIN(layout_vertical_fill_weighted)
 TEST_BEGIN(layout_vertical_auto)
 {
     ZephioLayout layout;
-    zephio_layout_init(&layout, ZEPHIO_LAYOUT_VERTICAL, 0, 0, 40, 20);
+    zephio_layout_init_ctx(&layout, &g_test_ctx, ZEPHIO_LAYOUT_VERTICAL, 0, 0, 40, 20);
 
     ZephioWidget a;
-    zephio_widget_init(&a, 0, 0, 40, 7, NULL, NULL);
+    zephio_widget_init_ctx(&a, 0, 0, 40, 7, NULL, &g_test_ctx, NULL);
 
     zephio_layout_add(&layout, &a, ZEPHIO_LAYOUT_AUTO);
 
@@ -234,12 +237,12 @@ TEST_BEGIN(layout_vertical_auto)
 TEST_BEGIN(layout_vertical_mixed)
 {
     ZephioLayout layout;
-    zephio_layout_init(&layout, ZEPHIO_LAYOUT_VERTICAL, 0, 0, 40, 20);
+    zephio_layout_init_ctx(&layout, &g_test_ctx, ZEPHIO_LAYOUT_VERTICAL, 0, 0, 40, 20);
 
     ZephioWidget fixed_w, auto_w, fill_w;
-    zephio_widget_init(&fixed_w, 0, 0, 40, 1, NULL, NULL);
-    zephio_widget_init(&auto_w, 0, 0, 40, 3, NULL, NULL);
-    zephio_widget_init(&fill_w, 0, 0, 40, 1, NULL, NULL);
+    zephio_widget_init_ctx(&fixed_w, 0, 0, 40, 1, NULL, &g_test_ctx, NULL);
+    zephio_widget_init_ctx(&auto_w, 0, 0, 40, 3, NULL, &g_test_ctx, NULL);
+    zephio_widget_init_ctx(&fill_w, 0, 0, 40, 1, NULL, &g_test_ctx, NULL);
 
     zephio_layout_add(&layout, &fixed_w, ZEPHIO_LAYOUT_FIXED(5));
     zephio_layout_add(&layout, &auto_w, ZEPHIO_LAYOUT_AUTO);
@@ -260,11 +263,11 @@ TEST_BEGIN(layout_vertical_mixed)
 TEST_BEGIN(layout_horizontal_fixed)
 {
     ZephioLayout layout;
-    zephio_layout_init(&layout, ZEPHIO_LAYOUT_HORIZONTAL, 0, 0, 80, 24);
+    zephio_layout_init_ctx(&layout, &g_test_ctx, ZEPHIO_LAYOUT_HORIZONTAL, 0, 0, 80, 24);
 
     ZephioWidget a, b;
-    zephio_widget_init(&a, 0, 0, 20, 24, NULL, NULL);
-    zephio_widget_init(&b, 0, 0, 40, 24, NULL, NULL);
+    zephio_widget_init_ctx(&a, 0, 0, 20, 24, NULL, &g_test_ctx, NULL);
+    zephio_widget_init_ctx(&b, 0, 0, 40, 24, NULL, &g_test_ctx, NULL);
 
     zephio_layout_add(&layout, &a, ZEPHIO_LAYOUT_FIXED(25));
     zephio_layout_add(&layout, &b, ZEPHIO_LAYOUT_FIXED(55));
@@ -282,12 +285,12 @@ TEST_BEGIN(layout_horizontal_fixed)
 TEST_BEGIN(layout_horizontal_fill_equal)
 {
     ZephioLayout layout;
-    zephio_layout_init(&layout, ZEPHIO_LAYOUT_HORIZONTAL, 0, 0, 80, 24);
+    zephio_layout_init_ctx(&layout, &g_test_ctx, ZEPHIO_LAYOUT_HORIZONTAL, 0, 0, 80, 24);
 
     ZephioWidget a, b, c;
-    zephio_widget_init(&a, 0, 0, 1, 24, NULL, NULL);
-    zephio_widget_init(&b, 0, 0, 1, 24, NULL, NULL);
-    zephio_widget_init(&c, 0, 0, 1, 24, NULL, NULL);
+    zephio_widget_init_ctx(&a, 0, 0, 1, 24, NULL, &g_test_ctx, NULL);
+    zephio_widget_init_ctx(&b, 0, 0, 1, 24, NULL, &g_test_ctx, NULL);
+    zephio_widget_init_ctx(&c, 0, 0, 1, 24, NULL, &g_test_ctx, NULL);
 
     zephio_layout_add(&layout, &a, ZEPHIO_LAYOUT_FILL);
     zephio_layout_add(&layout, &b, ZEPHIO_LAYOUT_FILL);
@@ -306,11 +309,11 @@ TEST_BEGIN(layout_horizontal_fill_equal)
 TEST_BEGIN(layout_horizontal_fill_weighted)
 {
     ZephioLayout layout;
-    zephio_layout_init(&layout, ZEPHIO_LAYOUT_HORIZONTAL, 0, 0, 90, 24);
+    zephio_layout_init_ctx(&layout, &g_test_ctx, ZEPHIO_LAYOUT_HORIZONTAL, 0, 0, 90, 24);
 
     ZephioWidget a, b;
-    zephio_widget_init(&a, 0, 0, 1, 24, NULL, NULL);
-    zephio_widget_init(&b, 0, 0, 1, 24, NULL, NULL);
+    zephio_widget_init_ctx(&a, 0, 0, 1, 24, NULL, &g_test_ctx, NULL);
+    zephio_widget_init_ctx(&b, 0, 0, 1, 24, NULL, &g_test_ctx, NULL);
 
     zephio_layout_add(&layout, &a, ZEPHIO_LAYOUT_FILL_WEIGHT(3.0f));
     zephio_layout_add(&layout, &b, ZEPHIO_LAYOUT_FILL_WEIGHT(1.0f));
@@ -328,11 +331,11 @@ TEST_BEGIN(layout_horizontal_fill_weighted)
 TEST_BEGIN(layout_horizontal_mixed)
 {
     ZephioLayout layout;
-    zephio_layout_init(&layout, ZEPHIO_LAYOUT_HORIZONTAL, 0, 0, 80, 24);
+    zephio_layout_init_ctx(&layout, &g_test_ctx, ZEPHIO_LAYOUT_HORIZONTAL, 0, 0, 80, 24);
 
     ZephioWidget sidebar, main;
-    zephio_widget_init(&sidebar, 0, 0, 20, 24, NULL, NULL);
-    zephio_widget_init(&main, 0, 0, 60, 24, NULL, NULL);
+    zephio_widget_init_ctx(&sidebar, 0, 0, 20, 24, NULL, &g_test_ctx, NULL);
+    zephio_widget_init_ctx(&main, 0, 0, 60, 24, NULL, &g_test_ctx, NULL);
 
     zephio_layout_add(&layout, &sidebar, ZEPHIO_LAYOUT_FIXED(20));
     zephio_layout_add(&layout, &main, ZEPHIO_LAYOUT_FILL);
@@ -350,12 +353,12 @@ TEST_BEGIN(layout_horizontal_mixed)
 TEST_BEGIN(layout_padding_vertical)
 {
     ZephioLayout layout;
-    zephio_layout_init(&layout, ZEPHIO_LAYOUT_VERTICAL, 0, 0, 40, 20);
+    zephio_layout_init_ctx(&layout, &g_test_ctx, ZEPHIO_LAYOUT_VERTICAL, 0, 0, 40, 20);
     zephio_layout_set_padding(&layout, 2);
 
     ZephioWidget a, b;
-    zephio_widget_init(&a, 0, 0, 40, 1, NULL, NULL);
-    zephio_widget_init(&b, 0, 0, 40, 1, NULL, NULL);
+    zephio_widget_init_ctx(&a, 0, 0, 40, 1, NULL, &g_test_ctx, NULL);
+    zephio_widget_init_ctx(&b, 0, 0, 40, 1, NULL, &g_test_ctx, NULL);
 
     zephio_layout_add(&layout, &a, ZEPHIO_LAYOUT_FIXED(5));
     zephio_layout_add(&layout, &b, ZEPHIO_LAYOUT_FIXED(5));
@@ -369,12 +372,12 @@ TEST_BEGIN(layout_padding_vertical)
 TEST_BEGIN(layout_padding_horizontal)
 {
     ZephioLayout layout;
-    zephio_layout_init(&layout, ZEPHIO_LAYOUT_HORIZONTAL, 0, 0, 80, 24);
+    zephio_layout_init_ctx(&layout, &g_test_ctx, ZEPHIO_LAYOUT_HORIZONTAL, 0, 0, 80, 24);
     zephio_layout_set_padding(&layout, 5);
 
     ZephioWidget a, b;
-    zephio_widget_init(&a, 0, 0, 1, 24, NULL, NULL);
-    zephio_widget_init(&b, 0, 0, 1, 24, NULL, NULL);
+    zephio_widget_init_ctx(&a, 0, 0, 1, 24, NULL, &g_test_ctx, NULL);
+    zephio_widget_init_ctx(&b, 0, 0, 1, 24, NULL, &g_test_ctx, NULL);
 
     zephio_layout_add(&layout, &a, ZEPHIO_LAYOUT_FIXED(30));
     zephio_layout_add(&layout, &b, ZEPHIO_LAYOUT_FIXED(30));
@@ -390,11 +393,11 @@ TEST_BEGIN(layout_padding_horizontal)
 TEST_BEGIN(layout_margin_vertical)
 {
     ZephioLayout layout;
-    zephio_layout_init(&layout, ZEPHIO_LAYOUT_VERTICAL, 0, 0, 40, 20);
+    zephio_layout_init_ctx(&layout, &g_test_ctx, ZEPHIO_LAYOUT_VERTICAL, 0, 0, 40, 20);
     zephio_layout_set_margin(&layout, 2, 1, 2, 1);
 
     ZephioWidget a;
-    zephio_widget_init(&a, 0, 0, 40, 1, NULL, NULL);
+    zephio_widget_init_ctx(&a, 0, 0, 40, 1, NULL, &g_test_ctx, NULL);
 
     zephio_layout_add(&layout, &a, ZEPHIO_LAYOUT_FILL);
 
@@ -409,11 +412,11 @@ TEST_BEGIN(layout_margin_vertical)
 TEST_BEGIN(layout_margin_horizontal)
 {
     ZephioLayout layout;
-    zephio_layout_init(&layout, ZEPHIO_LAYOUT_HORIZONTAL, 0, 0, 80, 24);
+    zephio_layout_init_ctx(&layout, &g_test_ctx, ZEPHIO_LAYOUT_HORIZONTAL, 0, 0, 80, 24);
     zephio_layout_set_margin(&layout, 1, 3, 1, 3);
 
     ZephioWidget a;
-    zephio_widget_init(&a, 0, 0, 1, 24, NULL, NULL);
+    zephio_widget_init_ctx(&a, 0, 0, 1, 24, NULL, &g_test_ctx, NULL);
 
     zephio_layout_add(&layout, &a, ZEPHIO_LAYOUT_FILL);
 
@@ -430,11 +433,11 @@ TEST_BEGIN(layout_margin_horizontal)
 TEST_BEGIN(layout_set_direction)
 {
     ZephioLayout layout;
-    zephio_layout_init(&layout, ZEPHIO_LAYOUT_VERTICAL, 0, 0, 40, 20);
+    zephio_layout_init_ctx(&layout, &g_test_ctx, ZEPHIO_LAYOUT_VERTICAL, 0, 0, 40, 20);
 
     ZephioWidget a, b;
-    zephio_widget_init(&a, 0, 0, 40, 1, NULL, NULL);
-    zephio_widget_init(&b, 0, 0, 40, 1, NULL, NULL);
+    zephio_widget_init_ctx(&a, 0, 0, 40, 1, NULL, &g_test_ctx, NULL);
+    zephio_widget_init_ctx(&b, 0, 0, 40, 1, NULL, &g_test_ctx, NULL);
 
     zephio_layout_add(&layout, &a, ZEPHIO_LAYOUT_FIXED(10));
     zephio_layout_add(&layout, &b, ZEPHIO_LAYOUT_FIXED(10));
@@ -457,12 +460,12 @@ TEST_BEGIN(layout_set_direction)
 TEST_BEGIN(layout_fill_rounding_last_gets_remainder)
 {
     ZephioLayout layout;
-    zephio_layout_init(&layout, ZEPHIO_LAYOUT_VERTICAL, 0, 0, 40, 10);
+    zephio_layout_init_ctx(&layout, &g_test_ctx, ZEPHIO_LAYOUT_VERTICAL, 0, 0, 40, 10);
 
     ZephioWidget a, b, c;
-    zephio_widget_init(&a, 0, 0, 40, 1, NULL, NULL);
-    zephio_widget_init(&b, 0, 0, 40, 1, NULL, NULL);
-    zephio_widget_init(&c, 0, 0, 40, 1, NULL, NULL);
+    zephio_widget_init_ctx(&a, 0, 0, 40, 1, NULL, &g_test_ctx, NULL);
+    zephio_widget_init_ctx(&b, 0, 0, 40, 1, NULL, &g_test_ctx, NULL);
+    zephio_widget_init_ctx(&c, 0, 0, 40, 1, NULL, &g_test_ctx, NULL);
 
     zephio_layout_add(&layout, &a, ZEPHIO_LAYOUT_FILL);
     zephio_layout_add(&layout, &b, ZEPHIO_LAYOUT_FILL);
@@ -477,12 +480,12 @@ TEST_BEGIN(layout_fill_rounding_last_gets_remainder)
 TEST_BEGIN(layout_fill_rounding_weighted)
 {
     ZephioLayout layout;
-    zephio_layout_init(&layout, ZEPHIO_LAYOUT_HORIZONTAL, 0, 0, 100, 24);
+    zephio_layout_init_ctx(&layout, &g_test_ctx, ZEPHIO_LAYOUT_HORIZONTAL, 0, 0, 100, 24);
 
     ZephioWidget a, b, c;
-    zephio_widget_init(&a, 0, 0, 1, 24, NULL, NULL);
-    zephio_widget_init(&b, 0, 0, 1, 24, NULL, NULL);
-    zephio_widget_init(&c, 0, 0, 1, 24, NULL, NULL);
+    zephio_widget_init_ctx(&a, 0, 0, 1, 24, NULL, &g_test_ctx, NULL);
+    zephio_widget_init_ctx(&b, 0, 0, 1, 24, NULL, &g_test_ctx, NULL);
+    zephio_widget_init_ctx(&c, 0, 0, 1, 24, NULL, &g_test_ctx, NULL);
 
     zephio_layout_add(&layout, &a, ZEPHIO_LAYOUT_FILL_WEIGHT(1.0f));
     zephio_layout_add(&layout, &b, ZEPHIO_LAYOUT_FILL_WEIGHT(1.0f));
@@ -497,10 +500,10 @@ TEST_BEGIN(layout_fill_rounding_weighted)
 TEST_BEGIN(layout_single_fill_takes_all)
 {
     ZephioLayout layout;
-    zephio_layout_init(&layout, ZEPHIO_LAYOUT_VERTICAL, 0, 0, 40, 25);
+    zephio_layout_init_ctx(&layout, &g_test_ctx, ZEPHIO_LAYOUT_VERTICAL, 0, 0, 40, 25);
 
     ZephioWidget w;
-    zephio_widget_init(&w, 0, 0, 40, 1, NULL, NULL);
+    zephio_widget_init_ctx(&w, 0, 0, 40, 1, NULL, &g_test_ctx, NULL);
 
     zephio_layout_add(&layout, &w, ZEPHIO_LAYOUT_FILL);
 
@@ -515,12 +518,12 @@ TEST_BEGIN(layout_single_fill_takes_all)
 TEST_BEGIN(layout_items_children_sync)
 {
     ZephioLayout layout;
-    zephio_layout_init(&layout, ZEPHIO_LAYOUT_VERTICAL, 0, 0, 40, 20);
+    zephio_layout_init_ctx(&layout, &g_test_ctx, ZEPHIO_LAYOUT_VERTICAL, 0, 0, 40, 20);
 
     ZephioWidget a, b, c;
-    zephio_widget_init(&a, 0, 0, 40, 1, NULL, NULL);
-    zephio_widget_init(&b, 0, 0, 40, 1, NULL, NULL);
-    zephio_widget_init(&c, 0, 0, 40, 1, NULL, NULL);
+    zephio_widget_init_ctx(&a, 0, 0, 40, 1, NULL, &g_test_ctx, NULL);
+    zephio_widget_init_ctx(&b, 0, 0, 40, 1, NULL, &g_test_ctx, NULL);
+    zephio_widget_init_ctx(&c, 0, 0, 40, 1, NULL, &g_test_ctx, NULL);
 
     zephio_layout_add(&layout, &a, ZEPHIO_LAYOUT_FIXED(5));
     zephio_layout_add(&layout, &b, ZEPHIO_LAYOUT_FIXED(5));
@@ -545,10 +548,10 @@ TEST_BEGIN(layout_items_children_sync)
 TEST_BEGIN(layout_destroy)
 {
     ZephioLayout layout;
-    zephio_layout_init(&layout, ZEPHIO_LAYOUT_VERTICAL, 0, 0, 40, 20);
+    zephio_layout_init_ctx(&layout, &g_test_ctx, ZEPHIO_LAYOUT_VERTICAL, 0, 0, 40, 20);
 
     ZephioWidget a;
-    zephio_widget_init(&a, 0, 0, 40, 1, NULL, NULL);
+    zephio_widget_init_ctx(&a, 0, 0, 40, 1, NULL, &g_test_ctx, NULL);
     zephio_layout_add(&layout, &a, ZEPHIO_LAYOUT_FIXED(5));
 
     zephio_widget_destroy(&layout.base);

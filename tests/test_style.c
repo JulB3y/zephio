@@ -1,5 +1,8 @@
 #include "util.h"
 #include "zephio_style.h"
+#include "zephio_context.h"
+
+static ZephioContext g_test_ctx;
 
 /* ── color equality ─────────────────────────────────────────────── */
 
@@ -57,7 +60,7 @@ TEST_BEGIN(style_make)
 
 TEST_BEGIN(style_macro)
 {
-    ZephioStyle s = TUI_STYLE(ZEPHIO_COLOR_WHITE, ZEPHIO_COLOR_BLACK, ZEPHIO_ATTR_NONE);
+    ZephioStyle s = ZEPHIO_STYLE(ZEPHIO_COLOR_WHITE, ZEPHIO_COLOR_BLACK, ZEPHIO_ATTR_NONE);
     TEST_ASSERT(zephio_color_eq(s.fg, ZEPHIO_COLOR_INDEX(ZEPHIO_COLOR_WHITE)));
     TEST_ASSERT(zephio_color_eq(s.bg, ZEPHIO_COLOR_INDEX(ZEPHIO_COLOR_BLACK)));
     TEST_EQ(s.attr, ZEPHIO_ATTR_NONE);
@@ -65,7 +68,7 @@ TEST_BEGIN(style_macro)
 
 TEST_BEGIN(style_rgb_macro)
 {
-    ZephioStyle s = TUI_STYLE_RGB(10, 20, 30, 40, 50, 60, ZEPHIO_ATTR_ITALIC);
+    ZephioStyle s = ZEPHIO_STYLE_RGB(10, 20, 30, 40, 50, 60, ZEPHIO_ATTR_ITALIC);
     TEST_ASSERT(zephio_color_eq(s.fg, ZEPHIO_COLOR_RGB(10, 20, 30)));
     TEST_ASSERT(zephio_color_eq(s.bg, ZEPHIO_COLOR_RGB(40, 50, 60)));
     TEST_EQ(s.attr, ZEPHIO_ATTR_ITALIC);
@@ -88,10 +91,10 @@ TEST_BEGIN(theme_default)
 
 TEST_BEGIN(theme_create_full)
 {
-    ZephioStyle normal = TUI_STYLE(7, 0, 0);
-    ZephioStyle focused = TUI_STYLE(0, 14, ZEPHIO_ATTR_BOLD);
-    ZephioStyle disabled = TUI_STYLE(8, 0, ZEPHIO_ATTR_DIM);
-    ZephioStyle active = TUI_STYLE(15, 12, ZEPHIO_ATTR_BOLD);
+    ZephioStyle normal = ZEPHIO_STYLE(7, 0, 0);
+    ZephioStyle focused = ZEPHIO_STYLE(0, 14, ZEPHIO_ATTR_BOLD);
+    ZephioStyle disabled = ZEPHIO_STYLE(8, 0, ZEPHIO_ATTR_DIM);
+    ZephioStyle active = ZEPHIO_STYLE(15, 12, ZEPHIO_ATTR_BOLD);
 
     ZephioTheme theme = zephio_theme_create(&normal, &focused, &disabled, &active);
 
@@ -115,53 +118,53 @@ TEST_BEGIN(theme_create_null)
 
 TEST_BEGIN(style_set_cell)
 {
-    zephio_screen_init(24, 80);
-    ZephioStyle s = TUI_STYLE(7, 0, ZEPHIO_ATTR_BOLD);
-    zephio_style_set_cell(5, 10, "Z", &s);
+    zephio_screen_init(&g_test_ctx, 24, 80);
+    ZephioStyle s = ZEPHIO_STYLE(7, 0, ZEPHIO_ATTR_BOLD);
+    zephio_style_set_cell(&g_test_ctx, 5, 10, "Z", &s);
 
-    ZephioCell *cell = &g_screen.back[5 * 80 + 10];
+    ZephioCell *cell = &g_test_ctx.screen.back[5 * 80 + 10];
     TEST_EQ(cell->ch[0], 'Z');
     TEST_ASSERT(zephio_color_eq(cell->fg, ZEPHIO_COLOR_INDEX(7)));
     TEST_ASSERT(zephio_color_eq(cell->bg, ZEPHIO_COLOR_INDEX(0)));
     TEST_EQ(cell->attr, ZEPHIO_ATTR_BOLD);
-    zephio_screen_free();
+    zephio_screen_free(&g_test_ctx);
 }
 
 TEST_BEGIN(style_write)
 {
-    zephio_screen_init(24, 80);
-    ZephioStyle s = TUI_STYLE(3, 1, ZEPHIO_ATTR_UNDERLINE);
-    zephio_style_write(0, 0, "AB", &s);
+    zephio_screen_init(&g_test_ctx, 24, 80);
+    ZephioStyle s = ZEPHIO_STYLE(3, 1, ZEPHIO_ATTR_UNDERLINE);
+    zephio_style_write(&g_test_ctx, 0, 0, "AB", &s);
 
-    TEST_EQ(g_screen.back[0].ch[0], 'A');
-    TEST_EQ(g_screen.back[1].ch[0], 'B');
-    TEST_ASSERT(zephio_color_eq(g_screen.back[0].fg, ZEPHIO_COLOR_INDEX(3)));
-    TEST_EQ(g_screen.back[0].attr, ZEPHIO_ATTR_UNDERLINE);
-    zephio_screen_free();
+    TEST_EQ(g_test_ctx.screen.back[0].ch[0], 'A');
+    TEST_EQ(g_test_ctx.screen.back[1].ch[0], 'B');
+    TEST_ASSERT(zephio_color_eq(g_test_ctx.screen.back[0].fg, ZEPHIO_COLOR_INDEX(3)));
+    TEST_EQ(g_test_ctx.screen.back[0].attr, ZEPHIO_ATTR_UNDERLINE);
+    zephio_screen_free(&g_test_ctx);
 }
 
 TEST_BEGIN(style_fill)
 {
-    zephio_screen_init(24, 80);
-    ZephioStyle s = TUI_STYLE(2, 4, 0);
-    zephio_style_fill(0, 0, 3, 2, ".", &s);
+    zephio_screen_init(&g_test_ctx, 24, 80);
+    ZephioStyle s = ZEPHIO_STYLE(2, 4, 0);
+    zephio_style_fill(&g_test_ctx, 0, 0, 3, 2, ".", &s);
 
-    TEST_EQ(g_screen.back[0].ch[0], '.');
-    TEST_EQ(g_screen.back[1].ch[0], '.');
-    TEST_EQ(g_screen.back[2].ch[0], '.');
-    TEST_EQ(g_screen.back[80].ch[0], '.');
-    TEST_EQ(g_screen.back[81].ch[0], '.');
-    TEST_EQ(g_screen.back[82].ch[0], '.');
-    zephio_screen_free();
+    TEST_EQ(g_test_ctx.screen.back[0].ch[0], '.');
+    TEST_EQ(g_test_ctx.screen.back[1].ch[0], '.');
+    TEST_EQ(g_test_ctx.screen.back[2].ch[0], '.');
+    TEST_EQ(g_test_ctx.screen.back[80].ch[0], '.');
+    TEST_EQ(g_test_ctx.screen.back[81].ch[0], '.');
+    TEST_EQ(g_test_ctx.screen.back[82].ch[0], '.');
+    zephio_screen_free(&g_test_ctx);
 }
 
 TEST_BEGIN(style_null_guard)
 {
-    zephio_screen_init(24, 80);
-    zephio_style_set_cell(0, 0, "X", NULL);
-    zephio_style_write(0, 0, "X", NULL);
-    zephio_style_fill(0, 0, 1, 1, "X", NULL);
-    zephio_screen_free();
+    zephio_screen_init(&g_test_ctx, 24, 80);
+    zephio_style_set_cell(&g_test_ctx, 0, 0, "X", NULL);
+    zephio_style_write(&g_test_ctx, 0, 0, "X", NULL);
+    zephio_style_fill(&g_test_ctx, 0, 0, 1, 1, "X", NULL);
+    zephio_screen_free(&g_test_ctx);
 }
 
 /* ── main ────────────────────────────────────────────────────────── */

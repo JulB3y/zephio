@@ -46,12 +46,13 @@ static int g_test_fail = 0;
 
 #ifdef ZEPHIO_TEST_CAPTURE
 #include <unistd.h>
-#include "zephio_terminal.h"
+#include "zephio_context.h"
 
 static char g_output_buf[8192];
 static int g_output_len = 0;
 static int g_cap_r = -1;
 static int g_cap_w = -1;
+static ZephioContext g_test_ctx;
 
 static inline void capture_start(void)
 {
@@ -61,7 +62,7 @@ static inline void capture_start(void)
     pipe(p);
     g_cap_r = p[0];
     g_cap_w = p[1];
-    g_terminal.fd = g_cap_w;
+    g_test_ctx.terminal.fd = g_cap_w;
     memset(g_output_buf, 0, sizeof(g_output_buf));
     g_output_len = 0;
 }
@@ -69,7 +70,7 @@ static inline void capture_start(void)
 static inline void capture_drain(void)
 {
     if (g_cap_w >= 0) close(g_cap_w);
-    g_terminal.fd = -1;
+    g_test_ctx.terminal.fd = -1;
     ssize_t total = 0;
     if (g_cap_r >= 0) {
         ssize_t n;
@@ -91,7 +92,7 @@ static inline void capture_done(void)
     if (g_cap_w >= 0) close(g_cap_w);
     g_cap_r = -1;
     g_cap_w = -1;
-    g_terminal.fd = -1;
+    g_test_ctx.terminal.fd = -1;
 }
 #endif
 

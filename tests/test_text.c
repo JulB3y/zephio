@@ -1,4 +1,5 @@
 #include "util.h"
+#include "zephio_context.h"
 #include "zephio_text.h"
 
 #include <string.h>

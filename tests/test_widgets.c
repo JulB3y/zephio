@@ -1,4 +1,6 @@
 #include "util.h"
+#include "zephio_context.h"
+static ZephioContext g_test_ctx;
 #include "zephio_progress.h"
 #include "zephio_checkbox.h"
 #include "zephio_radio.h"
@@ -26,7 +28,7 @@ static void stub_field_on_change(ZephioWidget *w, const char *text, void *ud) { 
 TEST_BEGIN(progress_init)
 {
     ZephioProgress p;
-    ZephioResult res = zephio_progress_init(&p, 0, 0, 20, 1);
+    ZephioResult res = zephio_progress_init_ctx(&p, &g_test_ctx, 0, 0, 20, 1);
     TEST_EQ(res, ZEPHIO_OK);
     TEST_EQ(p.value, 0);
     TEST_EQ(p.show_percent, 1);
@@ -37,13 +39,13 @@ TEST_BEGIN(progress_init)
 
 TEST_BEGIN(progress_init_null)
 {
-    TEST_NE(zephio_progress_init(NULL, 0, 0, 20, 1), ZEPHIO_OK);
+    TEST_NE(zephio_progress_init_ctx(NULL, NULL, 0, 0, 20, 1), ZEPHIO_OK);
 }
 
 TEST_BEGIN(progress_set_value)
 {
     ZephioProgress p;
-    zephio_progress_init(&p, 0, 0, 20, 1);
+    zephio_progress_init_ctx(&p, &g_test_ctx, 0, 0, 20, 1);
 
     zephio_progress_set_value(&p, 50);
     TEST_EQ(zephio_progress_get_value(&p), 50);
@@ -60,7 +62,7 @@ TEST_BEGIN(progress_set_value)
 TEST_BEGIN(progress_value_clamped)
 {
     ZephioProgress p;
-    zephio_progress_init(&p, 0, 0, 20, 1);
+    zephio_progress_init_ctx(&p, &g_test_ctx, 0, 0, 20, 1);
 
     zephio_progress_set_value(&p, -10);
     TEST_EQ(zephio_progress_get_value(&p), 0);
@@ -79,7 +81,7 @@ TEST_BEGIN(progress_get_value_null)
 TEST_BEGIN(progress_set_label)
 {
     ZephioProgress p;
-    zephio_progress_init(&p, 0, 0, 30, 1);
+    zephio_progress_init_ctx(&p, &g_test_ctx, 0, 0, 30, 1);
 
     zephio_progress_set_label(&p, "Loading");
     TEST_ASSERT(p.label != NULL);
@@ -94,7 +96,7 @@ TEST_BEGIN(progress_set_label)
 TEST_BEGIN(progress_set_chars)
 {
     ZephioProgress p;
-    zephio_progress_init(&p, 0, 0, 20, 1);
+    zephio_progress_init_ctx(&p, &g_test_ctx, 0, 0, 20, 1);
 
     zephio_progress_set_chars(&p, "#", "-");
     TEST_STR_EQ(p.fill_char, "#");
@@ -110,7 +112,7 @@ TEST_BEGIN(progress_set_chars)
 TEST_BEGIN(progress_show_percent)
 {
     ZephioProgress p;
-    zephio_progress_init(&p, 0, 0, 20, 1);
+    zephio_progress_init_ctx(&p, &g_test_ctx, 0, 0, 20, 1);
 
     TEST_EQ(p.show_percent, 1);
     zephio_progress_set_show_percent(&p, 0);
@@ -124,7 +126,7 @@ TEST_BEGIN(progress_show_percent)
 TEST_BEGIN(progress_set_colors)
 {
     ZephioProgress p;
-    zephio_progress_init(&p, 0, 0, 20, 1);
+    zephio_progress_init_ctx(&p, &g_test_ctx, 0, 0, 20, 1);
 
     ZephioColor fg = ZEPHIO_COLOR_INDEX(2);
     ZephioColor bg = ZEPHIO_COLOR_INDEX(4);
@@ -138,7 +140,7 @@ TEST_BEGIN(progress_set_colors)
 TEST_BEGIN(progress_set_attr)
 {
     ZephioProgress p;
-    zephio_progress_init(&p, 0, 0, 20, 1);
+    zephio_progress_init_ctx(&p, &g_test_ctx, 0, 0, 20, 1);
 
     zephio_progress_set_attr(&p, ZEPHIO_ATTR_BOLD);
     TEST_EQ(p.attr, ZEPHIO_ATTR_BOLD);
@@ -151,7 +153,7 @@ TEST_BEGIN(progress_set_attr)
 TEST_BEGIN(checkbox_init)
 {
     ZephioCheckbox cb;
-    ZephioResult res = zephio_checkbox_init(&cb, 0, 0, 20, 1, "Enable");
+    ZephioResult res = zephio_checkbox_init_ctx(&cb, &g_test_ctx, 0, 0, 20, 1, "Enable");
     TEST_EQ(res, ZEPHIO_OK);
     TEST_EQ(cb.state, TUI_CHECK_UNCHECKED);
     TEST_EQ(cb.tristate, 0);
@@ -163,13 +165,13 @@ TEST_BEGIN(checkbox_init)
 
 TEST_BEGIN(checkbox_init_null)
 {
-    TEST_NE(zephio_checkbox_init(NULL, 0, 0, 20, 1, "X"), ZEPHIO_OK);
+    TEST_NE(zephio_checkbox_init_ctx(NULL, NULL, 0, 0, 20, 1, "X"), ZEPHIO_OK);
 }
 
 TEST_BEGIN(checkbox_init_no_label)
 {
     ZephioCheckbox cb;
-    ZephioResult res = zephio_checkbox_init(&cb, 0, 0, 10, 1, NULL);
+    ZephioResult res = zephio_checkbox_init_ctx(&cb, &g_test_ctx, 0, 0, 10, 1, NULL);
     TEST_EQ(res, ZEPHIO_OK);
     TEST_ASSERT(cb.label == NULL);
     zephio_widget_destroy(&cb.base);
@@ -178,7 +180,7 @@ TEST_BEGIN(checkbox_init_no_label)
 TEST_BEGIN(checkbox_set_state)
 {
     ZephioCheckbox cb;
-    zephio_checkbox_init(&cb, 0, 0, 20, 1, NULL);
+    zephio_checkbox_init_ctx(&cb, &g_test_ctx, 0, 0, 20, 1, NULL);
 
     zephio_checkbox_set_state(&cb, TUI_CHECK_CHECKED);
     TEST_EQ(zephio_checkbox_get_state(&cb), TUI_CHECK_CHECKED);
@@ -200,7 +202,7 @@ TEST_BEGIN(checkbox_get_state_null)
 TEST_BEGIN(checkbox_tristate)
 {
     ZephioCheckbox cb;
-    zephio_checkbox_init(&cb, 0, 0, 20, 1, NULL);
+    zephio_checkbox_init_ctx(&cb, &g_test_ctx, 0, 0, 20, 1, NULL);
     zephio_checkbox_set_tristate(&cb, 1);
 
     TEST_EQ(cb.state, TUI_CHECK_UNCHECKED);
@@ -222,7 +224,7 @@ TEST_BEGIN(checkbox_tristate)
 TEST_BEGIN(checkbox_set_label)
 {
     ZephioCheckbox cb;
-    zephio_checkbox_init(&cb, 0, 0, 20, 1, NULL);
+    zephio_checkbox_init_ctx(&cb, &g_test_ctx, 0, 0, 20, 1, NULL);
 
     zephio_checkbox_set_label(&cb, "New label");
     TEST_ASSERT(cb.label != NULL);
@@ -237,7 +239,7 @@ TEST_BEGIN(checkbox_set_label)
 TEST_BEGIN(checkbox_set_colors)
 {
     ZephioCheckbox cb;
-    zephio_checkbox_init(&cb, 0, 0, 20, 1, NULL);
+    zephio_checkbox_init_ctx(&cb, &g_test_ctx, 0, 0, 20, 1, NULL);
 
     ZephioColor fg = ZEPHIO_COLOR_INDEX(10);
     ZephioColor bg = ZEPHIO_COLOR_INDEX(5);
@@ -257,7 +259,7 @@ TEST_BEGIN(checkbox_set_colors)
 TEST_BEGIN(radio_init)
 {
     ZephioRadio r;
-    ZephioResult res = zephio_radio_init(&r, 0, 0, 20, 5);
+    ZephioResult res = zephio_radio_init_ctx(&r, &g_test_ctx, 0, 0, 20, 5);
     TEST_EQ(res, ZEPHIO_OK);
     TEST_EQ(r.option_count, 0);
     TEST_EQ(r.selected, 0);
@@ -267,13 +269,13 @@ TEST_BEGIN(radio_init)
 
 TEST_BEGIN(radio_init_null)
 {
-    TEST_NE(zephio_radio_init(NULL, 0, 0, 20, 5), ZEPHIO_OK);
+    TEST_NE(zephio_radio_init_ctx(NULL, NULL, 0, 0, 20, 5), ZEPHIO_OK);
 }
 
 TEST_BEGIN(radio_add_option)
 {
     ZephioRadio r;
-    zephio_radio_init(&r, 0, 0, 20, 5);
+    zephio_radio_init_ctx(&r, &g_test_ctx, 0, 0, 20, 5);
 
     ZephioResult res;
     res = zephio_radio_add_option(&r, "Option A");
@@ -294,7 +296,7 @@ TEST_BEGIN(radio_add_option)
 TEST_BEGIN(radio_add_null_option)
 {
     ZephioRadio r;
-    zephio_radio_init(&r, 0, 0, 20, 5);
+    zephio_radio_init_ctx(&r, &g_test_ctx, 0, 0, 20, 5);
 
     ZephioResult res = zephio_radio_add_option(&r, NULL);
     TEST_EQ(res, ZEPHIO_OK);
@@ -307,7 +309,7 @@ TEST_BEGIN(radio_add_null_option)
 TEST_BEGIN(radio_remove_option)
 {
     ZephioRadio r;
-    zephio_radio_init(&r, 0, 0, 20, 5);
+    zephio_radio_init_ctx(&r, &g_test_ctx, 0, 0, 20, 5);
     zephio_radio_add_option(&r, "A");
     zephio_radio_add_option(&r, "B");
     zephio_radio_add_option(&r, "C");
@@ -323,7 +325,7 @@ TEST_BEGIN(radio_remove_option)
 TEST_BEGIN(radio_remove_out_of_bounds)
 {
     ZephioRadio r;
-    zephio_radio_init(&r, 0, 0, 20, 5);
+    zephio_radio_init_ctx(&r, &g_test_ctx, 0, 0, 20, 5);
     zephio_radio_add_option(&r, "A");
 
     zephio_radio_remove_option(&r, -1);
@@ -338,7 +340,7 @@ TEST_BEGIN(radio_remove_out_of_bounds)
 TEST_BEGIN(radio_clear)
 {
     ZephioRadio r;
-    zephio_radio_init(&r, 0, 0, 20, 5);
+    zephio_radio_init_ctx(&r, &g_test_ctx, 0, 0, 20, 5);
     zephio_radio_add_option(&r, "A");
     zephio_radio_add_option(&r, "B");
     zephio_radio_add_option(&r, "C");
@@ -353,7 +355,7 @@ TEST_BEGIN(radio_clear)
 TEST_BEGIN(radio_selected)
 {
     ZephioRadio r;
-    zephio_radio_init(&r, 0, 0, 20, 5);
+    zephio_radio_init_ctx(&r, &g_test_ctx, 0, 0, 20, 5);
     zephio_radio_add_option(&r, "A");
     zephio_radio_add_option(&r, "B");
     zephio_radio_add_option(&r, "C");
@@ -377,7 +379,7 @@ TEST_BEGIN(radio_selected_null)
 TEST_BEGIN(radio_set_selected_bounds)
 {
     ZephioRadio r;
-    zephio_radio_init(&r, 0, 0, 20, 5);
+    zephio_radio_init_ctx(&r, &g_test_ctx, 0, 0, 20, 5);
     zephio_radio_add_option(&r, "A");
     zephio_radio_add_option(&r, "B");
 
@@ -393,7 +395,7 @@ TEST_BEGIN(radio_set_selected_bounds)
 TEST_BEGIN(radio_set_colors)
 {
     ZephioRadio r;
-    zephio_radio_init(&r, 0, 0, 20, 5);
+    zephio_radio_init_ctx(&r, &g_test_ctx, 0, 0, 20, 5);
 
     ZephioColor fg = ZEPHIO_COLOR_INDEX(15);
     ZephioColor bg = ZEPHIO_COLOR_INDEX(0);
@@ -411,7 +413,7 @@ TEST_BEGIN(radio_set_colors)
 TEST_BEGIN(radio_remove_adjusts_selected)
 {
     ZephioRadio r;
-    zephio_radio_init(&r, 0, 0, 20, 5);
+    zephio_radio_init_ctx(&r, &g_test_ctx, 0, 0, 20, 5);
     zephio_radio_add_option(&r, "A");
     zephio_radio_add_option(&r, "B");
     zephio_radio_add_option(&r, "C");
@@ -431,7 +433,7 @@ TEST_BEGIN(radio_remove_adjusts_selected)
 TEST_BEGIN(label_init)
 {
     ZephioLabel l;
-    ZephioResult res = zephio_label_init(&l, 2, 1, 20, 1, "Hello");
+    ZephioResult res = zephio_label_init_ctx(&l, &g_test_ctx, 2, 1, 20, 1, "Hello");
     TEST_EQ(res, ZEPHIO_OK);
     TEST_EQ(l.base.focusable, 0);
     TEST_EQ(l.base.visible, 1);
@@ -442,13 +444,13 @@ TEST_BEGIN(label_init)
 
 TEST_BEGIN(label_init_null_widget)
 {
-    TEST_NE(zephio_label_init(NULL, 0, 0, 20, 1, "X"), ZEPHIO_OK);
+    TEST_NE(zephio_label_init_ctx(NULL, NULL, 0, 0, 20, 1, "X"), ZEPHIO_OK);
 }
 
 TEST_BEGIN(label_init_null_text)
 {
     ZephioLabel l;
-    ZephioResult res = zephio_label_init(&l, 0, 0, 20, 1, NULL);
+    ZephioResult res = zephio_label_init_ctx(&l, &g_test_ctx, 0, 0, 20, 1, NULL);
     TEST_EQ(res, ZEPHIO_OK);
     TEST_ASSERT(l.text == NULL);
     zephio_widget_destroy(&l.base);
@@ -457,7 +459,7 @@ TEST_BEGIN(label_init_null_text)
 TEST_BEGIN(label_set_text)
 {
     ZephioLabel l;
-    zephio_label_init(&l, 0, 0, 20, 1, NULL);
+    zephio_label_init_ctx(&l, &g_test_ctx, 0, 0, 20, 1, NULL);
 
     zephio_label_set_text(&l, "World");
     TEST_ASSERT(l.text != NULL);
@@ -473,7 +475,7 @@ TEST_BEGIN(label_set_text)
 TEST_BEGIN(label_set_colors)
 {
     ZephioLabel l;
-    zephio_label_init(&l, 0, 0, 20, 1, NULL);
+    zephio_label_init_ctx(&l, &g_test_ctx, 0, 0, 20, 1, NULL);
 
     ZephioColor fg = ZEPHIO_COLOR_INDEX(10);
     ZephioColor bg = ZEPHIO_COLOR_INDEX(2);
@@ -488,7 +490,7 @@ TEST_BEGIN(label_set_colors)
 TEST_BEGIN(label_set_attr)
 {
     ZephioLabel l;
-    zephio_label_init(&l, 0, 0, 20, 1, NULL);
+    zephio_label_init_ctx(&l, &g_test_ctx, 0, 0, 20, 1, NULL);
 
     zephio_label_set_attr(&l, ZEPHIO_ATTR_BOLD);
     TEST_EQ(l.attr, ZEPHIO_ATTR_BOLD);
@@ -498,32 +500,32 @@ TEST_BEGIN(label_set_attr)
 
 TEST_BEGIN(label_render)
 {
-    zephio_screen_init(24, 80);
+    zephio_screen_init(&g_test_ctx, 24, 80);
     ZephioLabel l;
-    zephio_label_init(&l, 5, 2, 10, 1, "Hi");
+    zephio_label_init_ctx(&l, &g_test_ctx, 5, 2, 10, 1, "Hi");
     l.base.dirty = 1;
 
     zephio_widget_render(&l.base);
     TEST_EQ(l.base.dirty, 0);
-    TEST_EQ(g_screen.back[2 * 80 + 5].ch[0], 'H');
-    TEST_EQ(g_screen.back[2 * 80 + 6].ch[0], 'i');
+    TEST_EQ(g_test_ctx.screen.back[2 * 80 + 5].ch[0], 'H');
+    TEST_EQ(g_test_ctx.screen.back[2 * 80 + 6].ch[0], 'i');
 
     zephio_widget_destroy(&l.base);
-    zephio_screen_free();
+    zephio_screen_free(&g_test_ctx);
 }
 
 TEST_BEGIN(label_render_null_text)
 {
-    zephio_screen_init(24, 80);
+    zephio_screen_init(&g_test_ctx, 24, 80);
     ZephioLabel l;
-    zephio_label_init(&l, 0, 0, 10, 1, NULL);
+    zephio_label_init_ctx(&l, &g_test_ctx, 0, 0, 10, 1, NULL);
     l.base.dirty = 1;
 
     zephio_widget_render(&l.base);
     TEST_EQ(l.base.dirty, 0);
 
     zephio_widget_destroy(&l.base);
-    zephio_screen_free();
+    zephio_screen_free(&g_test_ctx);
 }
 
 /* ── Button ─────────────────────────────────────────────────────── */
@@ -531,7 +533,7 @@ TEST_BEGIN(label_render_null_text)
 TEST_BEGIN(button_init)
 {
     ZephioButton b;
-    ZephioResult res = zephio_button_init(&b, 0, 0, 10, 3, "OK");
+    ZephioResult res = zephio_button_init_ctx(&b, &g_test_ctx, 0, 0, 10, 3, "OK");
     TEST_EQ(res, ZEPHIO_OK);
     TEST_EQ(b.base.focusable, 1);
     TEST_ASSERT(b.text != NULL);
@@ -541,13 +543,13 @@ TEST_BEGIN(button_init)
 
 TEST_BEGIN(button_init_null_widget)
 {
-    TEST_NE(zephio_button_init(NULL, 0, 0, 10, 3, "X"), ZEPHIO_OK);
+    TEST_NE(zephio_button_init_ctx(NULL, NULL, 0, 0, 10, 3, "X"), ZEPHIO_OK);
 }
 
 TEST_BEGIN(button_set_text)
 {
     ZephioButton b;
-    zephio_button_init(&b, 0, 0, 10, 3, NULL);
+    zephio_button_init_ctx(&b, &g_test_ctx, 0, 0, 10, 3, NULL);
 
     zephio_button_set_text(&b, "Cancel");
     TEST_ASSERT(b.text != NULL);
@@ -563,7 +565,7 @@ TEST_BEGIN(button_set_text)
 TEST_BEGIN(button_set_colors)
 {
     ZephioButton b;
-    zephio_button_init(&b, 0, 0, 10, 3, NULL);
+    zephio_button_init_ctx(&b, &g_test_ctx, 0, 0, 10, 3, NULL);
 
     ZephioColor fg = ZEPHIO_COLOR_INDEX(15);
     ZephioColor bg = ZEPHIO_COLOR_INDEX(1);
@@ -583,7 +585,7 @@ TEST_BEGIN(button_on_click)
     g_btn_clicked = 0;
 
     ZephioButton b;
-    zephio_button_init(&b, 0, 0, 10, 3, "Go");
+    zephio_button_init_ctx(&b, &g_test_ctx, 0, 0, 10, 3, "Go");
     zephio_button_set_on_click(&b, stub_btn_on_click, NULL);
 
     ZephioEvent event = {0};
@@ -600,7 +602,7 @@ TEST_BEGIN(button_on_click_space)
     g_btn_clicked = 0;
 
     ZephioButton b;
-    zephio_button_init(&b, 0, 0, 10, 3, "Go");
+    zephio_button_init_ctx(&b, &g_test_ctx, 0, 0, 10, 3, "Go");
     zephio_button_set_on_click(&b, stub_btn_on_click, NULL);
 
     ZephioEvent event = {0};
@@ -617,7 +619,7 @@ TEST_BEGIN(button_mouse_click)
     g_btn_clicked = 0;
 
     ZephioButton b;
-    zephio_button_init(&b, 0, 0, 10, 3, "Go");
+    zephio_button_init_ctx(&b, &g_test_ctx, 0, 0, 10, 3, "Go");
     b.base.abs_x = 0;
     b.base.abs_y = 0;
     zephio_button_set_on_click(&b, stub_btn_on_click, NULL);
@@ -632,16 +634,16 @@ TEST_BEGIN(button_mouse_click)
 
 TEST_BEGIN(button_render)
 {
-    zephio_screen_init(24, 80);
+    zephio_screen_init(&g_test_ctx, 24, 80);
     ZephioButton b;
-    zephio_button_init(&b, 3, 5, 8, 1, "OK");
+    zephio_button_init_ctx(&b, &g_test_ctx, 3, 5, 8, 1, "OK");
     b.base.dirty = 1;
 
     zephio_widget_render(&b.base);
     TEST_EQ(b.base.dirty, 0);
 
     zephio_widget_destroy(&b.base);
-    zephio_screen_free();
+    zephio_screen_free(&g_test_ctx);
 }
 
 /* ── Box ────────────────────────────────────────────────────────── */
@@ -649,10 +651,10 @@ TEST_BEGIN(button_render)
 TEST_BEGIN(box_init)
 {
     ZephioBox box;
-    ZephioResult res = zephio_box_init(&box, 0, 0, 30, 15, TUI_BOX_SINGLE);
+    ZephioResult res = zephio_box_init_ctx(&box, &g_test_ctx, 0, 0, 30, 15, ZEPHIO_BOX_SINGLE);
     TEST_EQ(res, ZEPHIO_OK);
     TEST_EQ(box.base.focusable, 0);
-    TEST_EQ(box.border_style, TUI_BOX_SINGLE);
+    TEST_EQ(box.border_style, ZEPHIO_BOX_SINGLE);
     TEST_EQ(box.padding, 0);
     TEST_ASSERT(box.title == NULL);
     zephio_widget_destroy(&box.base);
@@ -660,13 +662,13 @@ TEST_BEGIN(box_init)
 
 TEST_BEGIN(box_init_null)
 {
-    TEST_NE(zephio_box_init(NULL, 0, 0, 30, 15, TUI_BOX_SINGLE), ZEPHIO_OK);
+    TEST_NE(zephio_box_init_ctx(NULL, NULL, 0, 0, 30, 15, ZEPHIO_BOX_SINGLE), ZEPHIO_OK);
 }
 
 TEST_BEGIN(box_set_title)
 {
     ZephioBox box;
-    zephio_box_init(&box, 0, 0, 30, 15, TUI_BOX_SINGLE);
+    zephio_box_init_ctx(&box, &g_test_ctx, 0, 0, 30, 15, ZEPHIO_BOX_SINGLE);
 
     zephio_box_set_title(&box, "Settings");
     TEST_ASSERT(box.title != NULL);
@@ -682,7 +684,7 @@ TEST_BEGIN(box_set_title)
 TEST_BEGIN(box_set_colors)
 {
     ZephioBox box;
-    zephio_box_init(&box, 0, 0, 30, 15, TUI_BOX_SINGLE);
+    zephio_box_init_ctx(&box, &g_test_ctx, 0, 0, 30, 15, ZEPHIO_BOX_SINGLE);
 
     ZephioColor fg = ZEPHIO_COLOR_INDEX(14);
     ZephioColor bg = ZEPHIO_COLOR_INDEX(0);
@@ -696,7 +698,7 @@ TEST_BEGIN(box_set_colors)
 TEST_BEGIN(box_set_attr)
 {
     ZephioBox box;
-    zephio_box_init(&box, 0, 0, 30, 15, TUI_BOX_SINGLE);
+    zephio_box_init_ctx(&box, &g_test_ctx, 0, 0, 30, 15, ZEPHIO_BOX_SINGLE);
 
     zephio_box_set_attr(&box, ZEPHIO_ATTR_BOLD);
     TEST_EQ(box.attr, ZEPHIO_ATTR_BOLD);
@@ -707,7 +709,7 @@ TEST_BEGIN(box_set_attr)
 TEST_BEGIN(box_set_padding)
 {
     ZephioBox box;
-    zephio_box_init(&box, 0, 0, 30, 15, TUI_BOX_SINGLE);
+    zephio_box_init_ctx(&box, &g_test_ctx, 0, 0, 30, 15, ZEPHIO_BOX_SINGLE);
 
     zephio_box_set_padding(&box, 2);
     TEST_EQ(box.padding, 2);
@@ -718,64 +720,64 @@ TEST_BEGIN(box_set_padding)
 
 TEST_BEGIN(box_render_single)
 {
-    zephio_screen_init(24, 80);
+    zephio_screen_init(&g_test_ctx, 24, 80);
     ZephioBox box;
-    zephio_box_init(&box, 0, 0, 10, 5, TUI_BOX_SINGLE);
+    zephio_box_init_ctx(&box, &g_test_ctx, 0, 0, 10, 5, ZEPHIO_BOX_SINGLE);
     box.base.dirty = 1;
 
     zephio_widget_render(&box.base);
     TEST_EQ(box.base.dirty, 0);
-    TEST_ASSERT(memcmp(g_screen.back[0].ch, "\xe2\x94\x8c", 3) == 0);
+    TEST_ASSERT(memcmp(g_test_ctx.screen.back[0].ch, "\xe2\x94\x8c", 3) == 0);
 
     zephio_widget_destroy(&box.base);
-    zephio_screen_free();
+    zephio_screen_free(&g_test_ctx);
 }
 
 TEST_BEGIN(box_render_double)
 {
-    zephio_screen_init(24, 80);
+    zephio_screen_init(&g_test_ctx, 24, 80);
     ZephioBox box;
-    zephio_box_init(&box, 0, 0, 10, 5, TUI_BOX_DOUBLE);
+    zephio_box_init_ctx(&box, &g_test_ctx, 0, 0, 10, 5, ZEPHIO_BOX_DOUBLE);
     box.base.dirty = 1;
 
     zephio_widget_render(&box.base);
     TEST_EQ(box.base.dirty, 0);
-    TEST_ASSERT(memcmp(g_screen.back[0].ch, "\xe2\x95\x94", 3) == 0);
+    TEST_ASSERT(memcmp(g_test_ctx.screen.back[0].ch, "\xe2\x95\x94", 3) == 0);
 
     zephio_widget_destroy(&box.base);
-    zephio_screen_free();
+    zephio_screen_free(&g_test_ctx);
 }
 
 TEST_BEGIN(box_render_too_small)
 {
-    zephio_screen_init(24, 80);
+    zephio_screen_init(&g_test_ctx, 24, 80);
     ZephioBox box;
-    zephio_box_init(&box, 0, 0, 1, 1, TUI_BOX_SINGLE);
+    zephio_box_init_ctx(&box, &g_test_ctx, 0, 0, 1, 1, ZEPHIO_BOX_SINGLE);
     box.base.dirty = 1;
 
     zephio_widget_render(&box.base);
     TEST_EQ(box.base.dirty, 0);
 
     zephio_widget_destroy(&box.base);
-    zephio_screen_free();
+    zephio_screen_free(&g_test_ctx);
 }
 
 TEST_BEGIN(box_render_with_title)
 {
-    zephio_screen_init(24, 80);
+    zephio_screen_init(&g_test_ctx, 24, 80);
     ZephioBox box;
-    zephio_box_init(&box, 0, 0, 20, 5, TUI_BOX_SINGLE);
+    zephio_box_init_ctx(&box, &g_test_ctx, 0, 0, 20, 5, ZEPHIO_BOX_SINGLE);
     zephio_box_set_title(&box, "Test");
     box.base.dirty = 1;
 
     zephio_widget_render(&box.base);
-    TEST_EQ(g_screen.back[0 * 80 + 2].ch[0], 'T');
-    TEST_EQ(g_screen.back[0 * 80 + 3].ch[0], 'e');
-    TEST_EQ(g_screen.back[0 * 80 + 4].ch[0], 's');
-    TEST_EQ(g_screen.back[0 * 80 + 5].ch[0], 't');
+    TEST_EQ(g_test_ctx.screen.back[0 * 80 + 2].ch[0], 'T');
+    TEST_EQ(g_test_ctx.screen.back[0 * 80 + 3].ch[0], 'e');
+    TEST_EQ(g_test_ctx.screen.back[0 * 80 + 4].ch[0], 's');
+    TEST_EQ(g_test_ctx.screen.back[0 * 80 + 5].ch[0], 't');
 
     zephio_widget_destroy(&box.base);
-    zephio_screen_free();
+    zephio_screen_free(&g_test_ctx);
 }
 
 /* ── List ───────────────────────────────────────────────────────── */
@@ -783,7 +785,7 @@ TEST_BEGIN(box_render_with_title)
 TEST_BEGIN(list_init)
 {
     ZephioList list;
-    ZephioResult res = zephio_list_init(&list, 0, 0, 30, 10);
+    ZephioResult res = zephio_list_init_ctx(&list, &g_test_ctx, 0, 0, 30, 10);
     TEST_EQ(res, ZEPHIO_OK);
     TEST_EQ(list.base.focusable, 1);
     TEST_EQ(list.item_count, 0);
@@ -794,13 +796,13 @@ TEST_BEGIN(list_init)
 
 TEST_BEGIN(list_init_null)
 {
-    TEST_NE(zephio_list_init(NULL, 0, 0, 30, 10), ZEPHIO_OK);
+    TEST_NE(zephio_list_init_ctx(NULL, NULL, 0, 0, 30, 10), ZEPHIO_OK);
 }
 
 TEST_BEGIN(list_add_item)
 {
     ZephioList list;
-    zephio_list_init(&list, 0, 0, 30, 10);
+    zephio_list_init_ctx(&list, &g_test_ctx, 0, 0, 30, 10);
 
     zephio_list_add_item(&list, "Item A");
     zephio_list_add_item(&list, "Item B");
@@ -817,7 +819,7 @@ TEST_BEGIN(list_add_item)
 TEST_BEGIN(list_add_null_item)
 {
     ZephioList list;
-    zephio_list_init(&list, 0, 0, 30, 10);
+    zephio_list_init_ctx(&list, &g_test_ctx, 0, 0, 30, 10);
 
     ZephioResult res = zephio_list_add_item(&list, NULL);
     TEST_EQ(res, ZEPHIO_OK);
@@ -830,7 +832,7 @@ TEST_BEGIN(list_add_null_item)
 TEST_BEGIN(list_remove_item)
 {
     ZephioList list;
-    zephio_list_init(&list, 0, 0, 30, 10);
+    zephio_list_init_ctx(&list, &g_test_ctx, 0, 0, 30, 10);
     zephio_list_add_item(&list, "A");
     zephio_list_add_item(&list, "B");
     zephio_list_add_item(&list, "C");
@@ -846,7 +848,7 @@ TEST_BEGIN(list_remove_item)
 TEST_BEGIN(list_remove_out_of_bounds)
 {
     ZephioList list;
-    zephio_list_init(&list, 0, 0, 30, 10);
+    zephio_list_init_ctx(&list, &g_test_ctx, 0, 0, 30, 10);
     zephio_list_add_item(&list, "A");
 
     zephio_list_remove_item(&list, -1);
@@ -861,7 +863,7 @@ TEST_BEGIN(list_remove_out_of_bounds)
 TEST_BEGIN(list_clear)
 {
     ZephioList list;
-    zephio_list_init(&list, 0, 0, 30, 10);
+    zephio_list_init_ctx(&list, &g_test_ctx, 0, 0, 30, 10);
     zephio_list_add_item(&list, "A");
     zephio_list_add_item(&list, "B");
 
@@ -877,7 +879,7 @@ TEST_BEGIN(list_clear)
 TEST_BEGIN(list_get_selected)
 {
     ZephioList list;
-    zephio_list_init(&list, 0, 0, 30, 10);
+    zephio_list_init_ctx(&list, &g_test_ctx, 0, 0, 30, 10);
     zephio_list_add_item(&list, "A");
     zephio_list_add_item(&list, "B");
 
@@ -900,7 +902,7 @@ TEST_BEGIN(list_get_selected_null)
 TEST_BEGIN(list_get_selected_empty)
 {
     ZephioList list;
-    zephio_list_init(&list, 0, 0, 30, 10);
+    zephio_list_init_ctx(&list, &g_test_ctx, 0, 0, 30, 10);
     TEST_ASSERT(zephio_list_get_selected_item(&list) == NULL);
     zephio_widget_destroy(&list.base);
 }
@@ -908,7 +910,7 @@ TEST_BEGIN(list_get_selected_empty)
 TEST_BEGIN(list_set_colors)
 {
     ZephioList list;
-    zephio_list_init(&list, 0, 0, 30, 10);
+    zephio_list_init_ctx(&list, &g_test_ctx, 0, 0, 30, 10);
 
     ZephioColor fg = ZEPHIO_COLOR_INDEX(15);
     ZephioColor bg = ZEPHIO_COLOR_INDEX(0);
@@ -926,7 +928,7 @@ TEST_BEGIN(list_set_colors)
 TEST_BEGIN(list_input_navigation)
 {
     ZephioList list;
-    zephio_list_init(&list, 0, 0, 30, 5);
+    zephio_list_init_ctx(&list, &g_test_ctx, 0, 0, 30, 5);
     zephio_list_add_item(&list, "A");
     zephio_list_add_item(&list, "B");
     zephio_list_add_item(&list, "C");
@@ -952,7 +954,7 @@ TEST_BEGIN(list_input_select)
     g_list_selected_idx = -1;
 
     ZephioList list;
-    zephio_list_init(&list, 0, 0, 30, 5);
+    zephio_list_init_ctx(&list, &g_test_ctx, 0, 0, 30, 5);
     zephio_list_add_item(&list, "A");
     zephio_list_add_item(&list, "B");
     zephio_list_set_on_select(&list, stub_list_on_select, NULL);
@@ -967,20 +969,20 @@ TEST_BEGIN(list_input_select)
 
 TEST_BEGIN(list_render)
 {
-    zephio_screen_init(24, 80);
+    zephio_screen_init(&g_test_ctx, 24, 80);
     ZephioList list;
-    zephio_list_init(&list, 0, 0, 20, 5);
+    zephio_list_init_ctx(&list, &g_test_ctx, 0, 0, 20, 5);
     zephio_list_add_item(&list, "Hello");
     list.base.dirty = 1;
     list.base.focused = 1;
 
     zephio_widget_render(&list.base);
     TEST_EQ(list.base.dirty, 0);
-    TEST_EQ(g_screen.back[0].ch[0], '>');
-    TEST_EQ(g_screen.back[1].ch[0], 'H');
+    TEST_EQ(g_test_ctx.screen.back[0].ch[0], '>');
+    TEST_EQ(g_test_ctx.screen.back[1].ch[0], 'H');
 
     zephio_widget_destroy(&list.base);
-    zephio_screen_free();
+    zephio_screen_free(&g_test_ctx);
 }
 
 /* ── InputField ─────────────────────────────────────────────────── */
@@ -988,7 +990,7 @@ TEST_BEGIN(list_render)
 TEST_BEGIN(input_field_init)
 {
     ZephioInputField f;
-    ZephioResult res = zephio_input_field_init(&f, 0, 0, 30, 256);
+    ZephioResult res = zephio_input_field_init_ctx(&f, &g_test_ctx, 0, 0, 30, 256);
     TEST_EQ(res, ZEPHIO_OK);
     TEST_EQ(f.base.focusable, 1);
     TEST_EQ(f.text_capacity, 256);
@@ -1000,13 +1002,13 @@ TEST_BEGIN(input_field_init)
 
 TEST_BEGIN(input_field_init_null)
 {
-    TEST_NE(zephio_input_field_init(NULL, 0, 0, 30, 256), ZEPHIO_OK);
+    TEST_NE(zephio_input_field_init_ctx(NULL, NULL, 0, 0, 30, 256), ZEPHIO_OK);
 }
 
 TEST_BEGIN(input_field_set_text)
 {
     ZephioInputField f;
-    zephio_input_field_init(&f, 0, 0, 30, 256);
+    zephio_input_field_init_ctx(&f, &g_test_ctx, 0, 0, 30, 256);
 
     zephio_input_field_set_text(&f, "Hello");
     TEST_ASSERT(f.text != NULL);
@@ -1024,7 +1026,7 @@ TEST_BEGIN(input_field_set_text)
 TEST_BEGIN(input_field_get_text)
 {
     ZephioInputField f;
-    zephio_input_field_init(&f, 0, 0, 30, 256);
+    zephio_input_field_init_ctx(&f, &g_test_ctx, 0, 0, 30, 256);
 
     TEST_STR_EQ(zephio_input_field_get_text(&f), "");
 
@@ -1039,7 +1041,7 @@ TEST_BEGIN(input_field_get_text)
 TEST_BEGIN(input_field_set_colors)
 {
     ZephioInputField f;
-    zephio_input_field_init(&f, 0, 0, 30, 256);
+    zephio_input_field_init_ctx(&f, &g_test_ctx, 0, 0, 30, 256);
 
     ZephioColor fg = ZEPHIO_COLOR_INDEX(15);
     ZephioColor bg = ZEPHIO_COLOR_INDEX(234);
@@ -1057,7 +1059,7 @@ TEST_BEGIN(input_field_set_colors)
 TEST_BEGIN(input_field_typing)
 {
     ZephioInputField f;
-    zephio_input_field_init(&f, 0, 0, 30, 256);
+    zephio_input_field_init_ctx(&f, &g_test_ctx, 0, 0, 30, 256);
 
     ZephioEvent e = {0};
     e.key = ZEPHIO_KEY_UNKNOWN;
@@ -1078,7 +1080,7 @@ TEST_BEGIN(input_field_typing)
 TEST_BEGIN(input_field_backspace)
 {
     ZephioInputField f;
-    zephio_input_field_init(&f, 0, 0, 30, 256);
+    zephio_input_field_init_ctx(&f, &g_test_ctx, 0, 0, 30, 256);
     zephio_input_field_set_text(&f, "ABC");
     f.cursor_pos = 3;
 
@@ -1094,7 +1096,7 @@ TEST_BEGIN(input_field_backspace)
 TEST_BEGIN(input_field_delete)
 {
     ZephioInputField f;
-    zephio_input_field_init(&f, 0, 0, 30, 256);
+    zephio_input_field_init_ctx(&f, &g_test_ctx, 0, 0, 30, 256);
     zephio_input_field_set_text(&f, "ABC");
     f.cursor_pos = 1;
 
@@ -1110,7 +1112,7 @@ TEST_BEGIN(input_field_delete)
 TEST_BEGIN(input_field_cursor_movement)
 {
     ZephioInputField f;
-    zephio_input_field_init(&f, 0, 0, 30, 256);
+    zephio_input_field_init_ctx(&f, &g_test_ctx, 0, 0, 30, 256);
     zephio_input_field_set_text(&f, "ABCDE");
 
     ZephioEvent left = {0};
@@ -1134,7 +1136,7 @@ TEST_BEGIN(input_field_cursor_movement)
 TEST_BEGIN(input_field_home_end)
 {
     ZephioInputField f;
-    zephio_input_field_init(&f, 0, 0, 30, 256);
+    zephio_input_field_init_ctx(&f, &g_test_ctx, 0, 0, 30, 256);
     zephio_input_field_set_text(&f, "ABCDE");
 
     ZephioEvent home = {0};
@@ -1155,7 +1157,7 @@ TEST_BEGIN(input_field_submit)
     g_field_submitted = 0;
 
     ZephioInputField f;
-    zephio_input_field_init(&f, 0, 0, 30, 256);
+    zephio_input_field_init_ctx(&f, &g_test_ctx, 0, 0, 30, 256);
     zephio_input_field_set_on_submit(&f, stub_field_on_submit, NULL);
 
     ZephioEvent enter = {0};
@@ -1171,7 +1173,7 @@ TEST_BEGIN(input_field_on_change)
     g_field_change_count = 0;
 
     ZephioInputField f;
-    zephio_input_field_init(&f, 0, 0, 30, 256);
+    zephio_input_field_init_ctx(&f, &g_test_ctx, 0, 0, 30, 256);
     zephio_input_field_set_on_change(&f, stub_field_on_change, NULL);
 
     ZephioEvent e = {0};
@@ -1185,26 +1187,26 @@ TEST_BEGIN(input_field_on_change)
 
 TEST_BEGIN(input_field_render)
 {
-    zephio_screen_init(24, 80);
+    zephio_screen_init(&g_test_ctx, 24, 80);
     ZephioInputField f;
-    zephio_input_field_init(&f, 0, 0, 20, 256);
+    zephio_input_field_init_ctx(&f, &g_test_ctx, 0, 0, 20, 256);
     zephio_input_field_set_text(&f, "Hi");
     f.base.dirty = 1;
     f.base.focused = 1;
 
     zephio_widget_render(&f.base);
     TEST_EQ(f.base.dirty, 0);
-    TEST_EQ(g_screen.back[0].ch[0], 'H');
-    TEST_EQ(g_screen.back[1].ch[0], 'i');
+    TEST_EQ(g_test_ctx.screen.back[0].ch[0], 'H');
+    TEST_EQ(g_test_ctx.screen.back[1].ch[0], 'i');
 
     zephio_widget_destroy(&f.base);
-    zephio_screen_free();
+    zephio_screen_free(&g_test_ctx);
 }
 
 TEST_BEGIN(input_field_capacity_truncation)
 {
     ZephioInputField f;
-    zephio_input_field_init(&f, 0, 0, 20, 5);
+    zephio_input_field_init_ctx(&f, &g_test_ctx, 0, 0, 20, 5);
 
     zephio_input_field_set_text(&f, "ABCDE");
     TEST_STR_EQ(f.text, "ABCD");
