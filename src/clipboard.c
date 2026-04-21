@@ -1,6 +1,6 @@
-#include "tui_clipboard.h"
-#include "tui_terminal.h"
-#include "tui_context.h"
+#include "zephio_clipboard.h"
+#include "zephio_terminal.h"
+#include "zephio_context.h"
 
 #include <stdlib.h>
 #include <string.h>
@@ -33,13 +33,13 @@ static size_t base64_encoded_size(size_t len)
     return ((len + 2) / 3) * 4;
 }
 
-int tui_clipboard_copy(TuiContext *ctx, const char *text)
+int zephio_clipboard_copy(ZephioContext *ctx, const char *text)
 {
     if (!text) return -1;
-    return tui_clipboard_copy_n(ctx, text, strlen(text));
+    return zephio_clipboard_copy_n(ctx, text, strlen(text));
 }
 
-int tui_clipboard_copy_n(TuiContext *ctx, const char *data, size_t len)
+int zephio_clipboard_copy_n(ZephioContext *ctx, const char *data, size_t len)
 {
     if (!data || len == 0) return -1;
 

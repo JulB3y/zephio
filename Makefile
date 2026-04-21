@@ -9,7 +9,7 @@ LIBDIR  := lib
 
 SRCS    := $(wildcard $(SRCDIR)/*.c)
 OBJS    := $(patsubst $(SRCDIR)/%.c,$(BUILDDIR)/%.o,$(SRCS))
-LIB     := $(LIBDIR)/libtui.a
+LIB     := $(LIBDIR)/libzephio.a
 
 EXAMPLES := $(patsubst examples/%.c,$(BUILDDIR)/%,$(wildcard examples/*.c))
 TESTS    := $(patsubst tests/%.c,$(BUILDDIR)/test_%,$(wildcard tests/*.c))
@@ -48,13 +48,13 @@ $(BUILDDIR)/%.o: $(SRCDIR)/%.c
 
 $(BUILDDIR)/%: examples/%.c $(LIB)
 	@mkdir -p $(BUILDDIR)
-	$(CC) $(CFLAGS) $< -L$(LIBDIR) -ltui $(LDFLAGS) -o $@
+	$(CC) $(CFLAGS) $< -L$(LIBDIR) -lzephio $(LDFLAGS) -o $@
 
 examples: $(EXAMPLES)
 
 $(BUILDDIR)/test_%: tests/%.c $(LIB)
 	@mkdir -p $(BUILDDIR)
-	$(CC) $(CFLAGS) -Itests $< -L$(LIBDIR) -ltui $(LDFLAGS) -o $@
+	$(CC) $(CFLAGS) -Itests $< -L$(LIBDIR) -lzephio $(LDFLAGS) -o $@
 
 clean:
 	rm -rf $(BUILDDIR) $(LIBDIR)

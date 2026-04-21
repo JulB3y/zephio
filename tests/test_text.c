@@ -1,5 +1,5 @@
 #include "util.h"
-#include "tui_text.h"
+#include "zephio_text.h"
 
 #include <string.h>
 
@@ -194,41 +194,41 @@ TEST_BEGIN(utf8_char_width_combining)
 TEST_BEGIN(text_width_ascii)
 {
     const char *s = "Hello";
-    TEST_EQ(tui_text_width(s, strlen(s)), 5);
+    TEST_EQ(zephio_text_width(s, strlen(s)), 5);
 }
 
 
 TEST_BEGIN(text_width_null)
 {
-    TEST_EQ(tui_text_width(NULL, 0), 0);
+    TEST_EQ(zephio_text_width(NULL, 0), 0);
 }
 
 
 TEST_BEGIN(text_width_mixed)
 {
     const char *s = "A\xE2\x82\xAC""Z";
-    TEST_EQ(tui_text_width(s, strlen(s)), 3);
+    TEST_EQ(zephio_text_width(s, strlen(s)), 3);
 }
 
 
 TEST_BEGIN(text_width_cjk)
 {
     const char *s = "\xE4\xB8\xAD\xE6\x96\x87";
-    TEST_EQ(tui_text_width(s, strlen(s)), 4);
+    TEST_EQ(zephio_text_width(s, strlen(s)), 4);
 }
 
 
 TEST_BEGIN(text_width_stops_at_newline)
 {
     const char *s = "AB\nCD";
-    TEST_EQ(tui_text_width(s, strlen(s)), 2);
+    TEST_EQ(zephio_text_width(s, strlen(s)), 2);
 }
 
 
 TEST_BEGIN(text_str_width_basic)
 {
-    TEST_EQ(tui_text_str_width("abc"), 3);
-    TEST_EQ(tui_text_str_width(NULL), 0);
+    TEST_EQ(zephio_text_str_width("abc"), 3);
+    TEST_EQ(zephio_text_str_width(NULL), 0);
 }
 
 
@@ -238,7 +238,7 @@ TEST_BEGIN(text_clip_basic)
 {
     const char *s = "Hello, world!";
     size_t out_len;
-    int w = tui_text_clip(s, strlen(s), 5, &out_len);
+    int w = zephio_text_clip(s, strlen(s), 5, &out_len);
     TEST_EQ(w, 5);
     TEST_EQ((int)out_len, 5);
     TEST_ASSERT(memcmp(s, "Hello", 5) == 0);
@@ -249,7 +249,7 @@ TEST_BEGIN(text_clip_exact)
 {
     const char *s = "Hello";
     size_t out_len;
-    int w = tui_text_clip(s, strlen(s), 5, &out_len);
+    int w = zephio_text_clip(s, strlen(s), 5, &out_len);
     TEST_EQ(w, 5);
     TEST_EQ((int)out_len, 5);
 }
@@ -259,7 +259,7 @@ TEST_BEGIN(text_clip_shorter)
 {
     const char *s = "Hi";
     size_t out_len;
-    int w = tui_text_clip(s, strlen(s), 10, &out_len);
+    int w = zephio_text_clip(s, strlen(s), 10, &out_len);
     TEST_EQ(w, 2);
     TEST_EQ((int)out_len, 2);
 }
@@ -268,7 +268,7 @@ TEST_BEGIN(text_clip_shorter)
 TEST_BEGIN(text_clip_zero_width)
 {
     size_t out_len = 99;
-    int w = tui_text_clip("Hello", 5, 0, &out_len);
+    int w = zephio_text_clip("Hello", 5, 0, &out_len);
     TEST_EQ(w, 0);
     TEST_EQ((int)out_len, 0);
 }
@@ -277,7 +277,7 @@ TEST_BEGIN(text_clip_zero_width)
 TEST_BEGIN(text_clip_null)
 {
     size_t out_len = 99;
-    int w = tui_text_clip(NULL, 0, 5, &out_len);
+    int w = zephio_text_clip(NULL, 0, 5, &out_len);
     TEST_EQ(w, 0);
     TEST_EQ((int)out_len, 0);
 }
@@ -287,7 +287,7 @@ TEST_BEGIN(text_clip_wide_char)
 {
     const char *s = "\xE4\xB8\xAD""AB";
     size_t out_len;
-    int w = tui_text_clip(s, strlen(s), 3, &out_len);
+    int w = zephio_text_clip(s, strlen(s), 3, &out_len);
     TEST_EQ(w, 3);
     TEST_EQ((int)out_len, 4);
 }
@@ -297,7 +297,7 @@ TEST_BEGIN(text_clip_wide_overflow)
 {
     const char *s = "A\xE4\xB8\xAD""B";
     size_t out_len;
-    int w = tui_text_clip(s, strlen(s), 2, &out_len);
+    int w = zephio_text_clip(s, strlen(s), 2, &out_len);
     TEST_EQ(w, 1);
     TEST_EQ((int)out_len, 1);
 }
@@ -308,7 +308,7 @@ TEST_BEGIN(text_clip_wide_overflow)
 TEST_BEGIN(text_truncate_noop)
 {
     char out[64];
-    tui_text_truncate("Hi", 2, 10, "~", out, sizeof(out));
+    zephio_text_truncate("Hi", 2, 10, "~", out, sizeof(out));
     TEST_STR_EQ(out, "Hi");
 }
 
@@ -316,7 +316,7 @@ TEST_BEGIN(text_truncate_noop)
 TEST_BEGIN(text_truncate_with_ellipsis)
 {
     char out[64];
-    tui_text_truncate("Hello, world!", 13, 7, "...", out, sizeof(out));
+    zephio_text_truncate("Hello, world!", 13, 7, "...", out, sizeof(out));
     TEST_STR_EQ(out, "Hell...");
 }
 
@@ -324,7 +324,7 @@ TEST_BEGIN(text_truncate_with_ellipsis)
 TEST_BEGIN(text_truncate_null_text)
 {
     char out[16] = "X";
-    tui_text_truncate(NULL, 0, 10, "~", out, sizeof(out));
+    zephio_text_truncate(NULL, 0, 10, "~", out, sizeof(out));
     TEST_EQ(out[0], '\0');
 }
 
@@ -332,7 +332,7 @@ TEST_BEGIN(text_truncate_null_text)
 TEST_BEGIN(text_truncate_small_buffer)
 {
     char out[4];
-    tui_text_truncate("Hello", 5, 10, "~", out, sizeof(out));
+    zephio_text_truncate("Hello", 5, 10, "~", out, sizeof(out));
     TEST_STR_EQ(out, "Hel");
 }
 
@@ -343,7 +343,7 @@ TEST_BEGIN(word_wrap_basic)
 {
     const char *s = "Hello world foo";
     int breaks[8];
-    int n = tui_text_word_wrap(s, strlen(s), 6, breaks, 8);
+    int n = zephio_text_word_wrap(s, strlen(s), 6, breaks, 8);
     TEST_EQ(n, 2);
 }
 
@@ -352,7 +352,7 @@ TEST_BEGIN(word_wrap_newline)
 {
     const char *s = "Hello\nWorld";
     int breaks[4];
-    int n = tui_text_word_wrap(s, strlen(s), 80, breaks, 4);
+    int n = zephio_text_word_wrap(s, strlen(s), 80, breaks, 4);
     TEST_EQ(n, 1);
     TEST_EQ(breaks[0], 5);
 }
@@ -361,7 +361,7 @@ TEST_BEGIN(word_wrap_newline)
 TEST_BEGIN(word_wrap_null)
 {
     int breaks[4];
-    TEST_EQ(tui_text_word_wrap(NULL, 0, 10, breaks, 4), 0);
+    TEST_EQ(zephio_text_word_wrap(NULL, 0, 10, breaks, 4), 0);
 }
 
 
@@ -369,7 +369,7 @@ TEST_BEGIN(word_wrap_no_wrap_needed)
 {
     const char *s = "Short";
     int breaks[4];
-    int n = tui_text_word_wrap(s, strlen(s), 80, breaks, 4);
+    int n = zephio_text_word_wrap(s, strlen(s), 80, breaks, 4);
     TEST_EQ(n, 0);
 }
 
@@ -379,34 +379,34 @@ TEST_BEGIN(word_wrap_no_wrap_needed)
 TEST_BEGIN(index_to_col_basic)
 {
     const char *s = "Hello";
-    TEST_EQ(tui_text_index_to_col(s, strlen(s), 0), 0);
-    TEST_EQ(tui_text_index_to_col(s, strlen(s), 3), 3);
-    TEST_EQ(tui_text_index_to_col(s, strlen(s), 5), 5);
+    TEST_EQ(zephio_text_index_to_col(s, strlen(s), 0), 0);
+    TEST_EQ(zephio_text_index_to_col(s, strlen(s), 3), 3);
+    TEST_EQ(zephio_text_index_to_col(s, strlen(s), 5), 5);
 }
 
 
 TEST_BEGIN(index_to_col_wide)
 {
     const char *s = "\xE4\xB8\xAD""AB";
-    TEST_EQ(tui_text_index_to_col(s, strlen(s), 3), 2);
-    TEST_EQ(tui_text_index_to_col(s, strlen(s), 4), 3);
+    TEST_EQ(zephio_text_index_to_col(s, strlen(s), 3), 2);
+    TEST_EQ(zephio_text_index_to_col(s, strlen(s), 4), 3);
 }
 
 
 TEST_BEGIN(col_to_index_basic)
 {
     const char *s = "Hello";
-    TEST_EQ(tui_text_col_to_index(s, strlen(s), 0), 0);
-    TEST_EQ(tui_text_col_to_index(s, strlen(s), 3), 3);
-    TEST_EQ(tui_text_col_to_index(s, strlen(s), 5), 5);
+    TEST_EQ(zephio_text_col_to_index(s, strlen(s), 0), 0);
+    TEST_EQ(zephio_text_col_to_index(s, strlen(s), 3), 3);
+    TEST_EQ(zephio_text_col_to_index(s, strlen(s), 5), 5);
 }
 
 
 TEST_BEGIN(col_to_index_wide)
 {
     const char *s = "\xE4\xB8\xAD""AB";
-    TEST_EQ(tui_text_col_to_index(s, strlen(s), 2), 3);
-    TEST_EQ(tui_text_col_to_index(s, strlen(s), 3), 4);
+    TEST_EQ(zephio_text_col_to_index(s, strlen(s), 2), 3);
+    TEST_EQ(zephio_text_col_to_index(s, strlen(s), 3), 4);
 }
 
 
@@ -414,17 +414,17 @@ TEST_BEGIN(col_to_index_wide)
 
 TEST_BEGIN(expand_tab)
 {
-    TEST_EQ(tui_text_expand_tab(0, 8), 8);
-    TEST_EQ(tui_text_expand_tab(4, 8), 4);
-    TEST_EQ(tui_text_expand_tab(7, 8), 1);
-    TEST_EQ(tui_text_expand_tab(8, 8), 8);
+    TEST_EQ(zephio_text_expand_tab(0, 8), 8);
+    TEST_EQ(zephio_text_expand_tab(4, 8), 4);
+    TEST_EQ(zephio_text_expand_tab(7, 8), 1);
+    TEST_EQ(zephio_text_expand_tab(8, 8), 8);
 }
 
 
 TEST_BEGIN(expand_tabs_basic)
 {
     char out[64];
-    int n = tui_text_expand_tabs("\tHello", 6, 4, out, sizeof(out));
+    int n = zephio_text_expand_tabs("\tHello", 6, 4, out, sizeof(out));
     TEST_EQ(n, 4 + 5);
     TEST_STR_EQ(out, "    Hello");
 }
@@ -433,7 +433,7 @@ TEST_BEGIN(expand_tabs_basic)
 TEST_BEGIN(expand_tabs_mixed)
 {
     char out[64];
-    int n = tui_text_expand_tabs("A\tB", 3, 4, out, sizeof(out));
+    int n = zephio_text_expand_tabs("A\tB", 3, 4, out, sizeof(out));
     TEST_EQ(n, 5);
     TEST_STR_EQ(out, "A   B");
 }

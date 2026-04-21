@@ -1,13 +1,13 @@
 #define _POSIX_C_SOURCE 200809L
 
-#include "tui_animator.h"
+#include "zephio_animator.h"
 
 #include <stdlib.h>
 #include <string.h>
 
-TuiAnimator *tui_animator_new(void)
+ZephioAnimator *zephio_animator_new(void)
 {
-    TuiAnimator *a = (TuiAnimator *)calloc(1, sizeof(TuiAnimator));
+    ZephioAnimator *a = (ZephioAnimator *)calloc(1, sizeof(ZephioAnimator));
     if (!a) return NULL;
     a->count        = 0;
     a->next_id      = 1;
@@ -15,14 +15,14 @@ TuiAnimator *tui_animator_new(void)
     return a;
 }
 
-void tui_animator_free(TuiAnimator *animator)
+void zephio_animator_free(ZephioAnimator *animator)
 {
     if (!animator) return;
-    tui_animator_stop_all(animator);
+    zephio_animator_stop_all(animator);
     free(animator);
 }
 
-static int find_slot(const TuiAnimator *animator, int id)
+static int find_slot(const ZephioAnimator *animator, int id)
 {
     for (int i = 0; i < animator->count; i++) {
         if (animator->animations[i].id == id)
@@ -31,9 +31,9 @@ static int find_slot(const TuiAnimator *animator, int id)
     return -1;
 }
 
-int tui_animator_create(TuiAnimator *animator, double duration_ms,
-                        TuiEasing easing, TuiAnimUpdateFn on_update,
-                        TuiAnimCompleteFn on_complete, void *user_data)
+int zephio_animator_create(ZephioAnimator *animator, double duration_ms,
+                        ZephioEasing easing, ZephioAnimUpdateFn on_update,
+                        ZephioAnimCompleteFn on_complete, void *user_data)
 {
     if (!animator) return ZEPHIO_ANIMATOR_INVALID_ID;
     if (animator->count >= ZEPHIO_ANIMATOR_MAX_ANIMATIONS)
@@ -42,86 +42,86 @@ int tui_animator_create(TuiAnimator *animator, double duration_ms,
     int slot = animator->count;
     int id   = animator->next_id++;
 
-    TuiAnimation *anim = &animator->animations[slot];
-    tui_animation_init(anim, duration_ms, easing, on_update, on_complete, user_data);
+    ZephioAnimation *anim = &animator->animations[slot];
+    zephio_animation_init(anim, duration_ms, easing, on_update, on_complete, user_data);
     anim->id = id;
 
     animator->count++;
     return id;
 }
 
-void tui_animator_remove(TuiAnimator *animator, int id)
+void zephio_animator_remove(ZephioAnimator *animator, int id)
 {
     if (!animator) return;
     int slot = find_slot(animator, id);
     if (slot < 0) return;
 
-    TuiAnimation *anim = &animator->animations[slot];
-    if (anim->state == TUI_ANIM_PLAYING)
+    ZephioAnimation *anim = &animator->animations[slot];
+    if (anim->state == ZEPHIO_ANIM_PLAYING)
         animator->active_count--;
 
     int last = animator->count - 1;
     if (slot < last)
         memmove(&animator->animations[slot], &animator->animations[slot + 1],
-                (last - slot) * sizeof(TuiAnimation));
+                (last - slot) * sizeof(ZephioAnimation));
     animator->count--;
 }
 
-void tui_animator_play(TuiAnimator *animator, int id)
+void zephio_animator_play(ZephioAnimator *animator, int id)
 {
     if (!animator) return;
-    TuiAnimation *anim = tui_animator_get(animator, id);
+    ZephioAnimation *anim = zephio_animator_get(animator, id);
     if (!anim) return;
 
-    TuiAnimState prev = anim->state;
-    tui_animation_play(anim);
-    if (prev != TUI_ANIM_PLAYING && anim->state == TUI_ANIM_PLAYING)
+    ZephioAnimState prev = anim->state;
+    zephio_animation_play(anim);
+    if (prev != ZEPHIO_ANIM_PLAYING && anim->state == ZEPHIO_ANIM_PLAYING)
         animator->active_count++;
 }
 
-void tui_animator_pause(TuiAnimator *animator, int id)
+void zephio_animator_pause(ZephioAnimator *animator, int id)
 {
     if (!animator) return;
-    TuiAnimation *anim = tui_animator_get(animator, id);
+    ZephioAnimation *anim = zephio_animator_get(animator, id);
     if (!anim) return;
 
-    TuiAnimState prev = anim->state;
-    tui_animation_pause(anim);
-    if (prev == TUI_ANIM_PLAYING && anim->state == TUI_ANIM_PAUSED)
+    ZephioAnimState prev = anim->state;
+    zephio_animation_pause(anim);
+    if (prev == ZEPHIO_ANIM_PLAYING && anim->state == ZEPHIO_ANIM_PAUSED)
         animator->active_count--;
 }
 
-void tui_animator_stop(TuiAnimator *animator, int id)
+void zephio_animator_stop(ZephioAnimator *animator, int id)
 {
     if (!animator) return;
-    TuiAnimation *anim = tui_animator_get(animator, id);
+    ZephioAnimation *anim = zephio_animator_get(animator, id);
     if (!anim) return;
 
-    if (anim->state == TUI_ANIM_PLAYING)
+    if (anim->state == ZEPHIO_ANIM_PLAYING)
         animator->active_count--;
-    tui_animation_stop(anim);
+    zephio_animation_stop(anim);
 }
 
-void tui_animator_update(TuiAnimator *animator, double delta_ms)
+void zephio_animator_update(ZephioAnimator *animator, double delta_ms)
 {
     if (!animator || delta_ms <= 0.0) return;
 
     for (int i = 0; i < animator->count; i++) {
-        TuiAnimation *anim = &animator->animations[i];
-        TuiAnimState prev = anim->state;
-        tui_animation_update(anim, delta_ms);
-        if (prev == TUI_ANIM_PLAYING && anim->state == TUI_ANIM_COMPLETED)
+        ZephioAnimation *anim = &animator->animations[i];
+        ZephioAnimState prev = anim->state;
+        zephio_animation_update(anim, delta_ms);
+        if (prev == ZEPHIO_ANIM_PLAYING && anim->state == ZEPHIO_ANIM_COMPLETED)
             animator->active_count--;
     }
 }
 
-int tui_animator_is_active(const TuiAnimator *animator)
+int zephio_animator_is_active(const ZephioAnimator *animator)
 {
     if (!animator) return 0;
     return animator->active_count > 0 ? 1 : 0;
 }
 
-TuiAnimation *tui_animator_get(TuiAnimator *animator, int id)
+ZephioAnimation *zephio_animator_get(ZephioAnimator *animator, int id)
 {
     if (!animator) return NULL;
     int slot = find_slot(animator, id);
@@ -129,11 +129,11 @@ TuiAnimation *tui_animator_get(TuiAnimator *animator, int id)
     return &animator->animations[slot];
 }
 
-void tui_animator_stop_all(TuiAnimator *animator)
+void zephio_animator_stop_all(ZephioAnimator *animator)
 {
     if (!animator) return;
     for (int i = 0; i < animator->count; i++) {
-        tui_animation_stop(&animator->animations[i]);
+        zephio_animation_stop(&animator->animations[i]);
     }
     animator->active_count = 0;
     animator->count = 0;

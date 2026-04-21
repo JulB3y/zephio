@@ -1,33 +1,33 @@
 #define _POSIX_C_SOURCE 200809L
 
-#include "tui_list.h"
-#include "tui_context.h"
+#include "zephio_list.h"
+#include "zephio_context.h"
 
 #include <stdlib.h>
 #include <string.h>
 
 #define ITEMS_INITIAL_CAPACITY 8
 
-static void list_render(TuiWidget *widget)
+static void list_render(ZephioWidget *widget)
 {
-    TuiList *list = (TuiList *)widget;
+    ZephioList *list = (ZephioList *)widget;
 
     for (int i = 0; i < widget->height; i++) {
         int idx = list->scroll_offset + i;
         if (idx >= list->item_count) break;
 
-        TuiColor fg;
-        TuiColor bg;
-        TuiAttr attr;
+        ZephioColor fg;
+        ZephioColor bg;
+        ZephioAttr attr;
 
         if (widget->theme) {
-            TuiWidgetState state = TUI_STATE_NORMAL;
+            ZephioWidgetState state = ZEPHIO_STATE_NORMAL;
             if (widget->disabled) {
-                state = TUI_STATE_DISABLED;
+                state = ZEPHIO_STATE_DISABLED;
             } else if (idx == list->selected && widget->focused) {
-                state = TUI_STATE_FOCUSED;
+                state = ZEPHIO_STATE_FOCUSED;
             }
-            TuiStyle style = widget->theme->styles[state];
+            ZephioStyle style = widget->theme->styles[state];
             fg   = style.fg;
             bg   = style.bg;
             attr = style.attr;
@@ -43,7 +43,7 @@ static void list_render(TuiWidget *widget)
             }
         }
 
-        tui_screen_fill(widget->ctx, widget->abs_y + i, widget->abs_x,
+        zephio_screen_fill(widget->ctx, widget->abs_y + i, widget->abs_x,
                         widget->width, 1, " ", fg, bg, attr);
 
         if (list->items[idx]) {
@@ -62,15 +62,15 @@ static void list_render(TuiWidget *widget)
                 prefix[0] = '>';
             }
 
-            tui_screen_write(widget->ctx, widget->abs_y + i, widget->abs_x,
+            zephio_screen_write(widget->ctx, widget->abs_y + i, widget->abs_x,
                              prefix, fg, bg, attr);
-            tui_screen_write(widget->ctx, widget->abs_y + i, widget->abs_x + 1,
+            zephio_screen_write(widget->ctx, widget->abs_y + i, widget->abs_x + 1,
                              buf, fg, bg, attr);
         }
     }
 }
 
-static void list_ensure_visible(TuiList *list)
+static void list_ensure_visible(ZephioList *list)
 {
     if (list->selected < list->scroll_offset) {
         list->scroll_offset = list->selected;
@@ -81,11 +81,11 @@ static void list_ensure_visible(TuiList *list)
     }
 }
 
-static int list_handle_input(TuiWidget *widget, const TuiEvent *event)
+static int list_handle_input(ZephioWidget *widget, const ZephioEvent *event)
 {
-    TuiList *list = (TuiList *)widget;
+    ZephioList *list = (ZephioList *)widget;
 
-    if (event->key == TUI_KEY_UP) {
+    if (event->key == ZEPHIO_KEY_UP) {
         if (list->selected > 0) {
             list->selected--;
             list_ensure_visible(list);
@@ -94,7 +94,7 @@ static int list_handle_input(TuiWidget *widget, const TuiEvent *event)
         return 1;
     }
 
-    if (event->key == TUI_KEY_DOWN) {
+    if (event->key == ZEPHIO_KEY_DOWN) {
         if (list->selected < list->item_count - 1) {
             list->selected++;
             list_ensure_visible(list);
@@ -103,7 +103,7 @@ static int list_handle_input(TuiWidget *widget, const TuiEvent *event)
         return 1;
     }
 
-    if (event->key == TUI_KEY_ENTER) {
+    if (event->key == ZEPHIO_KEY_ENTER) {
         if (list->on_select && list->item_count > 0) {
             list->on_select(widget, list->selected,
                             list->items[list->selected], list->user_data);
@@ -114,11 +114,11 @@ static int list_handle_input(TuiWidget *widget, const TuiEvent *event)
     return 0;
 }
 
-static int list_handle_mouse(TuiWidget *widget, const TuiMouseEvent *mouse)
+static int list_handle_mouse(ZephioWidget *widget, const ZephioMouseEvent *mouse)
 {
-    TuiList *list = (TuiList *)widget;
+    ZephioList *list = (ZephioList *)widget;
 
-    if (mouse->action != TUI_MOUSE_PRESS || mouse->button != TUI_MOUSE_BTN_LEFT)
+    if (mouse->action != ZEPHIO_MOUSE_PRESS || mouse->button != ZEPHIO_MOUSE_BTN_LEFT)
         return 0;
 
     int idx = list->scroll_offset + (mouse->row - widget->abs_y);
@@ -136,9 +136,9 @@ static int list_handle_mouse(TuiWidget *widget, const TuiMouseEvent *mouse)
     return 1;
 }
 
-static void list_destroy(TuiWidget *widget)
+static void list_destroy(ZephioWidget *widget)
 {
-    TuiList *list = (TuiList *)widget;
+    ZephioList *list = (ZephioList *)widget;
 
     for (int i = 0; i < list->item_count; i++) {
         free(list->items[i]);
@@ -149,7 +149,7 @@ static void list_destroy(TuiWidget *widget)
     list->item_capacity = 0;
 }
 
-static TuiWidgetVTable list_vtable = {
+static ZephioWidgetVTable list_vtable = {
     .render       = list_render,
     .handle_input = list_handle_input,
     .handle_mouse = list_handle_mouse,
@@ -159,13 +159,13 @@ static TuiWidgetVTable list_vtable = {
     .on_blur      = NULL
 };
 
-TuiResult tui_list_init_ctx(TuiList *list, TuiContext *ctx, int x, int y, int width, int height)
+ZephioResult zephio_list_init_ctx(ZephioList *list, ZephioContext *ctx, int x, int y, int width, int height)
 {
     if (!list) return TUI_ERR_MEMORY;
 
-    TuiResult res = tui_widget_init_ctx(&list->base, x, y, width, height,
+    ZephioResult res = zephio_widget_init_ctx(&list->base, x, y, width, height,
                                         &list_vtable, ctx, NULL);
-    if (res != TUI_OK) return res;
+    if (res != ZEPHIO_OK) return res;
 
     list->base.focusable = 1;
 
@@ -182,10 +182,10 @@ TuiResult tui_list_init_ctx(TuiList *list, TuiContext *ctx, int x, int y, int wi
     list->on_select     = NULL;
     list->user_data     = NULL;
 
-    return TUI_OK;
+    return ZEPHIO_OK;
 }
 
-TuiResult tui_list_add_item(TuiList *list, const char *item)
+ZephioResult zephio_list_add_item(ZephioList *list, const char *item)
 {
     if (!list) return TUI_ERR_MEMORY;
 
@@ -206,10 +206,10 @@ TuiResult tui_list_add_item(TuiList *list, const char *item)
     list->item_count++;
     list->base.dirty = 1;
 
-    return TUI_OK;
+    return ZEPHIO_OK;
 }
 
-void tui_list_remove_item(TuiList *list, int index)
+void zephio_list_remove_item(ZephioList *list, int index)
 {
     if (!list || index < 0 || index >= list->item_count) return;
 
@@ -226,7 +226,7 @@ void tui_list_remove_item(TuiList *list, int index)
     list->base.dirty = 1;
 }
 
-void tui_list_clear(TuiList *list)
+void zephio_list_clear(ZephioList *list)
 {
     if (!list) return;
 
@@ -239,20 +239,20 @@ void tui_list_clear(TuiList *list)
     list->base.dirty   = 1;
 }
 
-int tui_list_get_selected(TuiList *list)
+int zephio_list_get_selected(ZephioList *list)
 {
     if (!list) return -1;
     return list->selected;
 }
 
-const char *tui_list_get_selected_item(TuiList *list)
+const char *zephio_list_get_selected_item(ZephioList *list)
 {
     if (!list || list->item_count == 0) return NULL;
     return list->items[list->selected];
 }
 
-void tui_list_set_colors(TuiList *list, TuiColor fg, TuiColor bg,
-                         TuiColor fg_selected, TuiColor bg_selected)
+void zephio_list_set_colors(ZephioList *list, ZephioColor fg, ZephioColor bg,
+                         ZephioColor fg_selected, ZephioColor bg_selected)
 {
     if (!list) return;
     list->fg           = fg;
@@ -262,7 +262,7 @@ void tui_list_set_colors(TuiList *list, TuiColor fg, TuiColor bg,
     list->base.dirty   = 1;
 }
 
-void tui_list_set_on_select(TuiList *list, TuiListCallback callback,
+void zephio_list_set_on_select(ZephioList *list, ZephioListCallback callback,
                             void *user_data)
 {
     if (!list) return;

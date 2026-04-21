@@ -1,13 +1,13 @@
 #define _POSIX_C_SOURCE 200809L
 
-#include "tui_input_field.h"
-#include "tui_context.h"
-#include "tui_text.h"
+#include "zephio_input_field.h"
+#include "zephio_context.h"
+#include "zephio_text.h"
 
 #include <stdlib.h>
 #include <string.h>
 
-static void input_field_update_scroll(TuiInputField *field)
+static void input_field_update_scroll(ZephioInputField *field)
 {
     if (!field->text) {
         field->scroll_offset = 0;
@@ -17,8 +17,8 @@ static void input_field_update_scroll(TuiInputField *field)
     int text_len = (int)strlen(field->text);
     int visible = field->base.width;
 
-    int cursor_col = tui_text_index_to_col(field->text, (size_t)text_len, (size_t)field->cursor_pos);
-    int scroll_col = tui_text_index_to_col(field->text, (size_t)text_len, (size_t)field->scroll_offset);
+    int cursor_col = zephio_text_index_to_col(field->text, (size_t)text_len, (size_t)field->cursor_pos);
+    int scroll_col = zephio_text_index_to_col(field->text, (size_t)text_len, (size_t)field->scroll_offset);
 
     if (cursor_col < scroll_col) {
         scroll_col = cursor_col;
@@ -28,19 +28,19 @@ static void input_field_update_scroll(TuiInputField *field)
         scroll_col = cursor_col - visible + 1;
     }
 
-    field->scroll_offset = tui_text_col_to_index(field->text, (size_t)text_len, scroll_col);
+    field->scroll_offset = zephio_text_col_to_index(field->text, (size_t)text_len, scroll_col);
 }
 
-static void input_field_render(TuiWidget *widget)
+static void input_field_render(ZephioWidget *widget)
 {
-    TuiInputField *field = (TuiInputField *)widget;
+    ZephioInputField *field = (ZephioInputField *)widget;
 
-    TuiColor fg;
-    TuiColor bg;
-    TuiAttr attr;
+    ZephioColor fg;
+    ZephioColor bg;
+    ZephioAttr attr;
 
     if (widget->theme) {
-        TuiStyle style = tui_widget_get_style(widget);
+        ZephioStyle style = zephio_widget_get_style(widget);
         fg   = style.fg;
         bg   = style.bg;
         attr = style.attr;
@@ -50,7 +50,7 @@ static void input_field_render(TuiWidget *widget)
         attr = field->attr;
     }
 
-    tui_screen_fill(widget->ctx, widget->abs_y, widget->abs_x,
+    zephio_screen_fill(widget->ctx, widget->abs_y, widget->abs_x,
                     widget->width, 1, " ", fg, bg, attr);
 
     if (field->text && field->text[0]) {
@@ -60,7 +60,7 @@ static void input_field_render(TuiWidget *widget)
 
         if (start < text_len) {
             size_t clip_len;
-            tui_text_clip(field->text + start, (size_t)(text_len - start),
+            zephio_text_clip(field->text + start, (size_t)(text_len - start),
                           visible, &clip_len);
 
             char buf[1024];
@@ -69,7 +69,7 @@ static void input_field_render(TuiWidget *widget)
             memcpy(buf, field->text + start, (size_t)copy_len);
             buf[copy_len] = '\0';
 
-            tui_screen_write(widget->ctx, widget->abs_y, widget->abs_x,
+            zephio_screen_write(widget->ctx, widget->abs_y, widget->abs_x,
                              buf, fg, bg, attr);
         }
     }
@@ -86,10 +86,10 @@ static void input_field_render(TuiWidget *widget)
             pos += clen;
         }
         if (cursor_col >= 0 && cursor_col < widget->width) {
-            TuiColor cursor_fg = field->cursor_fg;
-            TuiColor cursor_bg = field->cursor_bg;
+            ZephioColor cursor_fg = field->cursor_fg;
+            ZephioColor cursor_bg = field->cursor_bg;
             if (widget->theme) {
-                TuiStyle focused = widget->theme->styles[TUI_STATE_FOCUSED];
+                ZephioStyle focused = widget->theme->styles[ZEPHIO_STATE_FOCUSED];
                 cursor_fg = focused.bg;
                 cursor_bg = focused.fg;
             }
@@ -97,19 +97,19 @@ static void input_field_render(TuiWidget *widget)
             if (field->cursor_pos < text_len) {
                 cursor_ch = field->text + field->cursor_pos;
             }
-            tui_screen_set_cell(widget->ctx, widget->abs_y, widget->abs_x + cursor_col,
+            zephio_screen_set_cell(widget->ctx, widget->abs_y, widget->abs_x + cursor_col,
                                 cursor_ch, cursor_fg, cursor_bg,
                                 ZEPHIO_ATTR_NONE);
         }
     }
 }
 
-static int input_field_handle_input(TuiWidget *widget, const TuiEvent *event)
+static int input_field_handle_input(ZephioWidget *widget, const ZephioEvent *event)
 {
-    TuiInputField *field = (TuiInputField *)widget;
+    ZephioInputField *field = (ZephioInputField *)widget;
     int text_len = field->text ? (int)strlen(field->text) : 0;
 
-    if (event->key == TUI_KEY_LEFT) {
+    if (event->key == ZEPHIO_KEY_LEFT) {
         if (field->cursor_pos > 0) {
             int back = 1;
             while (back < field->cursor_pos &&
@@ -123,7 +123,7 @@ static int input_field_handle_input(TuiWidget *widget, const TuiEvent *event)
         return 1;
     }
 
-    if (event->key == TUI_KEY_RIGHT) {
+    if (event->key == ZEPHIO_KEY_RIGHT) {
         if (field->cursor_pos < text_len) {
             int fwd = tui_utf8_char_len((unsigned char)field->text[field->cursor_pos]);
             if (field->cursor_pos + fwd > text_len) fwd = text_len - field->cursor_pos;
@@ -134,21 +134,21 @@ static int input_field_handle_input(TuiWidget *widget, const TuiEvent *event)
         return 1;
     }
 
-    if (event->key == TUI_KEY_HOME) {
+    if (event->key == ZEPHIO_KEY_HOME) {
         field->cursor_pos = 0;
         input_field_update_scroll(field);
         widget->dirty = 1;
         return 1;
     }
 
-    if (event->key == TUI_KEY_END) {
+    if (event->key == ZEPHIO_KEY_END) {
         field->cursor_pos = text_len;
         input_field_update_scroll(field);
         widget->dirty = 1;
         return 1;
     }
 
-    if (event->key == TUI_KEY_BACKSPACE) {
+    if (event->key == ZEPHIO_KEY_BACKSPACE) {
         if (field->cursor_pos > 0 && text_len > 0) {
             int back = 1;
             while (back < field->cursor_pos &&
@@ -168,7 +168,7 @@ static int input_field_handle_input(TuiWidget *widget, const TuiEvent *event)
         return 1;
     }
 
-    if (event->key == TUI_KEY_DELETE) {
+    if (event->key == ZEPHIO_KEY_DELETE) {
         if (field->cursor_pos < text_len && text_len > 0) {
             int fwd = tui_utf8_char_len((unsigned char)field->text[field->cursor_pos]);
             if (field->cursor_pos + fwd > text_len) fwd = text_len - field->cursor_pos;
@@ -183,14 +183,14 @@ static int input_field_handle_input(TuiWidget *widget, const TuiEvent *event)
         return 1;
     }
 
-    if (event->key == TUI_KEY_ENTER) {
+    if (event->key == ZEPHIO_KEY_ENTER) {
         if (field->on_submit) {
             field->on_submit(widget, field->text, field->user_data);
         }
         return 1;
     }
 
-    if (event->codepoint >= 32 && event->key == TUI_KEY_UNKNOWN) {
+    if (event->codepoint >= 32 && event->key == ZEPHIO_KEY_UNKNOWN) {
         char enc[4];
         int char_len = tui_utf8_encode(event->codepoint, enc, sizeof(enc));
         if (char_len == 0) return 1;
@@ -220,14 +220,14 @@ static int input_field_handle_input(TuiWidget *widget, const TuiEvent *event)
     return 0;
 }
 
-static void input_field_destroy(TuiWidget *widget)
+static void input_field_destroy(ZephioWidget *widget)
 {
-    TuiInputField *field = (TuiInputField *)widget;
+    ZephioInputField *field = (ZephioInputField *)widget;
     free(field->text);
     field->text = NULL;
 }
 
-static TuiWidgetVTable input_field_vtable = {
+static ZephioWidgetVTable input_field_vtable = {
     .render       = input_field_render,
     .handle_input = input_field_handle_input,
     .handle_mouse = NULL,
@@ -237,15 +237,15 @@ static TuiWidgetVTable input_field_vtable = {
     .on_blur      = NULL
 };
 
-TuiResult tui_input_field_init_ctx(TuiInputField *field, TuiContext *ctx, int x, int y, int width,
+ZephioResult zephio_input_field_init_ctx(ZephioInputField *field, ZephioContext *ctx, int x, int y, int width,
                                    int capacity)
 {
     if (!field) return TUI_ERR_MEMORY;
     if (capacity <= 0) capacity = 256;
 
-    TuiResult res = tui_widget_init_ctx(&field->base, x, y, width, 1,
+    ZephioResult res = zephio_widget_init_ctx(&field->base, x, y, width, 1,
                                         &input_field_vtable, ctx, NULL);
-    if (res != TUI_OK) return res;
+    if (res != ZEPHIO_OK) return res;
 
     field->base.focusable = 1;
 
@@ -262,10 +262,10 @@ TuiResult tui_input_field_init_ctx(TuiInputField *field, TuiContext *ctx, int x,
     field->on_submit      = NULL;
     field->user_data      = NULL;
 
-    return TUI_OK;
+    return ZEPHIO_OK;
 }
 
-void tui_input_field_set_text(TuiInputField *field, const char *text)
+void zephio_input_field_set_text(ZephioInputField *field, const char *text)
 {
     if (!field) return;
     free(field->text);
@@ -288,14 +288,14 @@ void tui_input_field_set_text(TuiInputField *field, const char *text)
     field->base.dirty = 1;
 }
 
-const char *tui_input_field_get_text(TuiInputField *field)
+const char *zephio_input_field_get_text(ZephioInputField *field)
 {
     if (!field) return NULL;
     return field->text ? field->text : "";
 }
 
-void tui_input_field_set_colors(TuiInputField *field, TuiColor fg, TuiColor bg,
-                                TuiColor cursor_fg, TuiColor cursor_bg)
+void zephio_input_field_set_colors(ZephioInputField *field, ZephioColor fg, ZephioColor bg,
+                                ZephioColor cursor_fg, ZephioColor cursor_bg)
 {
     if (!field) return;
     field->fg         = fg;
@@ -305,8 +305,8 @@ void tui_input_field_set_colors(TuiInputField *field, TuiColor fg, TuiColor bg,
     field->base.dirty = 1;
 }
 
-void tui_input_field_set_on_change(TuiInputField *field,
-                                   TuiInputFieldCallback callback,
+void zephio_input_field_set_on_change(ZephioInputField *field,
+                                   ZephioInputFieldCallback callback,
                                    void *user_data)
 {
     if (!field) return;
@@ -314,8 +314,8 @@ void tui_input_field_set_on_change(TuiInputField *field,
     field->user_data = user_data;
 }
 
-void tui_input_field_set_on_submit(TuiInputField *field,
-                                   TuiInputFieldCallback callback,
+void zephio_input_field_set_on_submit(ZephioInputField *field,
+                                   ZephioInputFieldCallback callback,
                                    void *user_data)
 {
     if (!field) return;

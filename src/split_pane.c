@@ -1,13 +1,13 @@
 #define _POSIX_C_SOURCE 200809L
 
-#include "tui_split_pane.h"
-#include "tui_context.h"
-#include "tui_screen.h"
+#include "zephio_split_pane.h"
+#include "zephio_context.h"
+#include "zephio_screen.h"
 
-static void clamp_split_pos(TuiSplitPane *pane)
+static void clamp_split_pos(ZephioSplitPane *pane)
 {
     int total;
-    if (pane->orientation == TUI_SPLIT_HORIZONTAL) {
+    if (pane->orientation == ZEPHIO_SPLIT_HORIZONTAL) {
         total = pane->base.width;
     } else {
         total = pane->base.height;
@@ -29,20 +29,20 @@ static void clamp_split_pos(TuiSplitPane *pane)
     if (pane->split_pos > total - min2) pane->split_pos = total - min2;
 }
 
-static void split_render(TuiWidget *widget)
+static void split_render(ZephioWidget *widget)
 {
-    TuiSplitPane *pane = (TuiSplitPane *)widget;
+    ZephioSplitPane *pane = (ZephioSplitPane *)widget;
     clamp_split_pos(pane);
 
-    TuiStyle style = tui_widget_get_style(widget);
-    tui_screen_fill(widget->ctx, widget->abs_y, widget->abs_x,
+    ZephioStyle style = zephio_widget_get_style(widget);
+    zephio_screen_fill(widget->ctx, widget->abs_y, widget->abs_x,
                     widget->width, widget->height,
                     " ", style.fg, style.bg, style.attr);
 
     int p1_x, p1_y, p1_w, p1_h;
     int p2_x, p2_y, p2_w, p2_h;
 
-    if (pane->orientation == TUI_SPLIT_HORIZONTAL) {
+    if (pane->orientation == ZEPHIO_SPLIT_HORIZONTAL) {
         p1_x = widget->abs_x;
         p1_y = widget->abs_y;
         p1_w = pane->split_pos;
@@ -55,7 +55,7 @@ static void split_render(TuiWidget *widget)
 
         int sep_x = widget->abs_x + pane->split_pos;
         for (int r = 0; r < widget->height; r++) {
-            tui_screen_set_cell(widget->ctx, widget->abs_y + r, sep_x,
+            zephio_screen_set_cell(widget->ctx, widget->abs_y + r, sep_x,
                                 "\xe2\x94\x83",
                                 pane->sep_fg, pane->sep_bg,
                                 pane->sep_attr);
@@ -73,7 +73,7 @@ static void split_render(TuiWidget *widget)
 
         int sep_y = widget->abs_y + pane->split_pos;
         for (int c = 0; c < widget->width; c++) {
-            tui_screen_set_cell(widget->ctx, sep_y, widget->abs_x + c,
+            zephio_screen_set_cell(widget->ctx, sep_y, widget->abs_x + c,
                                 "\xe2\x94\x81",
                                 pane->sep_fg, pane->sep_bg,
                                 pane->sep_attr);
@@ -81,7 +81,7 @@ static void split_render(TuiWidget *widget)
     }
 
     if (widget->child_count >= 1) {
-        TuiWidget *child = widget->children[0];
+        ZephioWidget *child = widget->children[0];
         if (child->visible) {
             child->abs_x = p1_x;
             child->abs_y = p1_y;
@@ -90,12 +90,12 @@ static void split_render(TuiWidget *widget)
             }
             child->width  = p1_w;
             child->height = p1_h;
-            tui_widget_render(child);
+            zephio_widget_render(child);
         }
     }
 
     if (widget->child_count >= 2) {
-        TuiWidget *child = widget->children[1];
+        ZephioWidget *child = widget->children[1];
         if (child->visible) {
             child->abs_x = p2_x;
             child->abs_y = p2_y;
@@ -104,17 +104,17 @@ static void split_render(TuiWidget *widget)
             }
             child->width  = p2_w;
             child->height = p2_h;
-            tui_widget_render(child);
+            zephio_widget_render(child);
         }
     }
 }
 
-static int split_handle_input(TuiWidget *widget, const TuiEvent *event)
+static int split_handle_input(ZephioWidget *widget, const ZephioEvent *event)
 {
-    TuiSplitPane *pane = (TuiSplitPane *)widget;
+    ZephioSplitPane *pane = (ZephioSplitPane *)widget;
 
-    if (event->modifiers & TUI_MOD_CTRL) {
-        if (event->key == TUI_KEY_LEFT && pane->orientation == TUI_SPLIT_HORIZONTAL) {
+    if (event->modifiers & ZEPHIO_MOD_CTRL) {
+        if (event->key == ZEPHIO_KEY_LEFT && pane->orientation == ZEPHIO_SPLIT_HORIZONTAL) {
             if (pane->split_pos > pane->min_pane1) {
                 pane->split_pos--;
                 clamp_split_pos(pane);
@@ -122,13 +122,13 @@ static int split_handle_input(TuiWidget *widget, const TuiEvent *event)
             }
             return 1;
         }
-        if (event->key == TUI_KEY_RIGHT && pane->orientation == TUI_SPLIT_HORIZONTAL) {
+        if (event->key == ZEPHIO_KEY_RIGHT && pane->orientation == ZEPHIO_SPLIT_HORIZONTAL) {
             pane->split_pos++;
             clamp_split_pos(pane);
             widget->dirty = 1;
             return 1;
         }
-        if (event->key == TUI_KEY_UP && pane->orientation == TUI_SPLIT_VERTICAL) {
+        if (event->key == ZEPHIO_KEY_UP && pane->orientation == ZEPHIO_SPLIT_VERTICAL) {
             if (pane->split_pos > pane->min_pane1) {
                 pane->split_pos--;
                 clamp_split_pos(pane);
@@ -136,7 +136,7 @@ static int split_handle_input(TuiWidget *widget, const TuiEvent *event)
             }
             return 1;
         }
-        if (event->key == TUI_KEY_DOWN && pane->orientation == TUI_SPLIT_VERTICAL) {
+        if (event->key == ZEPHIO_KEY_DOWN && pane->orientation == ZEPHIO_SPLIT_VERTICAL) {
             pane->split_pos++;
             clamp_split_pos(pane);
             widget->dirty = 1;
@@ -145,7 +145,7 @@ static int split_handle_input(TuiWidget *widget, const TuiEvent *event)
     }
 
     for (int i = 0; i < widget->child_count; i++) {
-        TuiWidget *child = widget->children[i];
+        ZephioWidget *child = widget->children[i];
         if (child->focused && child->vtable && child->vtable->handle_input) {
             int consumed = child->vtable->handle_input(child, event);
             if (consumed) return 1;
@@ -155,9 +155,9 @@ static int split_handle_input(TuiWidget *widget, const TuiEvent *event)
     return 0;
 }
 
-static int is_on_separator(TuiSplitPane *pane, int row, int col)
+static int is_on_separator(ZephioSplitPane *pane, int row, int col)
 {
-    if (pane->orientation == TUI_SPLIT_HORIZONTAL) {
+    if (pane->orientation == ZEPHIO_SPLIT_HORIZONTAL) {
         int sep_col = pane->base.abs_x + pane->split_pos;
         return col == sep_col &&
                row >= pane->base.abs_y &&
@@ -170,14 +170,14 @@ static int is_on_separator(TuiSplitPane *pane, int row, int col)
     }
 }
 
-static int split_handle_mouse(TuiWidget *widget, const TuiMouseEvent *mouse)
+static int split_handle_mouse(ZephioWidget *widget, const ZephioMouseEvent *mouse)
 {
-    TuiSplitPane *pane = (TuiSplitPane *)widget;
+    ZephioSplitPane *pane = (ZephioSplitPane *)widget;
 
-    if (mouse->action == TUI_MOUSE_PRESS && mouse->button == TUI_MOUSE_BTN_LEFT) {
+    if (mouse->action == ZEPHIO_MOUSE_PRESS && mouse->button == ZEPHIO_MOUSE_BTN_LEFT) {
         if (is_on_separator(pane, mouse->row, mouse->col)) {
             pane->dragging = 1;
-            if (pane->orientation == TUI_SPLIT_HORIZONTAL) {
+            if (pane->orientation == ZEPHIO_SPLIT_HORIZONTAL) {
                 pane->drag_origin = mouse->col;
             } else {
                 pane->drag_origin = mouse->row;
@@ -187,9 +187,9 @@ static int split_handle_mouse(TuiWidget *widget, const TuiMouseEvent *mouse)
         }
     }
 
-    if (pane->dragging && mouse->action == TUI_MOUSE_MOTION) {
+    if (pane->dragging && mouse->action == ZEPHIO_MOUSE_MOTION) {
         int delta;
-        if (pane->orientation == TUI_SPLIT_HORIZONTAL) {
+        if (pane->orientation == ZEPHIO_SPLIT_HORIZONTAL) {
             delta = mouse->col - pane->drag_origin;
         } else {
             delta = mouse->row - pane->drag_origin;
@@ -200,15 +200,15 @@ static int split_handle_mouse(TuiWidget *widget, const TuiMouseEvent *mouse)
         return 1;
     }
 
-    if (pane->dragging && mouse->action == TUI_MOUSE_RELEASE) {
+    if (pane->dragging && mouse->action == ZEPHIO_MOUSE_RELEASE) {
         pane->dragging = 0;
         return 1;
     }
 
     for (int i = 0; i < widget->child_count; i++) {
-        TuiWidget *child = widget->children[i];
-        if (child->visible && tui_widget_contains(child, mouse->row, mouse->col)) {
-            int consumed = tui_widget_handle_mouse(child, mouse);
+        ZephioWidget *child = widget->children[i];
+        if (child->visible && zephio_widget_contains(child, mouse->row, mouse->col)) {
+            int consumed = zephio_widget_handle_mouse(child, mouse);
             if (consumed) return 1;
         }
     }
@@ -216,16 +216,16 @@ static int split_handle_mouse(TuiWidget *widget, const TuiMouseEvent *mouse)
     return 0;
 }
 
-static void split_on_resize(TuiWidget *widget, int width, int height)
+static void split_on_resize(ZephioWidget *widget, int width, int height)
 {
-    TuiSplitPane *pane = (TuiSplitPane *)widget;
+    ZephioSplitPane *pane = (ZephioSplitPane *)widget;
     widget->width  = width;
     widget->height = height;
     clamp_split_pos(pane);
     widget->dirty = 1;
 }
 
-static TuiWidgetVTable split_vtable = {
+static ZephioWidgetVTable split_vtable = {
     .render       = split_render,
     .handle_input = split_handle_input,
     .handle_mouse = split_handle_mouse,
@@ -235,15 +235,15 @@ static TuiWidgetVTable split_vtable = {
     .on_blur      = NULL
 };
 
-TuiResult tui_split_pane_init_ctx(TuiSplitPane *pane, TuiContext *ctx, int x, int y,
+ZephioResult zephio_split_pane_init_ctx(ZephioSplitPane *pane, ZephioContext *ctx, int x, int y,
                                   int width, int height,
-                                  TuiSplitOrientation orientation)
+                                  ZephioSplitOrientation orientation)
 {
     if (!pane) return TUI_ERR_MEMORY;
 
-    TuiResult res = tui_widget_init_ctx(&pane->base, x, y, width, height,
+    ZephioResult res = zephio_widget_init_ctx(&pane->base, x, y, width, height,
                                         &split_vtable, ctx, NULL);
-    if (res != TUI_OK) return res;
+    if (res != ZEPHIO_OK) return res;
 
     pane->base.focusable        = 0;
     pane->base.manages_children = 1;
@@ -256,22 +256,22 @@ TuiResult tui_split_pane_init_ctx(TuiSplitPane *pane, TuiContext *ctx, int x, in
     pane->drag_origin     = 0;
     pane->drag_split_origin = 0;
 
-    if (orientation == TUI_SPLIT_HORIZONTAL) {
+    if (orientation == ZEPHIO_SPLIT_HORIZONTAL) {
         pane->split_pos = width / 2;
     } else {
         pane->split_pos = height / 2;
     }
 
-    pane->sep_fg   = ZEPHIO_COLOR_INDEX(TUI_COLOR_BRIGHT_CYAN);
-    pane->sep_bg   = ZEPHIO_COLOR_INDEX(TUI_COLOR_BG_DARK);
+    pane->sep_fg   = ZEPHIO_COLOR_INDEX(ZEPHIO_COLOR_BRIGHT_CYAN);
+    pane->sep_bg   = ZEPHIO_COLOR_INDEX(ZEPHIO_COLOR_BG_DARK);
     pane->sep_attr = ZEPHIO_ATTR_DIM;
 
     clamp_split_pos(pane);
 
-    return TUI_OK;
+    return ZEPHIO_OK;
 }
 
-void tui_split_pane_set_position(TuiSplitPane *pane, int pos)
+void zephio_split_pane_set_position(ZephioSplitPane *pane, int pos)
 {
     if (!pane) return;
     pane->split_pos = pos;
@@ -279,13 +279,13 @@ void tui_split_pane_set_position(TuiSplitPane *pane, int pos)
     pane->base.dirty = 1;
 }
 
-int tui_split_pane_get_position(const TuiSplitPane *pane)
+int zephio_split_pane_get_position(const ZephioSplitPane *pane)
 {
     if (!pane) return 0;
     return pane->split_pos;
 }
 
-void tui_split_pane_set_min_sizes(TuiSplitPane *pane, int min_pane1,
+void zephio_split_pane_set_min_sizes(ZephioSplitPane *pane, int min_pane1,
                                   int min_pane2)
 {
     if (!pane) return;
@@ -295,8 +295,8 @@ void tui_split_pane_set_min_sizes(TuiSplitPane *pane, int min_pane1,
     pane->base.dirty = 1;
 }
 
-void tui_split_pane_set_separator_style(TuiSplitPane *pane, TuiColor fg,
-                                        TuiColor bg, TuiAttr attr)
+void zephio_split_pane_set_separator_style(ZephioSplitPane *pane, ZephioColor fg,
+                                        ZephioColor bg, ZephioAttr attr)
 {
     if (!pane) return;
     pane->sep_fg   = fg;
@@ -305,25 +305,25 @@ void tui_split_pane_set_separator_style(TuiSplitPane *pane, TuiColor fg,
     pane->base.dirty = 1;
 }
 
-void tui_split_pane_set_panes(TuiSplitPane *pane, TuiWidget *pane1,
-                              TuiWidget *pane2)
+void zephio_split_pane_set_panes(ZephioSplitPane *pane, ZephioWidget *pane1,
+                              ZephioWidget *pane2)
 {
     if (!pane) return;
 
-    tui_widget_remove_all_children(&pane->base);
+    zephio_widget_remove_all_children(&pane->base);
 
-    if (pane1) tui_widget_add_child(&pane->base, pane1);
-    if (pane2) tui_widget_add_child(&pane->base, pane2);
+    if (pane1) zephio_widget_add_child(&pane->base, pane1);
+    if (pane2) zephio_widget_add_child(&pane->base, pane2);
 
     pane->base.dirty = 1;
 }
 
-void tui_split_pane_get_pane1_rect(const TuiSplitPane *pane,
+void tui_split_pane_get_pane1_rect(const ZephioSplitPane *pane,
                                    int *x, int *y, int *w, int *h)
 {
     if (!pane) return;
 
-    if (pane->orientation == TUI_SPLIT_HORIZONTAL) {
+    if (pane->orientation == ZEPHIO_SPLIT_HORIZONTAL) {
         if (x) *x = pane->base.abs_x;
         if (y) *y = pane->base.abs_y;
         if (w) *w = pane->split_pos;
@@ -336,12 +336,12 @@ void tui_split_pane_get_pane1_rect(const TuiSplitPane *pane,
     }
 }
 
-void tui_split_pane_get_pane2_rect(const TuiSplitPane *pane,
+void tui_split_pane_get_pane2_rect(const ZephioSplitPane *pane,
                                    int *x, int *y, int *w, int *h)
 {
     if (!pane) return;
 
-    if (pane->orientation == TUI_SPLIT_HORIZONTAL) {
+    if (pane->orientation == ZEPHIO_SPLIT_HORIZONTAL) {
         if (x) *x = pane->base.abs_x + pane->split_pos + pane->separator_size;
         if (y) *y = pane->base.abs_y;
         if (w) *w = pane->base.width - pane->split_pos - pane->separator_size;

@@ -1,21 +1,21 @@
 #define _POSIX_C_SOURCE 200809L
 
-#include "tui_app.h"
-#include "tui_animator.h"
-#include "tui_terminal.h"
-#include "tui_screen.h"
-#include "tui_mouse.h"
-#include "tui_context.h"
+#include "zephio_app.h"
+#include "zephio_animator.h"
+#include "zephio_terminal.h"
+#include "zephio_screen.h"
+#include "zephio_mouse.h"
+#include "zephio_context.h"
 
 #include <poll.h>
 #include <stdlib.h>
 #include <string.h>
 #include <time.h>
 
-static void tui_app_stop(TuiApp *app);
-static TuiWidget *tui_app_top_overlay(TuiApp *app);
-static int tui_app_handle_overlay_input(TuiApp *app, const TuiEvent *event);
-static int tui_app_handle_overlay_mouse(TuiApp *app, const TuiMouseEvent *mouse);
+static void zephio_app_stop(ZephioApp *app);
+static ZephioWidget *zephio_app_top_overlay(ZephioApp *app);
+static int zephio_app_handle_overlay_input(ZephioApp *app, const ZephioEvent *event);
+static int zephio_app_handle_overlay_mouse(ZephioApp *app, const ZephioMouseEvent *mouse);
 
 static double time_now_ms(void)
 {
@@ -24,9 +24,9 @@ static double time_now_ms(void)
     return ts.tv_sec * 1000.0 + ts.tv_nsec / 1000000.0;
 }
 
-TuiApp *tui_app_new(TuiContext *ctx, const TuiAppConfig *config)
+ZephioApp *zephio_app_new(ZephioContext *ctx, const ZephioAppConfig *config)
 {
-    TuiApp *app = (TuiApp *)calloc(1, sizeof(TuiApp));
+    ZephioApp *app = (ZephioApp *)calloc(1, sizeof(ZephioApp));
     if (!app) return NULL;
 
     app->ctx = ctx;
@@ -38,24 +38,24 @@ TuiApp *tui_app_new(TuiContext *ctx, const TuiAppConfig *config)
     app->running       = 0;
     app->exit_code     = 0;
     app->overlay_count = 0;
-    app->animator      = tui_animator_new();
+    app->animator      = zephio_animator_new();
     app->last_tick_ms  = 0.0;
 
-    tui_toast_manager_init(&app->toasts);
+    zephio_toast_manager_init(&app->toasts);
 
     return app;
 }
 
-void tui_app_free(TuiApp *app)
+void zephio_app_free(ZephioApp *app)
 {
     if (app) {
-        tui_toast_manager_free(&app->toasts);
-        tui_animator_free(app->animator);
+        zephio_toast_manager_free(&app->toasts);
+        zephio_animator_free(app->animator);
         free(app);
     }
 }
 
-static void __attribute__((unused)) tui_app_stop(TuiApp *app)
+static void __attribute__((unused)) zephio_app_stop(ZephioApp *app)
 {
     if (app) {
         app->running   = 0;
@@ -63,7 +63,7 @@ static void __attribute__((unused)) tui_app_stop(TuiApp *app)
     }
 }
 
-static int app_poll_event(TuiApp *app, TuiEvent *event)
+static int app_poll_event(ZephioApp *app, ZephioEvent *event)
 {
     if (app->config.tick_rate_ms > 0) {
         struct pollfd pfd = { app->ctx->terminal.fd, POLLIN, 0 };
@@ -75,25 +75,25 @@ static int app_poll_event(TuiApp *app, TuiEvent *event)
         }
 
         if (ret < 0) {
-            TuiResult res = tui_input_poll(app->ctx, event);
-            return (res == TUI_OK) ? 1 : -1;
+            ZephioResult res = zephio_input_poll(app->ctx, event);
+            return (res == ZEPHIO_OK) ? 1 : -1;
         }
     }
 
-    TuiResult res = tui_input_poll(app->ctx, event);
-    if (res != TUI_OK) return -1;
+    ZephioResult res = zephio_input_poll(app->ctx, event);
+    if (res != ZEPHIO_OK) return -1;
     return 1;
 }
 
-int tui_app_run(TuiApp *app)
+int zephio_app_run(ZephioApp *app)
 {
     if (!app) return 1;
 
-    TuiResult res = tui_init(app->ctx);
-    if (res != TUI_OK) return 1;
+    ZephioResult res = zephio_init(app->ctx);
+    if (res != ZEPHIO_OK) return 1;
 
-    tui_input_init(app->ctx);
-    tui_mouse_enable(app->ctx);
+    zephio_input_init(app->ctx);
+    zephio_mouse_enable(app->ctx);
 
     app->running   = 1;
     app->exit_code = 0;
@@ -113,7 +113,7 @@ int tui_app_run(TuiApp *app)
     app->last_tick_ms = time_now_ms();
 
     while (app->running) {
-        TuiEvent event;
+        ZephioEvent event;
         int has_event = app_poll_event(app, &event);
 
         {
@@ -123,8 +123,8 @@ int tui_app_run(TuiApp *app)
             if (delta < 0.0 || delta > 1000.0) delta = 16.0;
 
             if (app->animator)
-                tui_animator_update(app->animator, delta);
-            tui_toast_update(&app->toasts, delta);
+                zephio_animator_update(app->animator, delta);
+            zephio_toast_update(&app->toasts, delta);
         }
 
         if (has_event < 0) {
@@ -138,8 +138,8 @@ int tui_app_run(TuiApp *app)
             continue;
         }
 
-        if (event.key == TUI_EVENT_RESIZE) {
-            tui_screen_resize(app->ctx, event.size.rows, event.size.cols);
+        if (event.key == ZEPHIO_EVENT_RESIZE) {
+            zephio_screen_resize(app->ctx, event.size.rows, event.size.cols);
 
             if (app->config.on_resize) {
                 int ret = app->config.on_resize(
@@ -157,9 +157,9 @@ int tui_app_run(TuiApp *app)
             continue;
         }
 
-        if (event.key == TUI_EVENT_MOUSE) {
+        if (event.key == ZEPHIO_EVENT_MOUSE) {
             if (app->overlay_count > 0) {
-                tui_app_handle_overlay_mouse(app, &event.mouse);
+                zephio_app_handle_overlay_mouse(app, &event.mouse);
             } else if (app->config.on_mouse) {
                 int ret = app->config.on_mouse(app, &event.mouse,
                                                app->config.user_data);
@@ -176,7 +176,7 @@ int tui_app_run(TuiApp *app)
         }
 
         if (app->overlay_count > 0) {
-            tui_app_handle_overlay_input(app, &event);
+            zephio_app_handle_overlay_input(app, &event);
         } else if (app->config.on_input) {
             int ret = app->config.on_input(app, &event, app->config.user_data);
             if (ret != 0) {
@@ -195,13 +195,13 @@ cleanup:
         app->config.on_shutdown(app, app->config.user_data);
     }
 
-    tui_input_shutdown(app->ctx);
-    tui_shutdown(app->ctx);
+    zephio_input_shutdown(app->ctx);
+    zephio_shutdown(app->ctx);
 
     return app->exit_code;
 }
 
-TuiResult tui_app_push_overlay(TuiApp *app, TuiWidget *widget)
+ZephioResult zephio_app_push_overlay(ZephioApp *app, ZephioWidget *widget)
 {
     if (!app || !widget) return TUI_ERR_MEMORY;
     if (app->overlay_count >= ZEPHIO_APP_MAX_OVERLAYS) return TUI_ERR_MEMORY;
@@ -210,87 +210,87 @@ TuiResult tui_app_push_overlay(TuiApp *app, TuiWidget *widget)
     widget->dirty = 1;
 
     if (widget->focusable) {
-        tui_widget_focus(widget);
+        zephio_widget_focus(widget);
     }
 
-    return TUI_OK;
+    return ZEPHIO_OK;
 }
 
-TuiWidget *tui_app_pop_overlay(TuiApp *app)
+ZephioWidget *zephio_app_pop_overlay(ZephioApp *app)
 {
     if (!app || app->overlay_count == 0) return NULL;
 
-    TuiWidget *widget = app->overlays[--app->overlay_count];
+    ZephioWidget *widget = app->overlays[--app->overlay_count];
     app->overlays[app->overlay_count] = NULL;
 
     if (widget->focused) {
-        tui_widget_blur(widget);
+        zephio_widget_blur(widget);
     }
 
     return widget;
 }
 
-static __attribute__((unused)) TuiWidget *tui_app_top_overlay(TuiApp *app)
+static __attribute__((unused)) ZephioWidget *zephio_app_top_overlay(ZephioApp *app)
 {
     if (!app || app->overlay_count == 0) return NULL;
     return app->overlays[app->overlay_count - 1];
 }
 
-void tui_app_render_overlays(TuiApp *app)
+void zephio_app_render_overlays(ZephioApp *app)
 {
     if (!app) return;
     for (int i = 0; i < app->overlay_count; i++) {
-        tui_widget_render(app->overlays[i]);
+        zephio_widget_render(app->overlays[i]);
     }
 }
 
-static int tui_app_handle_overlay_input(TuiApp *app, const TuiEvent *event)
+static int zephio_app_handle_overlay_input(ZephioApp *app, const ZephioEvent *event)
 {
     if (!app || app->overlay_count == 0) return 0;
 
-    TuiWidget *top = app->overlays[app->overlay_count - 1];
+    ZephioWidget *top = app->overlays[app->overlay_count - 1];
     if (!top) return 0;
 
     if (top->focused || top->focusable) {
-        if (!top->focused) tui_widget_focus(top);
-        return tui_widget_handle_input(top, event);
+        if (!top->focused) zephio_widget_focus(top);
+        return zephio_widget_handle_input(top, event);
     }
 
     return 0;
 }
 
-static int tui_app_handle_overlay_mouse(TuiApp *app, const TuiMouseEvent *mouse)
+static int zephio_app_handle_overlay_mouse(ZephioApp *app, const ZephioMouseEvent *mouse)
 {
     if (!app || app->overlay_count == 0) return 0;
 
-    TuiWidget *top = app->overlays[app->overlay_count - 1];
+    ZephioWidget *top = app->overlays[app->overlay_count - 1];
     if (!top) return 0;
 
-    return tui_widget_handle_mouse(top, mouse);
+    return zephio_widget_handle_mouse(top, mouse);
 }
 
-TuiAnimator *tui_app_get_animator(TuiApp *app)
+ZephioAnimator *zephio_app_get_animator(ZephioApp *app)
 {
     if (!app) return NULL;
     return app->animator;
 }
 
-TuiToastManager *tui_app_get_toasts(TuiApp *app)
+ZephioToastManager *zephio_app_get_toasts(ZephioApp *app)
 {
     if (!app) return NULL;
     return &app->toasts;
 }
 
-int tui_app_toast(TuiApp *app, TuiToastSeverity severity,
+int zephio_app_toast(ZephioApp *app, ZephioToastSeverity severity,
                   const char *message, double duration_ms)
 {
     if (!app) return -1;
-    return tui_toast_show(&app->toasts, severity, message, duration_ms);
+    return zephio_toast_show(&app->toasts, severity, message, duration_ms);
 }
 
-void tui_app_render_toasts(TuiApp *app)
+void zephio_app_render_toasts(ZephioApp *app)
 {
     if (!app) return;
-    TuiSize size = tui_screen_size(app->ctx);
-    tui_toast_render(app->ctx, &app->toasts, size.rows, size.cols);
+    ZephioSize size = zephio_screen_size(app->ctx);
+    zephio_toast_render(app->ctx, &app->toasts, size.rows, size.cols);
 }

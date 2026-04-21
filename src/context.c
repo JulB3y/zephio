@@ -1,3 +1,3 @@
-#include "tui_context.h"
+#include "zephio_context.h"
 
-_Thread_local TuiContext *tui_current_ctx;
+_Thread_local ZephioContext *zephio_current_ctx;

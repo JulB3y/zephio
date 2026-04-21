@@ -3,7 +3,7 @@
  * @brief Split pane widget demonstration.
  *
  * Demonstrates:
- *   - TuiSplitPane: horizontal and vertical splits
+ *   - ZephioSplitPane: horizontal and vertical splits
  *   - Mouse drag on separator to resize panes
  *   - Keyboard resize (Ctrl+Arrow keys)
  *   - Nested split panes (a vertical split inside the left pane)
@@ -18,49 +18,49 @@
 #define _POSIX_C_SOURCE 200809L
 
 #include "tui.h"
-#include "tui_app.h"
-#include "tui_box.h"
-#include "tui_container.h"
-#include "tui_label.h"
-#include "tui_list.h"
-#include "tui_screen.h"
-#include "tui_separator.h"
-#include "tui_split_pane.h"
-#include "tui_widget.h"
+#include "zephio_app.h"
+#include "zephio_box.h"
+#include "zephio_container.h"
+#include "zephio_label.h"
+#include "zephio_list.h"
+#include "zephio_screen.h"
+#include "zephio_separator.h"
+#include "zephio_split_pane.h"
+#include "zephio_widget.h"
 
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
 typedef struct {
-    TuiWidget    root;
+    ZephioWidget    root;
 
-    TuiSplitPane hsplit;
-    TuiSplitPane vsplit;
+    ZephioSplitPane hsplit;
+    ZephioSplitPane vsplit;
 
-    TuiBox       top_left;
-    TuiList      top_left_list;
-    TuiBox       bottom_left;
-    TuiLabel     bottom_left_label;
+    ZephioBox       top_left;
+    ZephioList      top_left_list;
+    ZephioBox       bottom_left;
+    ZephioLabel     bottom_left_label;
 
-    TuiBox       right_box;
-    TuiLabel     right_content;
+    ZephioBox       right_box;
+    ZephioLabel     right_content;
 
-    TuiLabel     statusbar;
+    ZephioLabel     statusbar;
     char         status_text[256];
 } AppWidgets;
 
-static TuiApp *g_app = NULL;
+static ZephioApp *g_app = NULL;
 
 static void update_status(AppWidgets *w, const char *msg)
 {
     snprintf(w->status_text, sizeof(w->status_text), " %s", msg);
-    tui_label_set_text(&w->statusbar, w->status_text);
-    tui_label_set_colors(&w->statusbar, ZEPHIO_COLOR_INDEX(15),
+    zephio_label_set_text(&w->statusbar, w->status_text);
+    zephio_label_set_colors(&w->statusbar, ZEPHIO_COLOR_INDEX(15),
                          ZEPHIO_COLOR_INDEX(236));
 }
 
-static void on_list_select(TuiWidget *widget, int index, const char *item,
+static void on_list_select(ZephioWidget *widget, int index, const char *item,
                            void *user_data)
 {
     (void)widget;
@@ -69,122 +69,122 @@ static void on_list_select(TuiWidget *widget, int index, const char *item,
 
     char buf[256];
     snprintf(buf, sizeof(buf), "Selected: %s", item);
-    tui_label_set_text(&w->right_content, buf);
+    zephio_label_set_text(&w->right_content, buf);
 
     char status_buf[120];
     snprintf(status_buf, sizeof(status_buf), "Selected: %s  |  Drag separator or Ctrl+Arrows to resize", item);
     update_status(w, status_buf);
 }
 
-static void build_widgets(AppWidgets *w, int rows, int cols, TuiContext *ctx)
+static void build_widgets(AppWidgets *w, int rows, int cols, ZephioContext *ctx)
 {
     int content_h = rows - 2;
 
-    tui_widget_init_ctx(&w->root, 0, 0, cols, rows, NULL, ctx, NULL);
+    zephio_widget_init_ctx(&w->root, 0, 0, cols, rows, NULL, ctx, NULL);
 
-    tui_split_pane_init_ctx(&w->hsplit, ctx, 0, 1, cols, content_h,
-                            TUI_SPLIT_HORIZONTAL);
-    tui_split_pane_set_separator_style(&w->hsplit,
-                                       ZEPHIO_COLOR_INDEX(TUI_COLOR_BRIGHT_CYAN),
-                                       ZEPHIO_COLOR_INDEX(TUI_COLOR_BG_DARK),
+    zephio_split_pane_init_ctx(&w->hsplit, ctx, 0, 1, cols, content_h,
+                            ZEPHIO_SPLIT_HORIZONTAL);
+    zephio_split_pane_set_separator_style(&w->hsplit,
+                                       ZEPHIO_COLOR_INDEX(ZEPHIO_COLOR_BRIGHT_CYAN),
+                                       ZEPHIO_COLOR_INDEX(ZEPHIO_COLOR_BG_DARK),
                                        ZEPHIO_ATTR_BOLD);
-    tui_split_pane_set_min_sizes(&w->hsplit, 15, 20);
+    zephio_split_pane_set_min_sizes(&w->hsplit, 15, 20);
 
-    tui_split_pane_init_ctx(&w->vsplit, ctx, 0, 0, cols / 2, content_h,
-                            TUI_SPLIT_VERTICAL);
-    tui_split_pane_set_separator_style(&w->vsplit,
-                                       ZEPHIO_COLOR_INDEX(TUI_COLOR_BRIGHT_YELLOW),
-                                       ZEPHIO_COLOR_INDEX(TUI_COLOR_BG_DARK),
+    zephio_split_pane_init_ctx(&w->vsplit, ctx, 0, 0, cols / 2, content_h,
+                            ZEPHIO_SPLIT_VERTICAL);
+    zephio_split_pane_set_separator_style(&w->vsplit,
+                                       ZEPHIO_COLOR_INDEX(ZEPHIO_COLOR_BRIGHT_YELLOW),
+                                       ZEPHIO_COLOR_INDEX(ZEPHIO_COLOR_BG_DARK),
                                        ZEPHIO_ATTR_BOLD);
-    tui_split_pane_set_min_sizes(&w->vsplit, 5, 5);
+    zephio_split_pane_set_min_sizes(&w->vsplit, 5, 5);
 
     {
-        int left_w = tui_split_pane_get_position(&w->hsplit);
+        int left_w = zephio_split_pane_get_position(&w->hsplit);
         (void)left_w;
 
-        tui_box_init_ctx(&w->top_left, ctx, 0, 0, 10, 10, ZEPHIO_BOX_SINGLE);
-        tui_box_set_title(&w->top_left, "Files");
-        tui_box_set_colors(&w->top_left,
-                           ZEPHIO_COLOR_INDEX(TUI_COLOR_BRIGHT_CYAN),
-                           ZEPHIO_COLOR_INDEX(TUI_COLOR_BG_DARK));
+        zephio_box_init_ctx(&w->top_left, ctx, 0, 0, 10, 10, ZEPHIO_BOX_SINGLE);
+        zephio_box_set_title(&w->top_left, "Files");
+        zephio_box_set_colors(&w->top_left,
+                           ZEPHIO_COLOR_INDEX(ZEPHIO_COLOR_BRIGHT_CYAN),
+                           ZEPHIO_COLOR_INDEX(ZEPHIO_COLOR_BG_DARK));
 
-        tui_list_init_ctx(&w->top_left_list, ctx, 0, 0, 10, 5);
-        tui_list_set_colors(&w->top_left_list, ZEPHIO_COLOR_INDEX(15),
-                            ZEPHIO_COLOR_INDEX(TUI_COLOR_BG_DARK),
+        zephio_list_init_ctx(&w->top_left_list, ctx, 0, 0, 10, 5);
+        zephio_list_set_colors(&w->top_left_list, ZEPHIO_COLOR_INDEX(15),
+                            ZEPHIO_COLOR_INDEX(ZEPHIO_COLOR_BG_DARK),
                             ZEPHIO_COLOR_INDEX(0),
                             ZEPHIO_COLOR_INDEX(12));
         w->top_left_list.base.focusable = 1;
-        tui_list_add_item(&w->top_left_list, "src/main.c");
-        tui_list_add_item(&w->top_left_list, "src/widget.c");
-        tui_list_add_item(&w->top_left_list, "src/app.c");
-        tui_list_add_item(&w->top_left_list, "include/tui.h");
-        tui_list_add_item(&w->top_left_list, "Makefile");
-        tui_list_add_item(&w->top_left_list, "README.md");
-        tui_list_set_on_select(&w->top_left_list, on_list_select, w);
-        tui_widget_add_child(&w->top_left.base, &w->top_left_list.base);
+        zephio_list_add_item(&w->top_left_list, "src/main.c");
+        zephio_list_add_item(&w->top_left_list, "src/widget.c");
+        zephio_list_add_item(&w->top_left_list, "src/app.c");
+        zephio_list_add_item(&w->top_left_list, "include/tui.h");
+        zephio_list_add_item(&w->top_left_list, "Makefile");
+        zephio_list_add_item(&w->top_left_list, "README.md");
+        zephio_list_set_on_select(&w->top_left_list, on_list_select, w);
+        zephio_widget_add_child(&w->top_left.base, &w->top_left_list.base);
 
-        tui_box_init_ctx(&w->bottom_left, ctx, 0, 0, 10, 5, ZEPHIO_BOX_SINGLE);
-        tui_box_set_title(&w->bottom_left, "Details");
-        tui_box_set_colors(&w->bottom_left,
-                           ZEPHIO_COLOR_INDEX(TUI_COLOR_BRIGHT_YELLOW),
-                           ZEPHIO_COLOR_INDEX(TUI_COLOR_BG_DARK));
+        zephio_box_init_ctx(&w->bottom_left, ctx, 0, 0, 10, 5, ZEPHIO_BOX_SINGLE);
+        zephio_box_set_title(&w->bottom_left, "Details");
+        zephio_box_set_colors(&w->bottom_left,
+                           ZEPHIO_COLOR_INDEX(ZEPHIO_COLOR_BRIGHT_YELLOW),
+                           ZEPHIO_COLOR_INDEX(ZEPHIO_COLOR_BG_DARK));
 
-        tui_label_init_ctx(&w->bottom_left_label, ctx, 0, 0, 10, 1,
+        zephio_label_init_ctx(&w->bottom_left_label, ctx, 0, 0, 10, 1,
                           "Select a file above");
-        tui_label_set_colors(&w->bottom_left_label,
-                             ZEPHIO_COLOR_INDEX(TUI_COLOR_BRIGHT_WHITE),
-                             ZEPHIO_COLOR_INDEX(TUI_COLOR_BG_DARK));
-        tui_widget_add_child(&w->bottom_left.base, &w->bottom_left_label.base);
+        zephio_label_set_colors(&w->bottom_left_label,
+                             ZEPHIO_COLOR_INDEX(ZEPHIO_COLOR_BRIGHT_WHITE),
+                             ZEPHIO_COLOR_INDEX(ZEPHIO_COLOR_BG_DARK));
+        zephio_widget_add_child(&w->bottom_left.base, &w->bottom_left_label.base);
 
-        tui_split_pane_set_panes(&w->vsplit, &w->top_left.base,
+        zephio_split_pane_set_panes(&w->vsplit, &w->top_left.base,
                                  &w->bottom_left.base);
     }
 
     {
-        tui_box_init_ctx(&w->right_box, ctx, 0, 0, 20, 10, ZEPHIO_BOX_DOUBLE);
-        tui_box_set_title(&w->right_box, "Editor");
-        tui_box_set_colors(&w->right_box,
-                           ZEPHIO_COLOR_INDEX(TUI_COLOR_BRIGHT_GREEN),
-                           ZEPHIO_COLOR_INDEX(TUI_COLOR_BG_DARK));
+        zephio_box_init_ctx(&w->right_box, ctx, 0, 0, 20, 10, ZEPHIO_BOX_DOUBLE);
+        zephio_box_set_title(&w->right_box, "Editor");
+        zephio_box_set_colors(&w->right_box,
+                           ZEPHIO_COLOR_INDEX(ZEPHIO_COLOR_BRIGHT_GREEN),
+                           ZEPHIO_COLOR_INDEX(ZEPHIO_COLOR_BG_DARK));
 
-        tui_label_init_ctx(&w->right_content, ctx, 0, 0, 20, 1,
+        zephio_label_init_ctx(&w->right_content, ctx, 0, 0, 20, 1,
                           "Select a file from the left pane");
-        tui_label_set_colors(&w->right_content,
-                             ZEPHIO_COLOR_INDEX(TUI_COLOR_BRIGHT_WHITE),
-                             ZEPHIO_COLOR_INDEX(TUI_COLOR_BG_DARK));
-        tui_widget_add_child(&w->right_box.base, &w->right_content.base);
+        zephio_label_set_colors(&w->right_content,
+                             ZEPHIO_COLOR_INDEX(ZEPHIO_COLOR_BRIGHT_WHITE),
+                             ZEPHIO_COLOR_INDEX(ZEPHIO_COLOR_BG_DARK));
+        zephio_widget_add_child(&w->right_box.base, &w->right_content.base);
     }
 
-    tui_split_pane_set_panes(&w->hsplit, &w->vsplit.base, &w->right_box.base);
-    tui_widget_add_child(&w->root, &w->hsplit.base);
+    zephio_split_pane_set_panes(&w->hsplit, &w->vsplit.base, &w->right_box.base);
+    zephio_widget_add_child(&w->root, &w->hsplit.base);
 
-    tui_label_init_ctx(&w->statusbar, ctx, 1, rows - 1, cols - 2, 1,
+    zephio_label_init_ctx(&w->statusbar, ctx, 1, rows - 1, cols - 2, 1,
                    " Drag separator bars or Ctrl+Arrows to resize  |  Tab: focus  q: quit");
-    tui_label_set_colors(&w->statusbar, ZEPHIO_COLOR_INDEX(15),
+    zephio_label_set_colors(&w->statusbar, ZEPHIO_COLOR_INDEX(15),
                          ZEPHIO_COLOR_INDEX(236));
-    tui_widget_add_child(&w->root, &w->statusbar.base);
+    zephio_widget_add_child(&w->root, &w->statusbar.base);
 }
 
 static void destroy_widgets(AppWidgets *w)
 {
     for (int i = w->root.child_count - 1; i >= 0; i--) {
-        tui_widget_destroy(w->root.children[i]);
+        zephio_widget_destroy(w->root.children[i]);
     }
-    tui_widget_remove_all_children(&w->root);
+    zephio_widget_remove_all_children(&w->root);
 }
 
-static int on_init(TuiApp *app, void *user_data)
+static int on_init(ZephioApp *app, void *user_data)
 {
     g_app = app;
     AppWidgets *w = (AppWidgets *)user_data;
     memset(w, 0, sizeof(*w));
 
-    TuiSize size = tui_screen_size(g_app->ctx);
+    ZephioSize size = zephio_screen_size(g_app->ctx);
     build_widgets(w, size.rows, size.cols, g_app->ctx);
     return 0;
 }
 
-static int on_resize(TuiApp *app, int rows, int cols, void *user_data)
+static int on_resize(ZephioApp *app, int rows, int cols, void *user_data)
 {
     (void)app;
     AppWidgets *w = (AppWidgets *)user_data;
@@ -193,91 +193,91 @@ static int on_resize(TuiApp *app, int rows, int cols, void *user_data)
     return 0;
 }
 
-static int on_render(TuiApp *app, void *user_data)
+static int on_render(ZephioApp *app, void *user_data)
 {
     (void)app;
     AppWidgets *w = (AppWidgets *)user_data;
-    TuiSize size = tui_screen_size(g_app->ctx);
+    ZephioSize size = zephio_screen_size(g_app->ctx);
 
-    tui_screen_clear(g_app->ctx);
-    tui_screen_fill(g_app->ctx, 0, 0, size.cols, 1, " ",
+    zephio_screen_clear(g_app->ctx);
+    zephio_screen_fill(g_app->ctx, 0, 0, size.cols, 1, " ",
                     ZEPHIO_COLOR_INDEX(15), ZEPHIO_COLOR_INDEX(4), ZEPHIO_ATTR_BOLD);
-    tui_screen_write(g_app->ctx, 0, 2,
+    zephio_screen_write(g_app->ctx, 0, 2,
                      "Split Pane Demo  |  Nested H+V Split  |  Drag separators to resize",
                      ZEPHIO_COLOR_INDEX(15), ZEPHIO_COLOR_INDEX(4), ZEPHIO_ATTR_BOLD);
-    tui_screen_fill(g_app->ctx, size.rows - 1, 0, size.cols, 1, " ",
+    zephio_screen_fill(g_app->ctx, size.rows - 1, 0, size.cols, 1, " ",
                     ZEPHIO_COLOR_INDEX(15), ZEPHIO_COLOR_INDEX(236), ZEPHIO_ATTR_NONE);
 
-    tui_widget_render(&w->root);
-    tui_app_render_overlays(app);
-    tui_app_render_toasts(app);
-    tui_screen_render(g_app->ctx);
+    zephio_widget_render(&w->root);
+    zephio_app_render_overlays(app);
+    zephio_app_render_toasts(app);
+    zephio_screen_render(g_app->ctx);
     return 0;
 }
 
-static int on_input(TuiApp *app, const TuiEvent *event, void *user_data)
+static int on_input(ZephioApp *app, const ZephioEvent *event, void *user_data)
 {
     (void)app;
     AppWidgets *w = (AppWidgets *)user_data;
 
-    if (event->key == TUI_KEY_ESCAPE || event->key == TUI_KEY_CTRL_C) {
+    if (event->key == ZEPHIO_KEY_ESCAPE || event->key == ZEPHIO_KEY_CTRL_C) {
         return 1;
     }
 
-    if (event->key == TUI_KEY_TAB) {
-        if (event->modifiers & TUI_MOD_SHIFT) {
-            tui_widget_focus_prev(&w->root);
+    if (event->key == ZEPHIO_KEY_TAB) {
+        if (event->modifiers & ZEPHIO_MOD_SHIFT) {
+            zephio_widget_focus_prev(&w->root);
         } else {
-            tui_widget_focus_next(&w->root);
+            zephio_widget_focus_next(&w->root);
         }
-        tui_widget_mark_dirty_recursive(&w->root);
+        zephio_widget_mark_dirty_recursive(&w->root);
         return 0;
     }
 
-    if (event->codepoint == 'q' && event->modifiers == TUI_MOD_NONE) {
+    if (event->codepoint == 'q' && event->modifiers == ZEPHIO_MOD_NONE) {
         return 1;
     }
 
-    if (event->modifiers & TUI_MOD_CTRL) {
-        if (event->key == TUI_KEY_LEFT || event->key == TUI_KEY_RIGHT) {
+    if (event->modifiers & ZEPHIO_MOD_CTRL) {
+        if (event->key == ZEPHIO_KEY_LEFT || event->key == ZEPHIO_KEY_RIGHT) {
             if (w->hsplit.base.vtable && w->hsplit.base.vtable->handle_input)
                 w->hsplit.base.vtable->handle_input(&w->hsplit.base, event);
             return 0;
         }
-        if (event->key == TUI_KEY_UP || event->key == TUI_KEY_DOWN) {
+        if (event->key == ZEPHIO_KEY_UP || event->key == ZEPHIO_KEY_DOWN) {
             if (w->vsplit.base.vtable && w->vsplit.base.vtable->handle_input)
                 w->vsplit.base.vtable->handle_input(&w->vsplit.base, event);
             return 0;
         }
     }
 
-    TuiWidget *focused = tui_widget_get_focused(&w->root);
+    ZephioWidget *focused = zephio_widget_get_focused(&w->root);
     if (focused) {
-        tui_widget_handle_input(focused, event);
+        zephio_widget_handle_input(focused, event);
     }
 
     return 0;
 }
 
-static int on_mouse(TuiApp *app, const TuiMouseEvent *mouse, void *user_data)
+static int on_mouse(ZephioApp *app, const ZephioMouseEvent *mouse, void *user_data)
 {
     (void)app;
     AppWidgets *w = (AppWidgets *)user_data;
 
-    if (mouse->action == TUI_MOUSE_PRESS && mouse->button == TUI_MOUSE_BTN_LEFT) {
-        TuiWidget *target = tui_widget_find_at(&w->root, mouse->row,
+    if (mouse->action == ZEPHIO_MOUSE_PRESS && mouse->button == ZEPHIO_MOUSE_BTN_LEFT) {
+        ZephioWidget *target = zephio_widget_find_at(&w->root, mouse->row,
                                                mouse->col);
         if (target && target->focusable) {
-            tui_widget_focus(target);
+            zephio_widget_focus(target);
         }
     }
 
-    tui_widget_handle_mouse(&w->root, mouse);
-    tui_widget_mark_dirty_recursive(&w->root);
+    zephio_widget_handle_mouse(&w->root, mouse);
+    zephio_widget_mark_dirty_recursive(&w->root);
     return 0;
 }
 
-static void on_shutdown(TuiApp *app, void *user_data)
+static void on_shutdown(ZephioApp *app, void *user_data)
 {
     (void)app;
     AppWidgets *w = (AppWidgets *)user_data;
@@ -288,9 +288,9 @@ int main(void)
 {
     AppWidgets widgets;
 
-    TuiContext ctx;
+    ZephioContext ctx;
 
-    TuiAppConfig config = {
+    ZephioAppConfig config = {
         .on_init     = on_init,
         .on_resize   = on_resize,
         .on_render   = on_render,
@@ -301,13 +301,13 @@ int main(void)
         .tick_rate_ms = 50
     };
 
-    TuiApp *app = tui_app_new(&ctx, &config);
+    ZephioApp *app = zephio_app_new(&ctx, &config);
     if (!app) {
         fprintf(stderr, "Failed to create app\n");
         return 1;
     }
 
-    int ret = tui_app_run(app);
-    tui_app_free(app);
+    int ret = zephio_app_run(app);
+    zephio_app_free(app);
     return ret;
 }

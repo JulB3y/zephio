@@ -1,14 +1,14 @@
 #define _POSIX_C_SOURCE 200809L
 
-#include "tui_table.h"
-#include "tui_context.h"
+#include "zephio_table.h"
+#include "zephio_context.h"
 
 #include <stdlib.h>
 #include <string.h>
 
 #define INITIAL_CAP 8
 
-static void rebuild_sort_mapping(TuiTable *table)
+static void rebuild_sort_mapping(ZephioTable *table)
 {
     if (table->sort_mapping) {
         free(table->sort_mapping);
@@ -26,8 +26,8 @@ static void rebuild_sort_mapping(TuiTable *table)
     if (table->sort_col < 0 || table->sort_col >= table->col_count)
         return;
 
-    TuiSortOrder order = table->columns[table->sort_col].sort_order;
-    if (order == TUI_SORT_NONE) return;
+    ZephioSortOrder order = table->columns[table->sort_col].sort_order;
+    if (order == ZEPHIO_SORT_NONE) return;
 
     int col = table->sort_col;
 
@@ -42,7 +42,7 @@ static void rebuild_sort_mapping(TuiTable *table)
             const char *b = (col < table->col_count && table->rows[key])
                                 ? table->rows[key][col] : "";
             int cmp = strcmp(a, b);
-            if (order == TUI_SORT_DESC) cmp = -cmp;
+            if (order == ZEPHIO_SORT_DESC) cmp = -cmp;
             if (cmp > 0) {
                 table->sort_mapping[j + 1] = table->sort_mapping[j];
                 j--;
@@ -54,14 +54,14 @@ static void rebuild_sort_mapping(TuiTable *table)
     }
 }
 
-static int mapped_row(TuiTable *table, int logical)
+static int mapped_row(ZephioTable *table, int logical)
 {
     if (table->sort_mapping && logical >= 0 && logical < table->row_count)
         return table->sort_mapping[logical];
     return logical;
 }
 
-static void ensure_visible(TuiTable *table)
+static void ensure_visible(ZephioTable *table)
 {
     int body_height = table->base.height - 1;
     if (body_height < 1) body_height = 1;
@@ -74,8 +74,8 @@ static void ensure_visible(TuiTable *table)
     }
 }
 
-static void render_clipped_text(TuiContext *ctx, int row, int col, const char *text,
-                                 int max_w, TuiColor fg, TuiColor bg, TuiAttr attr)
+static void render_clipped_text(ZephioContext *ctx, int row, int col, const char *text,
+                                 int max_w, ZephioColor fg, ZephioColor bg, ZephioAttr attr)
 {
     int len = (int)strlen(text);
     int w = len < max_w ? len : max_w;
@@ -83,11 +83,11 @@ static void render_clipped_text(TuiContext *ctx, int row, int col, const char *t
     int cl = w < (int)sizeof(buf) - 1 ? w : (int)sizeof(buf) - 1;
     memcpy(buf, text, (size_t)cl);
     buf[cl] = '\0';
-    tui_screen_write(ctx, row, col, buf, fg, bg, attr);
+    zephio_screen_write(ctx, row, col, buf, fg, bg, attr);
 }
 
-static void render_columns(TuiContext *ctx, TuiTable *table, int row, int screen_row,
-                            int wx, int widget_width, TuiColor fg, TuiColor bg, TuiAttr attr)
+static void render_columns(ZephioContext *ctx, ZephioTable *table, int row, int screen_row,
+                            int wx, int widget_width, ZephioColor fg, ZephioColor bg, ZephioAttr attr)
 {
     int col_x = wx - table->scroll_x;
     for (int c = 0; c < table->col_count; c++) {
@@ -108,18 +108,18 @@ static void render_columns(TuiContext *ctx, TuiTable *table, int row, int screen
     }
 }
 
-static void resolve_style(TuiWidget *widget, int logical, int selected,
-                           TuiColor fg_def, TuiColor bg_def,
-                           TuiColor fg_sel, TuiColor bg_sel,
-                           TuiColor *fg, TuiColor *bg, TuiAttr *attr)
+static void resolve_style(ZephioWidget *widget, int logical, int selected,
+                           ZephioColor fg_def, ZephioColor bg_def,
+                           ZephioColor fg_sel, ZephioColor bg_sel,
+                           ZephioColor *fg, ZephioColor *bg, ZephioAttr *attr)
 {
     if (widget->theme) {
-        TuiWidgetState state = TUI_STATE_NORMAL;
+        ZephioWidgetState state = ZEPHIO_STATE_NORMAL;
         if (widget->disabled)
-            state = TUI_STATE_DISABLED;
+            state = ZEPHIO_STATE_DISABLED;
         else if (logical == selected && widget->focused)
-            state = TUI_STATE_FOCUSED;
-        TuiStyle s = widget->theme->styles[state];
+            state = ZEPHIO_STATE_FOCUSED;
+        ZephioStyle s = widget->theme->styles[state];
         *fg = s.fg; *bg = s.bg; *attr = s.attr;
     } else {
         *fg = fg_def; *bg = bg_def; *attr = ZEPHIO_ATTR_NONE;
@@ -129,20 +129,20 @@ static void resolve_style(TuiWidget *widget, int logical, int selected,
     }
 }
 
-static void table_render(TuiWidget *widget)
+static void table_render(ZephioWidget *widget)
 {
-    TuiTable *table = (TuiTable *)widget;
+    ZephioTable *table = (ZephioTable *)widget;
     int wx = widget->abs_x;
     int wy = widget->abs_y;
 
-    TuiStyle header_style = tui_widget_get_style(widget);
+    ZephioStyle header_style = zephio_widget_get_style(widget);
     int body_height = widget->height - 1;
     if (body_height < 0) body_height = 0;
 
     {
-        TuiColor hfg = table->fg_header;
-        TuiColor hbg = table->bg_header;
-        TuiAttr  hat = ZEPHIO_ATTR_BOLD;
+        ZephioColor hfg = table->fg_header;
+        ZephioColor hbg = table->bg_header;
+        ZephioAttr  hat = ZEPHIO_ATTR_BOLD;
 
         if (widget->theme) {
             hfg = header_style.fg;
@@ -150,7 +150,7 @@ static void table_render(TuiWidget *widget)
             hat = header_style.attr | ZEPHIO_ATTR_BOLD;
         }
 
-        tui_screen_fill(widget->ctx, wy, wx, widget->width, 1, " ", hfg, hbg, hat);
+        zephio_screen_fill(widget->ctx, wy, wx, widget->width, 1, " ", hfg, hbg, hat);
 
         int col_x = wx - table->scroll_x;
         for (int c = 0; c < table->col_count; c++) {
@@ -169,12 +169,12 @@ static void table_render(TuiWidget *widget)
                     int cl = w < (int)sizeof(buf) - 3 ? w : (int)sizeof(buf) - 3;
                     memcpy(buf, table->columns[c].label, (size_t)cl);
 
-                    if (table->columns[c].sort_order != TUI_SORT_NONE && cl + 2 < max_w) {
+                    if (table->columns[c].sort_order != ZEPHIO_SORT_NONE && cl + 2 < max_w) {
                         buf[cl++] = ' ';
-                        buf[cl++] = table->columns[c].sort_order == TUI_SORT_ASC ? '^' : 'v';
+                        buf[cl++] = table->columns[c].sort_order == ZEPHIO_SORT_ASC ? '^' : 'v';
                     }
                     buf[cl] = '\0';
-                    tui_screen_write(widget->ctx, wy, text_x, buf, hfg, hbg, hat);
+                    zephio_screen_write(widget->ctx, wy, text_x, buf, hfg, hbg, hat);
                 }
             }
             col_x += cw;
@@ -187,14 +187,14 @@ static void table_render(TuiWidget *widget)
             if (logical >= table->row_count) break;
             int r = mapped_row(table, logical);
 
-            TuiColor fg, bg;
-            TuiAttr  attr;
+            ZephioColor fg, bg;
+            ZephioAttr  attr;
             resolve_style(widget, logical, table->selected,
                           table->fg, table->bg,
                           table->fg_selected, table->bg_selected,
                           &fg, &bg, &attr);
 
-            tui_screen_fill(widget->ctx, wy + 1 + i, wx, widget->width, 1, " ", fg, bg, attr);
+            zephio_screen_fill(widget->ctx, wy + 1 + i, wx, widget->width, 1, " ", fg, bg, attr);
 
             if (!table->rows[r]) continue;
             render_columns(widget->ctx, table, r, wy + 1 + i, wx, widget->width, fg, bg, attr);
@@ -203,9 +203,9 @@ static void table_render(TuiWidget *widget)
 
     if (table->row_count > body_height && body_height > 0) {
         int scroll_col = wx + widget->width - 1;
-        TuiColor track_fg = ZEPHIO_COLOR_INDEX(TUI_COLOR_GRAY_DARK);
-        TuiColor track_bg = table->bg;
-        tui_screen_fill(widget->ctx, wy + 1, scroll_col, 1, body_height, " ",
+        ZephioColor track_fg = ZEPHIO_COLOR_INDEX(ZEPHIO_COLOR_GRAY_DARK);
+        ZephioColor track_bg = table->bg;
+        zephio_screen_fill(widget->ctx, wy + 1, scroll_col, 1, body_height, " ",
                         track_fg, track_bg, ZEPHIO_ATTR_DIM);
 
         int max_scroll = table->row_count - body_height;
@@ -214,29 +214,29 @@ static void table_render(TuiWidget *widget)
             if (thumb_h < 1) thumb_h = 1;
             int thumb_y = table->scroll_y * (body_height - thumb_h) / max_scroll;
             for (int t = 0; t < thumb_h; t++) {
-                tui_screen_set_cell(widget->ctx, wy + 1 + thumb_y + t, scroll_col,
+                zephio_screen_set_cell(widget->ctx, wy + 1 + thumb_y + t, scroll_col,
                                     "\xe2\x96\x88",
-                                    ZEPHIO_COLOR_INDEX(TUI_COLOR_BRIGHT_WHITE),
-                                    ZEPHIO_COLOR_INDEX(TUI_COLOR_GRAY_MID),
+                                    ZEPHIO_COLOR_INDEX(ZEPHIO_COLOR_BRIGHT_WHITE),
+                                    ZEPHIO_COLOR_INDEX(ZEPHIO_COLOR_GRAY_MID),
                                     ZEPHIO_ATTR_NONE);
             }
         }
     }
 }
 
-static void table_handle_sort(TuiTable *table, int col)
+static void table_handle_sort(ZephioTable *table, int col)
 {
     if (col < 0 || col >= table->col_count) return;
 
     if (table->sort_col >= 0 && table->sort_col != col) {
-        table->columns[table->sort_col].sort_order = TUI_SORT_NONE;
+        table->columns[table->sort_col].sort_order = ZEPHIO_SORT_NONE;
     }
 
-    TuiSortOrder cur = table->columns[col].sort_order;
+    ZephioSortOrder cur = table->columns[col].sort_order;
     switch (cur) {
-    case TUI_SORT_NONE: table->columns[col].sort_order = TUI_SORT_ASC;  break;
-    case TUI_SORT_ASC:  table->columns[col].sort_order = TUI_SORT_DESC; break;
-    case TUI_SORT_DESC: table->columns[col].sort_order = TUI_SORT_NONE; break;
+    case ZEPHIO_SORT_NONE: table->columns[col].sort_order = ZEPHIO_SORT_ASC;  break;
+    case ZEPHIO_SORT_ASC:  table->columns[col].sort_order = ZEPHIO_SORT_DESC; break;
+    case ZEPHIO_SORT_DESC: table->columns[col].sort_order = ZEPHIO_SORT_NONE; break;
     }
     table->sort_col = col;
 
@@ -244,15 +244,15 @@ static void table_handle_sort(TuiTable *table, int col)
     table->base.dirty = 1;
 }
 
-static int table_handle_input(TuiWidget *widget, const TuiEvent *event)
+static int table_handle_input(ZephioWidget *widget, const ZephioEvent *event)
 {
-    TuiTable *table = (TuiTable *)widget;
+    ZephioTable *table = (ZephioTable *)widget;
 
     int body_height = widget->height - 1;
     if (body_height < 1) body_height = 1;
 
     switch (event->key) {
-    case TUI_KEY_UP:
+    case ZEPHIO_KEY_UP:
         if (table->selected > 0) {
             table->selected--;
             ensure_visible(table);
@@ -260,7 +260,7 @@ static int table_handle_input(TuiWidget *widget, const TuiEvent *event)
         }
         return 1;
 
-    case TUI_KEY_DOWN:
+    case ZEPHIO_KEY_DOWN:
         if (table->selected < table->row_count - 1) {
             table->selected++;
             ensure_visible(table);
@@ -268,7 +268,7 @@ static int table_handle_input(TuiWidget *widget, const TuiEvent *event)
         }
         return 1;
 
-    case TUI_KEY_LEFT:
+    case ZEPHIO_KEY_LEFT:
         if (table->scroll_x > 0) {
             table->scroll_x -= 5;
             if (table->scroll_x < 0) table->scroll_x = 0;
@@ -276,7 +276,7 @@ static int table_handle_input(TuiWidget *widget, const TuiEvent *event)
         }
         return 1;
 
-    case TUI_KEY_RIGHT: {
+    case ZEPHIO_KEY_RIGHT: {
         int total_w = 0;
         for (int c = 0; c < table->col_count; c++) total_w += table->columns[c].width;
         if (table->scroll_x < total_w - widget->width) {
@@ -286,7 +286,7 @@ static int table_handle_input(TuiWidget *widget, const TuiEvent *event)
         return 1;
     }
 
-    case TUI_KEY_PAGE_UP:
+    case ZEPHIO_KEY_PAGE_UP:
         if (table->selected > 0) {
             table->selected -= body_height;
             if (table->selected < 0) table->selected = 0;
@@ -295,7 +295,7 @@ static int table_handle_input(TuiWidget *widget, const TuiEvent *event)
         }
         return 1;
 
-    case TUI_KEY_PAGE_DOWN:
+    case ZEPHIO_KEY_PAGE_DOWN:
         if (table->row_count > 0) {
             table->selected += body_height;
             if (table->selected >= table->row_count)
@@ -305,13 +305,13 @@ static int table_handle_input(TuiWidget *widget, const TuiEvent *event)
         }
         return 1;
 
-    case TUI_KEY_HOME:
+    case ZEPHIO_KEY_HOME:
         table->selected = 0;
         table->scroll_y = 0;
         widget->dirty = 1;
         return 1;
 
-    case TUI_KEY_END:
+    case ZEPHIO_KEY_END:
         if (table->row_count > 0) {
             table->selected = table->row_count - 1;
             ensure_visible(table);
@@ -319,7 +319,7 @@ static int table_handle_input(TuiWidget *widget, const TuiEvent *event)
         }
         return 1;
 
-    case TUI_KEY_ENTER:
+    case ZEPHIO_KEY_ENTER:
         if (table->on_select && table->row_count > 0) {
             table->on_select(widget, table->selected, table->user_data);
         }
@@ -332,11 +332,11 @@ static int table_handle_input(TuiWidget *widget, const TuiEvent *event)
     return 0;
 }
 
-static int table_handle_mouse(TuiWidget *widget, const TuiMouseEvent *mouse)
+static int table_handle_mouse(ZephioWidget *widget, const ZephioMouseEvent *mouse)
 {
-    TuiTable *table = (TuiTable *)widget;
+    ZephioTable *table = (ZephioTable *)widget;
 
-    if (mouse->action == TUI_MOUSE_WHEEL_UP) {
+    if (mouse->action == ZEPHIO_MOUSE_WHEEL_UP) {
         if (table->scroll_y > 0) {
             table->scroll_y -= 3;
             if (table->scroll_y < 0) table->scroll_y = 0;
@@ -345,7 +345,7 @@ static int table_handle_mouse(TuiWidget *widget, const TuiMouseEvent *mouse)
         return 1;
     }
 
-    if (mouse->action == TUI_MOUSE_WHEEL_DOWN) {
+    if (mouse->action == ZEPHIO_MOUSE_WHEEL_DOWN) {
         int body_height = widget->height - 1;
         if (body_height < 1) body_height = 1;
         int max_off = table->row_count - body_height;
@@ -358,7 +358,7 @@ static int table_handle_mouse(TuiWidget *widget, const TuiMouseEvent *mouse)
         return 1;
     }
 
-    if (mouse->action != TUI_MOUSE_PRESS || mouse->button != TUI_MOUSE_BTN_LEFT)
+    if (mouse->action != ZEPHIO_MOUSE_PRESS || mouse->button != ZEPHIO_MOUSE_BTN_LEFT)
         return 0;
 
     int rel_row = mouse->row - widget->abs_y;
@@ -396,9 +396,9 @@ static int table_handle_mouse(TuiWidget *widget, const TuiMouseEvent *mouse)
     return 0;
 }
 
-static void table_destroy(TuiWidget *widget)
+static void table_destroy(ZephioWidget *widget)
 {
-    TuiTable *table = (TuiTable *)widget;
+    ZephioTable *table = (ZephioTable *)widget;
 
     for (int c = 0; c < table->col_count; c++)
         free(table->columns[c].label);
@@ -421,7 +421,7 @@ static void table_destroy(TuiWidget *widget)
     table->row_count     = 0;
 }
 
-static TuiWidgetVTable table_vtable = {
+static ZephioWidgetVTable table_vtable = {
     .render       = table_render,
     .handle_input = table_handle_input,
     .handle_mouse = table_handle_mouse,
@@ -431,13 +431,13 @@ static TuiWidgetVTable table_vtable = {
     .on_blur      = NULL
 };
 
-TuiResult tui_table_init_ctx(TuiTable *table, TuiContext *ctx, int x, int y, int width, int height)
+ZephioResult zephio_table_init_ctx(ZephioTable *table, ZephioContext *ctx, int x, int y, int width, int height)
 {
     if (!table) return TUI_ERR_MEMORY;
 
-    TuiResult res = tui_widget_init_ctx(&table->base, x, y, width, height,
+    ZephioResult res = zephio_widget_init_ctx(&table->base, x, y, width, height,
                                         &table_vtable, ctx, NULL);
-    if (res != TUI_OK) return res;
+    if (res != ZEPHIO_OK) return res;
 
     table->base.focusable = 1;
 
@@ -462,18 +462,18 @@ TuiResult tui_table_init_ctx(TuiTable *table, TuiContext *ctx, int x, int y, int
     table->fg_selected   = ZEPHIO_COLOR_INDEX(0);
     table->bg_selected   = ZEPHIO_COLOR_INDEX(12);
 
-    return TUI_OK;
+    return ZEPHIO_OK;
 }
 
-TuiResult tui_table_add_column(TuiTable *table, const char *label, int width)
+ZephioResult zephio_table_add_column(ZephioTable *table, const char *label, int width)
 {
     if (!table) return TUI_ERR_MEMORY;
 
     if (table->col_count >= table->col_capacity) {
         int new_cap = table->col_capacity == 0
             ? INITIAL_CAP : table->col_capacity * 2;
-        TuiTableColumn *nc = (TuiTableColumn *)realloc(
-            table->columns, (size_t)new_cap * sizeof(TuiTableColumn));
+        ZephioTableColumn *nc = (ZephioTableColumn *)realloc(
+            table->columns, (size_t)new_cap * sizeof(ZephioTableColumn));
         if (!nc) return TUI_ERR_MEMORY;
         table->columns      = nc;
         table->col_capacity = new_cap;
@@ -481,13 +481,13 @@ TuiResult tui_table_add_column(TuiTable *table, const char *label, int width)
 
     table->columns[table->col_count].label      = label ? strdup(label) : NULL;
     table->columns[table->col_count].width       = width > 0 ? width : 10;
-    table->columns[table->col_count].sort_order  = TUI_SORT_NONE;
+    table->columns[table->col_count].sort_order  = ZEPHIO_SORT_NONE;
     table->col_count++;
     table->base.dirty = 1;
-    return TUI_OK;
+    return ZEPHIO_OK;
 }
 
-TuiResult tui_table_add_row(TuiTable *table, const char **cells, int cell_count)
+ZephioResult zephio_table_add_row(ZephioTable *table, const char **cells, int cell_count)
 {
     if (!table) return TUI_ERR_MEMORY;
 
@@ -516,15 +516,15 @@ TuiResult tui_table_add_row(TuiTable *table, const char **cells, int cell_count)
     table->row_count++;
 
     if (table->sort_col >= 0 && table->sort_col < table->col_count
-        && table->columns[table->sort_col].sort_order != TUI_SORT_NONE) {
+        && table->columns[table->sort_col].sort_order != ZEPHIO_SORT_NONE) {
         rebuild_sort_mapping(table);
     }
 
     table->base.dirty = 1;
-    return TUI_OK;
+    return ZEPHIO_OK;
 }
 
-void tui_table_remove_row(TuiTable *table, int row)
+void zephio_table_remove_row(ZephioTable *table, int row)
 {
     if (!table || row < 0 || row >= table->row_count) return;
 
@@ -545,7 +545,7 @@ void tui_table_remove_row(TuiTable *table, int row)
     table->base.dirty = 1;
 }
 
-void tui_table_clear_rows(TuiTable *table)
+void zephio_table_clear_rows(ZephioTable *table)
 {
     if (!table) return;
     for (int r = 0; r < table->row_count; r++) {
@@ -564,15 +564,15 @@ void tui_table_clear_rows(TuiTable *table)
     table->base.dirty   = 1;
 }
 
-int tui_table_get_selected(TuiTable *table)
+int zephio_table_get_selected(ZephioTable *table)
 {
     if (!table) return -1;
     return table->selected;
 }
 
-void tui_table_set_colors(TuiTable *table, TuiColor fg, TuiColor bg,
-                          TuiColor fg_header, TuiColor bg_header,
-                          TuiColor fg_selected, TuiColor bg_selected)
+void zephio_table_set_colors(ZephioTable *table, ZephioColor fg, ZephioColor bg,
+                          ZephioColor fg_header, ZephioColor bg_header,
+                          ZephioColor fg_selected, ZephioColor bg_selected)
 {
     if (!table) return;
     table->fg           = fg;
@@ -584,7 +584,7 @@ void tui_table_set_colors(TuiTable *table, TuiColor fg, TuiColor bg,
     table->base.dirty   = 1;
 }
 
-void tui_table_set_on_select(TuiTable *table, TuiTableCallback callback,
+void zephio_table_set_on_select(ZephioTable *table, ZephioTableCallback callback,
                              void *user_data)
 {
     if (!table) return;
@@ -592,11 +592,11 @@ void tui_table_set_on_select(TuiTable *table, TuiTableCallback callback,
     table->user_data = user_data;
 }
 
-void tui_table_sort_by(TuiTable *table, int col, TuiSortOrder order)
+void zephio_table_sort_by(ZephioTable *table, int col, ZephioSortOrder order)
 {
     if (!table || col < 0 || col >= table->col_count) return;
     if (table->sort_col >= 0 && table->sort_col != col)
-        table->columns[table->sort_col].sort_order = TUI_SORT_NONE;
+        table->columns[table->sort_col].sort_order = ZEPHIO_SORT_NONE;
     table->sort_col = col;
     table->columns[col].sort_order = order;
     rebuild_sort_mapping(table);

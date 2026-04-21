@@ -1,34 +1,34 @@
 #define _POSIX_C_SOURCE 200809L
 
-#include "tui_label.h"
-#include "tui_context.h"
+#include "zephio_label.h"
+#include "zephio_context.h"
 
 #include <stdlib.h>
 #include <string.h>
 
-static void label_render(TuiWidget *widget)
+static void label_render(ZephioWidget *widget)
 {
-    TuiLabel *label = (TuiLabel *)widget;
+    ZephioLabel *label = (ZephioLabel *)widget;
     if (!label->text) return;
 
     if (widget->theme) {
-        TuiStyle style = tui_widget_get_style(widget);
-        tui_screen_write(widget->ctx, widget->abs_y, widget->abs_x,
+        ZephioStyle style = zephio_widget_get_style(widget);
+        zephio_screen_write(widget->ctx, widget->abs_y, widget->abs_x,
                          label->text, style.fg, style.bg, style.attr);
     } else {
-        tui_screen_write(widget->ctx, widget->abs_y, widget->abs_x,
+        zephio_screen_write(widget->ctx, widget->abs_y, widget->abs_x,
                           label->text, label->fg, label->bg, label->attr);
     }
 }
 
-static void label_destroy(TuiWidget *widget)
+static void label_destroy(ZephioWidget *widget)
 {
-    TuiLabel *label = (TuiLabel *)widget;
+    ZephioLabel *label = (ZephioLabel *)widget;
     free(label->text);
     label->text = NULL;
 }
 
-static TuiWidgetVTable label_vtable = {
+static ZephioWidgetVTable label_vtable = {
     .render       = label_render,
     .handle_input = NULL,
     .handle_mouse = NULL,
@@ -38,14 +38,14 @@ static TuiWidgetVTable label_vtable = {
     .on_blur      = NULL
 };
 
-TuiResult tui_label_init_ctx(TuiLabel *label, TuiContext *ctx, int x, int y, int width, int height,
+ZephioResult zephio_label_init_ctx(ZephioLabel *label, ZephioContext *ctx, int x, int y, int width, int height,
                              const char *text)
 {
     if (!label) return TUI_ERR_MEMORY;
 
-    TuiResult res = tui_widget_init_ctx(&label->base, x, y, width, height,
+    ZephioResult res = zephio_widget_init_ctx(&label->base, x, y, width, height,
                                         &label_vtable, ctx, NULL);
-    if (res != TUI_OK) return res;
+    if (res != ZEPHIO_OK) return res;
 
     label->base.focusable = 0;
 
@@ -60,10 +60,10 @@ TuiResult tui_label_init_ctx(TuiLabel *label, TuiContext *ctx, int x, int y, int
         label->text = NULL;
     }
 
-    return TUI_OK;
+    return ZEPHIO_OK;
 }
 
-void tui_label_set_text(TuiLabel *label, const char *text)
+void zephio_label_set_text(ZephioLabel *label, const char *text)
 {
     if (!label) return;
     free(label->text);
@@ -71,7 +71,7 @@ void tui_label_set_text(TuiLabel *label, const char *text)
     label->base.dirty = 1;
 }
 
-void tui_label_set_colors(TuiLabel *label, TuiColor fg, TuiColor bg)
+void zephio_label_set_colors(ZephioLabel *label, ZephioColor fg, ZephioColor bg)
 {
     if (!label) return;
     label->fg = fg;
@@ -79,7 +79,7 @@ void tui_label_set_colors(TuiLabel *label, TuiColor fg, TuiColor bg)
     label->base.dirty = 1;
 }
 
-void tui_label_set_attr(TuiLabel *label, TuiAttr attr)
+void zephio_label_set_attr(ZephioLabel *label, ZephioAttr attr)
 {
     if (!label) return;
     label->attr = attr;

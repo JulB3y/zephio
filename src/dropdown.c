@@ -1,16 +1,16 @@
 #define _POSIX_C_SOURCE 200809L
 
-#include "tui_dropdown.h"
-#include "tui_context.h"
-#include "tui_app.h"
-#include "tui_screen.h"
+#include "zephio_dropdown.h"
+#include "zephio_context.h"
+#include "zephio_app.h"
+#include "zephio_screen.h"
 
 #include <stdlib.h>
 #include <string.h>
 
-static void popup_ensure_visible(TuiDropdownPopup *popup)
+static void popup_ensure_visible(ZephioDropdownPopup *popup)
 {
-    TuiDropdown *dd = popup->owner;
+    ZephioDropdown *dd = popup->owner;
     int visible = dd->item_count < dd->max_visible
                   ? dd->item_count : dd->max_visible;
 
@@ -20,29 +20,29 @@ static void popup_ensure_visible(TuiDropdownPopup *popup)
         popup->scroll_offset = popup->highlighted - visible + 1;
 }
 
-static void popup_close(TuiDropdownPopup *popup)
+static void popup_close(ZephioDropdownPopup *popup)
 {
-    TuiDropdown *dd = popup->owner;
+    ZephioDropdown *dd = popup->owner;
     if (!dd->is_open) return;
     dd->is_open = 0;
-    TuiApp *app = (TuiApp *)dd->app;
-    if (app) tui_app_pop_overlay(app);
-    tui_widget_focus(&dd->base);
+    ZephioApp *app = (ZephioApp *)dd->app;
+    if (app) zephio_app_pop_overlay(app);
+    zephio_widget_focus(&dd->base);
 }
 
-static void popup_render(TuiWidget *widget)
+static void popup_render(ZephioWidget *widget)
 {
-    TuiDropdownPopup *popup = (TuiDropdownPopup *)widget;
-    TuiDropdown *dd = popup->owner;
+    ZephioDropdownPopup *popup = (ZephioDropdownPopup *)widget;
+    ZephioDropdown *dd = popup->owner;
 
-    TuiColor fg  = dd->fg_popup;
-    TuiColor bg  = dd->bg_popup;
-    TuiColor bfg = ZEPHIO_COLOR_INDEX(14);
-    TuiColor bbg = dd->bg_popup;
+    ZephioColor fg  = dd->fg_popup;
+    ZephioColor bg  = dd->bg_popup;
+    ZephioColor bfg = ZEPHIO_COLOR_INDEX(14);
+    ZephioColor bbg = dd->bg_popup;
 
-    tui_screen_fill(widget->ctx, widget->abs_y, widget->abs_x,
+    zephio_screen_fill(widget->ctx, widget->abs_y, widget->abs_x,
                     widget->width, widget->height, " ", fg, bg, ZEPHIO_ATTR_NONE);
-    tui_screen_box_single(widget->ctx, widget->abs_y, widget->abs_x,
+    zephio_screen_box_single(widget->ctx, widget->abs_y, widget->abs_x,
                           widget->width, widget->height, bfg, bbg, ZEPHIO_ATTR_BOLD);
 
     int visible = dd->item_count < dd->max_visible
@@ -51,9 +51,9 @@ static void popup_render(TuiWidget *widget)
         int idx = popup->scroll_offset + i;
         if (idx >= dd->item_count) break;
 
-        TuiColor ifg = fg;
-        TuiColor ibg = bg;
-        TuiAttr  iat = ZEPHIO_ATTR_NONE;
+        ZephioColor ifg = fg;
+        ZephioColor ibg = bg;
+        ZephioAttr  iat = ZEPHIO_ATTR_NONE;
 
         if (idx == popup->highlighted) {
             ifg = dd->fg_selected;
@@ -61,7 +61,7 @@ static void popup_render(TuiWidget *widget)
             iat = ZEPHIO_ATTR_REVERSE;
         }
 
-        tui_screen_fill(widget->ctx, widget->abs_y + 1 + i, widget->abs_x + 1,
+        zephio_screen_fill(widget->ctx, widget->abs_y + 1 + i, widget->abs_x + 1,
                         widget->width - 2, 1, " ", ifg, ibg, iat);
 
         if (dd->items[idx]) {
@@ -72,23 +72,23 @@ static void popup_render(TuiWidget *widget)
             int clen = wlen < (int)sizeof(buf) - 1 ? wlen : (int)sizeof(buf) - 1;
             memcpy(buf, dd->items[idx], (size_t)clen);
             buf[clen] = '\0';
-            tui_screen_write(widget->ctx, widget->abs_y + 1 + i,
+            zephio_screen_write(widget->ctx, widget->abs_y + 1 + i,
                              widget->abs_x + 2, buf, ifg, ibg, iat);
         }
     }
 }
 
-static int popup_handle_input(TuiWidget *widget, const TuiEvent *event)
+static int popup_handle_input(ZephioWidget *widget, const ZephioEvent *event)
 {
-    TuiDropdownPopup *popup = (TuiDropdownPopup *)widget;
-    TuiDropdown *dd = popup->owner;
+    ZephioDropdownPopup *popup = (ZephioDropdownPopup *)widget;
+    ZephioDropdown *dd = popup->owner;
 
-    if (event->key == TUI_KEY_ESCAPE) {
+    if (event->key == ZEPHIO_KEY_ESCAPE) {
         popup_close(popup);
         return 1;
     }
 
-    if (event->key == TUI_KEY_UP) {
+    if (event->key == ZEPHIO_KEY_UP) {
         if (popup->highlighted > 0) {
             popup->highlighted--;
             popup_ensure_visible(popup);
@@ -97,7 +97,7 @@ static int popup_handle_input(TuiWidget *widget, const TuiEvent *event)
         return 1;
     }
 
-    if (event->key == TUI_KEY_DOWN) {
+    if (event->key == ZEPHIO_KEY_DOWN) {
         if (popup->highlighted < dd->item_count - 1) {
             popup->highlighted++;
             popup_ensure_visible(popup);
@@ -106,7 +106,7 @@ static int popup_handle_input(TuiWidget *widget, const TuiEvent *event)
         return 1;
     }
 
-    if (event->key == TUI_KEY_ENTER) {
+    if (event->key == ZEPHIO_KEY_ENTER) {
         if (dd->item_count > 0) {
             dd->selected = popup->highlighted;
             dd->base.dirty = 1;
@@ -121,13 +121,13 @@ static int popup_handle_input(TuiWidget *widget, const TuiEvent *event)
     return 1;
 }
 
-static int popup_handle_mouse(TuiWidget *widget, const TuiMouseEvent *mouse)
+static int popup_handle_mouse(ZephioWidget *widget, const ZephioMouseEvent *mouse)
 {
-    TuiDropdownPopup *popup = (TuiDropdownPopup *)widget;
-    TuiDropdown *dd = popup->owner;
+    ZephioDropdownPopup *popup = (ZephioDropdownPopup *)widget;
+    ZephioDropdown *dd = popup->owner;
 
-    if (mouse->action == TUI_MOUSE_MOTION) {
-        if (tui_widget_contains(widget, mouse->row, mouse->col)) {
+    if (mouse->action == ZEPHIO_MOUSE_MOTION) {
+        if (zephio_widget_contains(widget, mouse->row, mouse->col)) {
             int idx = mouse->row - widget->abs_y - 1 + popup->scroll_offset;
             if (idx >= 0 && idx < dd->item_count &&
                 popup->highlighted != idx) {
@@ -138,7 +138,7 @@ static int popup_handle_mouse(TuiWidget *widget, const TuiMouseEvent *mouse)
         return 1;
     }
 
-    if (mouse->action == TUI_MOUSE_WHEEL_UP) {
+    if (mouse->action == ZEPHIO_MOUSE_WHEEL_UP) {
         if (popup->scroll_offset > 0) {
             popup->scroll_offset--;
             widget->dirty = 1;
@@ -146,7 +146,7 @@ static int popup_handle_mouse(TuiWidget *widget, const TuiMouseEvent *mouse)
         return 1;
     }
 
-    if (mouse->action == TUI_MOUSE_WHEEL_DOWN) {
+    if (mouse->action == ZEPHIO_MOUSE_WHEEL_DOWN) {
         int visible = dd->item_count < dd->max_visible
                       ? dd->item_count : dd->max_visible;
         if (popup->scroll_offset + visible < dd->item_count) {
@@ -156,8 +156,8 @@ static int popup_handle_mouse(TuiWidget *widget, const TuiMouseEvent *mouse)
         return 1;
     }
 
-    if (mouse->action == TUI_MOUSE_PRESS && mouse->button == TUI_MOUSE_BTN_LEFT) {
-        if (!tui_widget_contains(widget, mouse->row, mouse->col)) {
+    if (mouse->action == ZEPHIO_MOUSE_PRESS && mouse->button == ZEPHIO_MOUSE_BTN_LEFT) {
+        if (!zephio_widget_contains(widget, mouse->row, mouse->col)) {
             popup_close(popup);
             return 1;
         }
@@ -175,7 +175,7 @@ static int popup_handle_mouse(TuiWidget *widget, const TuiMouseEvent *mouse)
     return 1;
 }
 
-static TuiWidgetVTable popup_vtable = {
+static ZephioWidgetVTable popup_vtable = {
     .render       = popup_render,
     .handle_input = popup_handle_input,
     .handle_mouse = popup_handle_mouse,
@@ -185,13 +185,13 @@ static TuiWidgetVTable popup_vtable = {
     .on_blur      = NULL
 };
 
-static void dropdown_render(TuiWidget *widget)
+static void dropdown_render(ZephioWidget *widget)
 {
-    TuiDropdown *dd = (TuiDropdown *)widget;
+    ZephioDropdown *dd = (ZephioDropdown *)widget;
 
-    TuiColor fg  = dd->fg;
-    TuiColor bg  = dd->bg;
-    TuiAttr  attr = dd->attr;
+    ZephioColor fg  = dd->fg;
+    ZephioColor bg  = dd->bg;
+    ZephioAttr  attr = dd->attr;
 
     if (widget->focused || dd->is_open) {
         fg = dd->fg_selected;
@@ -199,7 +199,7 @@ static void dropdown_render(TuiWidget *widget)
         attr |= ZEPHIO_ATTR_REVERSE;
     }
 
-    tui_screen_fill(widget->ctx, widget->abs_y, widget->abs_x,
+    zephio_screen_fill(widget->ctx, widget->abs_y, widget->abs_x,
                     widget->width, widget->height, " ", fg, bg, attr);
 
     const char *text = "Select...";
@@ -215,24 +215,24 @@ static void dropdown_render(TuiWidget *widget)
     memcpy(buf, text, (size_t)clen);
     buf[clen] = '\0';
 
-    tui_screen_write(widget->ctx, widget->abs_y, widget->abs_x + 1, buf, fg, bg, attr);
-    tui_screen_write(widget->ctx, widget->abs_y, widget->abs_x + widget->width - 2,
+    zephio_screen_write(widget->ctx, widget->abs_y, widget->abs_x + 1, buf, fg, bg, attr);
+    zephio_screen_write(widget->ctx, widget->abs_y, widget->abs_x + widget->width - 2,
                      "\xe2\x96\xbc", fg, bg, attr);
 }
 
-static int dropdown_handle_input(TuiWidget *widget, const TuiEvent *event)
+static int dropdown_handle_input(ZephioWidget *widget, const ZephioEvent *event)
 {
-    TuiDropdown *dd = (TuiDropdown *)widget;
+    ZephioDropdown *dd = (ZephioDropdown *)widget;
     if (dd->is_open) return 0;
 
-    if (event->key == TUI_KEY_ENTER || event->codepoint == ' ' ||
-        event->key == TUI_KEY_DOWN) {
+    if (event->key == ZEPHIO_KEY_ENTER || event->codepoint == ' ' ||
+        event->key == ZEPHIO_KEY_DOWN) {
         if (dd->app && dd->item_count > 0)
-            tui_dropdown_open(dd, dd->app);
+            zephio_dropdown_open(dd, dd->app);
         return 1;
     }
 
-    if (event->key == TUI_KEY_UP && dd->selected > 0) {
+    if (event->key == ZEPHIO_KEY_UP && dd->selected > 0) {
         dd->selected--;
         widget->dirty = 1;
         if (dd->on_change)
@@ -244,25 +244,25 @@ static int dropdown_handle_input(TuiWidget *widget, const TuiEvent *event)
     return 0;
 }
 
-static int dropdown_handle_mouse(TuiWidget *widget, const TuiMouseEvent *mouse)
+static int dropdown_handle_mouse(ZephioWidget *widget, const ZephioMouseEvent *mouse)
 {
-    TuiDropdown *dd = (TuiDropdown *)widget;
+    ZephioDropdown *dd = (ZephioDropdown *)widget;
     if (dd->is_open) return 0;
 
-    if (mouse->action == TUI_MOUSE_PRESS && mouse->button == TUI_MOUSE_BTN_LEFT) {
+    if (mouse->action == ZEPHIO_MOUSE_PRESS && mouse->button == ZEPHIO_MOUSE_BTN_LEFT) {
         if (dd->app && dd->item_count > 0)
-            tui_dropdown_open(dd, dd->app);
+            zephio_dropdown_open(dd, dd->app);
         return 1;
     }
     return 0;
 }
 
-static void dropdown_destroy(TuiWidget *widget)
+static void dropdown_destroy(ZephioWidget *widget)
 {
-    TuiDropdown *dd = (TuiDropdown *)widget;
+    ZephioDropdown *dd = (ZephioDropdown *)widget;
     if (dd->is_open && dd->app) {
-        TuiApp *app = (TuiApp *)dd->app;
-        tui_app_pop_overlay(app);
+        ZephioApp *app = (ZephioApp *)dd->app;
+        zephio_app_pop_overlay(app);
         dd->is_open = 0;
     }
     for (int i = 0; i < dd->item_count; i++)
@@ -273,7 +273,7 @@ static void dropdown_destroy(TuiWidget *widget)
     dd->item_capacity = 0;
 }
 
-static TuiWidgetVTable dropdown_vtable = {
+static ZephioWidgetVTable dropdown_vtable = {
     .render       = dropdown_render,
     .handle_input = dropdown_handle_input,
     .handle_mouse = dropdown_handle_mouse,
@@ -283,13 +283,13 @@ static TuiWidgetVTable dropdown_vtable = {
     .on_blur      = NULL
 };
 
-TuiResult tui_dropdown_init_ctx(TuiDropdown *dropdown, TuiContext *ctx, int x, int y, int width)
+ZephioResult zephio_dropdown_init_ctx(ZephioDropdown *dropdown, ZephioContext *ctx, int x, int y, int width)
 {
     if (!dropdown) return TUI_ERR_MEMORY;
 
-    TuiResult res = tui_widget_init_ctx(&dropdown->base, x, y, width, 1,
+    ZephioResult res = zephio_widget_init_ctx(&dropdown->base, x, y, width, 1,
                                         &dropdown_vtable, ctx, NULL);
-    if (res != TUI_OK) return res;
+    if (res != ZEPHIO_OK) return res;
 
     dropdown->base.focusable = 1;
 
@@ -314,10 +314,10 @@ TuiResult tui_dropdown_init_ctx(TuiDropdown *dropdown, TuiContext *ctx, int x, i
     dropdown->on_change = NULL;
     dropdown->user_data = NULL;
 
-    return TUI_OK;
+    return ZEPHIO_OK;
 }
 
-TuiResult tui_dropdown_add_item(TuiDropdown *dropdown, const char *item)
+ZephioResult zephio_dropdown_add_item(ZephioDropdown *dropdown, const char *item)
 {
     if (!dropdown) return TUI_ERR_MEMORY;
 
@@ -335,10 +335,10 @@ TuiResult tui_dropdown_add_item(TuiDropdown *dropdown, const char *item)
     dropdown->items[dropdown->item_count++] = item ? strdup(item) : NULL;
     if (dropdown->selected < 0) dropdown->selected = 0;
     dropdown->base.dirty = 1;
-    return TUI_OK;
+    return ZEPHIO_OK;
 }
 
-void tui_dropdown_clear(TuiDropdown *dropdown)
+void zephio_dropdown_clear(ZephioDropdown *dropdown)
 {
     if (!dropdown) return;
     for (int i = 0; i < dropdown->item_count; i++)
@@ -348,12 +348,12 @@ void tui_dropdown_clear(TuiDropdown *dropdown)
     dropdown->base.dirty = 1;
 }
 
-int tui_dropdown_get_selected(const TuiDropdown *dropdown)
+int zephio_dropdown_get_selected(const ZephioDropdown *dropdown)
 {
     return dropdown ? dropdown->selected : -1;
 }
 
-const char *tui_dropdown_get_selected_item(const TuiDropdown *dropdown)
+const char *zephio_dropdown_get_selected_item(const ZephioDropdown *dropdown)
 {
     if (!dropdown || dropdown->selected < 0 ||
         dropdown->selected >= dropdown->item_count)
@@ -361,7 +361,7 @@ const char *tui_dropdown_get_selected_item(const TuiDropdown *dropdown)
     return dropdown->items[dropdown->selected];
 }
 
-void tui_dropdown_set_selected(TuiDropdown *dropdown, int index)
+void zephio_dropdown_set_selected(ZephioDropdown *dropdown, int index)
 {
     if (!dropdown) return;
     if (index < -1 || index >= dropdown->item_count) return;
@@ -369,9 +369,9 @@ void tui_dropdown_set_selected(TuiDropdown *dropdown, int index)
     dropdown->base.dirty = 1;
 }
 
-void tui_dropdown_set_colors(TuiDropdown *dropdown,
-                             TuiColor fg, TuiColor bg,
-                             TuiColor fg_focused, TuiColor bg_focused)
+void zephio_dropdown_set_colors(ZephioDropdown *dropdown,
+                             ZephioColor fg, ZephioColor bg,
+                             ZephioColor fg_focused, ZephioColor bg_focused)
 {
     if (!dropdown) return;
     dropdown->fg          = fg;
@@ -381,9 +381,9 @@ void tui_dropdown_set_colors(TuiDropdown *dropdown,
     dropdown->base.dirty  = 1;
 }
 
-void tui_dropdown_set_popup_colors(TuiDropdown *dropdown,
-                                   TuiColor fg, TuiColor bg,
-                                   TuiColor fg_hl, TuiColor bg_hl)
+void zephio_dropdown_set_popup_colors(ZephioDropdown *dropdown,
+                                   ZephioColor fg, ZephioColor bg,
+                                   ZephioColor fg_hl, ZephioColor bg_hl)
 {
     if (!dropdown) return;
     dropdown->fg_popup    = fg;
@@ -393,8 +393,8 @@ void tui_dropdown_set_popup_colors(TuiDropdown *dropdown,
     dropdown->base.dirty  = 1;
 }
 
-void tui_dropdown_set_on_change(TuiDropdown *dropdown,
-                                TuiDropdownCallback callback,
+void zephio_dropdown_set_on_change(ZephioDropdown *dropdown,
+                                ZephioDropdownCallback callback,
                                 void *user_data)
 {
     if (!dropdown) return;
@@ -402,13 +402,13 @@ void tui_dropdown_set_on_change(TuiDropdown *dropdown,
     dropdown->user_data = user_data;
 }
 
-void tui_dropdown_set_max_visible(TuiDropdown *dropdown, int max_visible)
+void zephio_dropdown_set_max_visible(ZephioDropdown *dropdown, int max_visible)
 {
     if (!dropdown) return;
     dropdown->max_visible = max_visible > 0 ? max_visible : ZEPHIO_DROPDOWN_MAX_VISIBLE;
 }
 
-void tui_dropdown_open(TuiDropdown *dropdown, void *app)
+void zephio_dropdown_open(ZephioDropdown *dropdown, void *app)
 {
     if (!dropdown || !app || dropdown->is_open) return;
     if (dropdown->item_count == 0) return;
@@ -433,7 +433,7 @@ void tui_dropdown_open(TuiDropdown *dropdown, void *app)
     int px = dropdown->base.abs_x;
     int py = dropdown->base.abs_y + dropdown->base.height;
 
-    tui_widget_init_ctx(&dropdown->popup.base, px, py, pw, ph,
+    zephio_widget_init_ctx(&dropdown->popup.base, px, py, pw, ph,
                         &popup_vtable, dropdown->base.ctx, NULL);
     dropdown->popup.base.focusable = 1;
     dropdown->popup.owner       = dropdown;
@@ -442,10 +442,10 @@ void tui_dropdown_open(TuiDropdown *dropdown, void *app)
     dropdown->popup.scroll_offset = 0;
     popup_ensure_visible(&dropdown->popup);
 
-    tui_app_push_overlay((TuiApp *)app, &dropdown->popup.base);
+    zephio_app_push_overlay((ZephioApp *)app, &dropdown->popup.base);
 }
 
-void tui_dropdown_close(TuiDropdown *dropdown)
+void zephio_dropdown_close(ZephioDropdown *dropdown)
 {
     if (!dropdown || !dropdown->is_open) return;
     popup_close(&dropdown->popup);

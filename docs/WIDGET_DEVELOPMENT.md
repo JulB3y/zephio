@@ -58,7 +58,7 @@ A counter with `+` and `-` buttons, displayed as text.
 #ifndef COUNTER_WIDGET_H
 #define COUNTER_WIDGET_H
 
-#include "tui_widget.h"
+#include "zephio_widget.h"
 
 typedef struct {
     TuiWidget base;
@@ -83,8 +83,8 @@ int  counter_widget_get_value(CounterWidget *cw);
 
 ```c
 #include "counter_widget.h"
-#include "tui_screen.h"
-#include "tui_style.h"
+#include "zephio_screen.h"
+#include "zephio_style.h"
 #include <stdio.h>
 #include <stdlib.h>
 
@@ -96,7 +96,7 @@ static void counter_render(TuiWidget *widget) {
 
     tui_screen_fill(widget->abs_y, widget->abs_x,
                     widget->width, widget->height,
-                    " ", fg, bg, TUI_ATTR_NONE);
+                    " ", fg, bg, ZEPHIO_ATTR_NONE);
 
     char buf[32];
     int len = snprintf(buf, sizeof(buf), "[-] %d [+]", cw->count);
@@ -104,21 +104,21 @@ static void counter_render(TuiWidget *widget) {
     int text_x = widget->abs_x + (widget->width - len) / 2;
     int text_y = widget->abs_y + widget->height / 2;
     if (text_x >= 0 && text_y >= 0) {
-        tui_screen_write(text_y, text_x, buf, fg, bg, TUI_ATTR_BOLD);
+        tui_screen_write(text_y, text_x, buf, fg, bg, ZEPHIO_ATTR_BOLD);
     }
 }
 
 static int counter_handle_input(TuiWidget *widget, const TuiEvent *event) {
     CounterWidget *cw = (CounterWidget *)widget;
 
-    if (event->codepoint == '+' || event->key == TUI_KEY_UP) {
+    if (event->codepoint == '+' || event->key == ZEPHIO_KEY_UP) {
         if (cw->count < cw->max) {
             cw->count++;
             tui_widget_set_dirty(widget);
         }
         return 1;
     }
-    if (event->codepoint == '-' || event->key == TUI_KEY_DOWN) {
+    if (event->codepoint == '-' || event->key == ZEPHIO_KEY_DOWN) {
         if (cw->count > cw->min) {
             cw->count--;
             tui_widget_set_dirty(widget);
@@ -148,18 +148,18 @@ TuiResult counter_widget_init(CounterWidget *cw, int x, int y,
                                int width, int min, int max) {
     TuiResult res = tui_widget_init(&cw->base, x, y, width, 1,
                                      &counter_vtable, NULL);
-    if (res != TUI_OK) return res;
+    if (res != ZEPHIO_OK) return res;
 
     cw->count       = 0;
     cw->min         = min;
     cw->max         = max;
-    cw->fg          = TUI_COLOR_INDEX(15);
-    cw->bg          = TUI_COLOR_INDEX(234);
-    cw->fg_focused  = TUI_COLOR_INDEX(0);
-    cw->bg_focused  = TUI_COLOR_INDEX(12);
+    cw->fg          = ZEPHIO_COLOR_INDEX(15);
+    cw->bg          = ZEPHIO_COLOR_INDEX(234);
+    cw->fg_focused  = ZEPHIO_COLOR_INDEX(0);
+    cw->bg_focused  = ZEPHIO_COLOR_INDEX(12);
     cw->base.focusable = 1;
 
-    return TUI_OK;
+    return ZEPHIO_OK;
 }
 
 void counter_widget_set_value(CounterWidget *cw, int value) {
@@ -178,8 +178,8 @@ int counter_widget_get_value(CounterWidget *cw) {
 
 ```c
 #include "tui.h"
-#include "tui_input.h"
-#include "tui_screen.h"
+#include "zephio_input.h"
+#include "zephio_screen.h"
 #include "counter_widget.h"
 
 static TuiWidget root;
@@ -188,20 +188,20 @@ static CounterWidget counter;
 static void draw_frame(int rows, int cols) {
     tui_screen_clear();
     tui_screen_write(0, 2, "Counter Demo  |  +/- to change  |  q to quit",
-        TUI_COLOR_INDEX(15), TUI_COLOR_INDEX(4), TUI_ATTR_BOLD);
+        ZEPHIO_COLOR_INDEX(15), ZEPHIO_COLOR_INDEX(4), ZEPHIO_ATTR_BOLD);
     tui_widget_render(&root);
     tui_screen_render();
 }
 
 static int on_input(const TuiEvent *ev, void *ud) {
-    if (ev->key == TUI_EVENT_RESIZE) {
+    if (ev->key == ZEPHIO_EVENT_RESIZE) {
         tui_screen_resize(ev->size.rows, ev->size.cols);
         draw_frame(ev->size.rows, ev->size.cols);
         return 0;
     }
-    if (ev->key == TUI_KEY_ESCAPE || ev->codepoint == 'q') return 1;
+    if (ev->key == ZEPHIO_KEY_ESCAPE || ev->codepoint == 'q') return 1;
 
-    if (ev->key == TUI_KEY_TAB) {
+    if (ev->key == ZEPHIO_KEY_TAB) {
         tui_widget_focus_next(&root);
         draw_frame(0, 0);
         return 0;

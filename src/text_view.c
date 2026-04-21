@@ -1,9 +1,9 @@
 #define _POSIX_C_SOURCE 200809L
 
-#include "tui_text_view.h"
-#include "tui_context.h"
-#include "tui_text.h"
-#include "tui_screen.h"
+#include "zephio_text_view.h"
+#include "zephio_context.h"
+#include "zephio_text.h"
+#include "zephio_screen.h"
 
 #include <stdlib.h>
 #include <string.h>
@@ -11,7 +11,7 @@
 #define LINES_INITIAL_CAPACITY 64
 #define RENDER_BUF_SIZE 4096
 
-static void text_view_ensure_capacity(TuiTextView *tv, int needed)
+static void text_view_ensure_capacity(ZephioTextView *tv, int needed)
 {
     if (needed <= tv->line_capacity) return;
 
@@ -31,7 +31,7 @@ static void text_view_ensure_capacity(TuiTextView *tv, int needed)
     tv->line_capacity = new_cap;
 }
 
-static void text_view_build_lines(TuiTextView *tv, int wrap_width)
+static void text_view_build_lines(ZephioTextView *tv, int wrap_width)
 {
     tv->line_count     = 0;
     tv->max_line_width = 0;
@@ -45,7 +45,7 @@ static void text_view_build_lines(TuiTextView *tv, int wrap_width)
     int break_count;
 
     if (tv->word_wrap && wrap_width > 0) {
-        break_count = tui_text_word_wrap(tv->text, (size_t)tv->text_len,
+        break_count = zephio_text_word_wrap(tv->text, (size_t)tv->text_len,
                                           wrap_width, breaks, max_breaks);
     } else {
         break_count = 0;
@@ -74,7 +74,7 @@ static void text_view_build_lines(TuiTextView *tv, int wrap_width)
         tv->line_lengths[line_idx] = len;
 
         if (len > 0) {
-            int w = tui_text_width(tv->text + pos, (size_t)len);
+            int w = zephio_text_width(tv->text + pos, (size_t)len);
             if (w > tv->max_line_width) tv->max_line_width = w;
         }
 
@@ -92,7 +92,7 @@ static void text_view_build_lines(TuiTextView *tv, int wrap_width)
         tv->line_starts[line_idx]  = pos;
         tv->line_lengths[line_idx] = len;
         if (len > 0) {
-            int w = tui_text_width(tv->text + pos, (size_t)len);
+            int w = zephio_text_width(tv->text + pos, (size_t)len);
             if (w > tv->max_line_width) tv->max_line_width = w;
         }
         line_idx++;
@@ -109,9 +109,9 @@ static void text_view_build_lines(TuiTextView *tv, int wrap_width)
     free(breaks);
 }
 
-static void text_view_update_content(TuiTextView *tv)
+static void text_view_update_content(ZephioTextView *tv)
 {
-    TuiWidget *w = &tv->base.base;
+    ZephioWidget *w = &tv->base.base;
     int wrap_width = w->width;
 
     if (tv->word_wrap && wrap_width > 0) {
@@ -129,13 +129,13 @@ static void text_view_update_content(TuiTextView *tv)
 
     int content_w = tv->max_line_width;
     if (content_w < w->width) content_w = w->width;
-    tui_scroll_container_set_content_size(&tv->base, content_w, tv->line_count);
+    zephio_scroll_container_set_content_size(&tv->base, content_w, tv->line_count);
 }
 
-static void text_view_render(TuiWidget *widget)
+static void text_view_render(ZephioWidget *widget)
 {
-    TuiTextView *tv = (TuiTextView *)widget;
-    TuiScrollContainer *sc = &tv->base;
+    ZephioTextView *tv = (ZephioTextView *)widget;
+    ZephioScrollContainer *sc = &tv->base;
 
     int has_vscroll = sc->content_height > widget->height;
     int has_hscroll = sc->content_width > widget->width;
@@ -144,9 +144,9 @@ static void text_view_render(TuiWidget *widget)
     if (cv_width < 0)  cv_width  = 0;
     if (cv_height < 0) cv_height = 0;
 
-    tui_scroll_container_clamp_scroll(sc, cv_width, cv_height);
+    zephio_scroll_container_clamp_scroll(sc, cv_width, cv_height);
 
-    tui_screen_fill(widget->ctx, widget->abs_y, widget->abs_x,
+    zephio_screen_fill(widget->ctx, widget->abs_y, widget->abs_x,
                     widget->width, widget->height,
                     " ", tv->fg, tv->bg, tv->attr);
 
@@ -163,13 +163,13 @@ static void text_view_render(TuiWidget *widget)
 
         const char *line_text = tv->text + ls;
 
-        int skip_bytes = tui_text_col_to_index(line_text, (size_t)ll,
+        int skip_bytes = zephio_text_col_to_index(line_text, (size_t)ll,
                                                 sc->scroll_x);
         int remaining = ll - skip_bytes;
         if (remaining <= 0) continue;
 
         size_t visible_bytes;
-        tui_text_clip(line_text + skip_bytes, (size_t)remaining,
+        zephio_text_clip(line_text + skip_bytes, (size_t)remaining,
                       cv_width, &visible_bytes);
 
         if (visible_bytes > 0) {
@@ -177,19 +177,19 @@ static void text_view_render(TuiWidget *widget)
                           ? visible_bytes : sizeof(buf) - 1;
             memcpy(buf, line_text + skip_bytes, copy);
             buf[copy] = '\0';
-            tui_screen_write(widget->ctx, widget->abs_y + r, widget->abs_x,
+            zephio_screen_write(widget->ctx, widget->abs_y + r, widget->abs_x,
                              buf, tv->fg, tv->bg, tv->attr);
         }
     }
 
-    tui_scroll_container_render_scrollbars(widget, sc,
+    zephio_scroll_container_render_scrollbars(widget, sc,
                                             has_vscroll, has_hscroll,
                                             cv_width, cv_height);
 }
 
-static void text_view_destroy(TuiWidget *widget)
+static void text_view_destroy(ZephioWidget *widget)
 {
-    TuiTextView *tv = (TuiTextView *)widget;
+    ZephioTextView *tv = (ZephioTextView *)widget;
     free(tv->text);
     free(tv->line_starts);
     free(tv->line_lengths);
@@ -201,31 +201,31 @@ static void text_view_destroy(TuiWidget *widget)
     tv->line_capacity = 0;
 }
 
-static void text_view_on_resize(TuiWidget *widget, int width, int height)
+static void text_view_on_resize(ZephioWidget *widget, int width, int height)
 {
     (void)width;
     (void)height;
-    TuiTextView *tv = (TuiTextView *)widget;
+    ZephioTextView *tv = (ZephioTextView *)widget;
     text_view_update_content(tv);
 }
 
-static TuiWidgetVTable text_view_vtable = {
+static ZephioWidgetVTable text_view_vtable = {
     .render       = text_view_render,
-    .handle_input = tui_scroll_container_handle_input,
-    .handle_mouse = tui_scroll_container_handle_mouse,
+    .handle_input = zephio_scroll_container_handle_input,
+    .handle_mouse = zephio_scroll_container_handle_mouse,
     .destroy      = text_view_destroy,
     .on_resize    = text_view_on_resize,
     .on_focus     = NULL,
     .on_blur      = NULL
 };
 
-TuiResult tui_text_view_init_ctx(TuiTextView *tv, TuiContext *ctx, int x, int y,
+ZephioResult zephio_text_view_init_ctx(ZephioTextView *tv, ZephioContext *ctx, int x, int y,
                                   int width, int height)
 {
     if (!tv) return TUI_ERR_MEMORY;
 
-    TuiResult res = tui_scroll_container_init_ctx(&tv->base, ctx, x, y, width, height);
-    if (res != TUI_OK) return res;
+    ZephioResult res = zephio_scroll_container_init_ctx(&tv->base, ctx, x, y, width, height);
+    if (res != ZEPHIO_OK) return res;
 
     tv->base.base.vtable = &text_view_vtable;
 
@@ -241,10 +241,10 @@ TuiResult tui_text_view_init_ctx(TuiTextView *tv, TuiContext *ctx, int x, int y,
     tv->attr    = ZEPHIO_ATTR_NONE;
     tv->word_wrap = 1;
 
-    return TUI_OK;
+    return ZEPHIO_OK;
 }
 
-void tui_text_view_set_text(TuiTextView *tv, const char *text)
+void zephio_text_view_set_text(ZephioTextView *tv, const char *text)
 {
     if (!tv) return;
 
@@ -264,7 +264,7 @@ void tui_text_view_set_text(TuiTextView *tv, const char *text)
     text_view_update_content(tv);
 }
 
-void tui_text_view_set_colors(TuiTextView *tv, TuiColor fg, TuiColor bg)
+void zephio_text_view_set_colors(ZephioTextView *tv, ZephioColor fg, ZephioColor bg)
 {
     if (!tv) return;
     tv->fg = fg;
@@ -272,14 +272,14 @@ void tui_text_view_set_colors(TuiTextView *tv, TuiColor fg, TuiColor bg)
     tv->base.base.dirty = 1;
 }
 
-void tui_text_view_set_attr(TuiTextView *tv, TuiAttr attr)
+void zephio_text_view_set_attr(ZephioTextView *tv, ZephioAttr attr)
 {
     if (!tv) return;
     tv->attr = attr;
     tv->base.base.dirty = 1;
 }
 
-void tui_text_view_set_word_wrap(TuiTextView *tv, int enabled)
+void zephio_text_view_set_word_wrap(ZephioTextView *tv, int enabled)
 {
     if (!tv) return;
     tv->word_wrap = enabled;
@@ -288,13 +288,13 @@ void tui_text_view_set_word_wrap(TuiTextView *tv, int enabled)
     text_view_update_content(tv);
 }
 
-int tui_text_view_get_line_count(TuiTextView *tv)
+int zephio_text_view_get_line_count(ZephioTextView *tv)
 {
     if (!tv) return 0;
     return tv->line_count;
 }
 
-int tui_text_view_get_scroll_y(TuiTextView *tv)
+int zephio_text_view_get_scroll_y(ZephioTextView *tv)
 {
     if (!tv) return 0;
     return tv->base.scroll_y;

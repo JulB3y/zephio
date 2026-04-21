@@ -23,8 +23,8 @@ Zephio's layout engine arranges widgets in horizontal or vertical stacks with fl
 
 ```c
 typedef enum {
-    TUI_LAYOUT_HORIZONTAL,  // Children arranged left to right
-    TUI_LAYOUT_VERTICAL     // Children arranged top to bottom
+    ZEPHIO_LAYOUT_HORIZONTAL,  // Children arranged left to right
+    ZEPHIO_LAYOUT_VERTICAL     // Children arranged top to bottom
 } TuiLayoutDirection;
 ```
 
@@ -36,24 +36,24 @@ Each child is paired with a `TuiLayoutConstraints` value:
 
 | Constraint | Macro | Behavior |
 |---|---|---|
-| **Fixed** | `TUI_LAYOUT_FIXED(n)` | Exact size in cells |
-| **Fill** | `TUI_LAYOUT_FILL` | Share remaining space equally (weight 1.0) |
-| **Weighted Fill** | `TUI_LAYOUT_FILL_WEIGHT(w)` | Share remaining space with weight `w` |
-| **Auto** | `TUI_LAYOUT_AUTO` | Use the child's current `width`/`height` |
+| **Fixed** | `ZEPHIO_LAYOUT_FIXED(n)` | Exact size in cells |
+| **Fill** | `ZEPHIO_LAYOUT_FILL` | Share remaining space equally (weight 1.0) |
+| **Weighted Fill** | `ZEPHIO_LAYOUT_FILL_WEIGHT(w)` | Share remaining space with weight `w` |
+| **Auto** | `ZEPHIO_LAYOUT_AUTO` | Use the child's current `width`/`height` |
 
 ### How Fill Works
 
 After allocating space for all `FIXED` and `AUTO` children, the remaining space is divided among `FILL` children proportionally to their weights.
 
 Example (80 columns, horizontal layout):
-- Child A: `TUI_LAYOUT_FIXED(20)` → 20 columns
-- Child B: `TUI_LAYOUT_FILL` → 30 columns (weight 1.0)
-- Child C: `TUI_LAYOUT_FILL` → 30 columns (weight 1.0)
+- Child A: `ZEPHIO_LAYOUT_FIXED(20)` → 20 columns
+- Child B: `ZEPHIO_LAYOUT_FILL` → 30 columns (weight 1.0)
+- Child C: `ZEPHIO_LAYOUT_FILL` → 30 columns (weight 1.0)
 
 Example with weights (80 columns, horizontal layout):
-- Child A: `TUI_LAYOUT_FIXED(20)` → 20 columns
-- Child B: `TUI_LAYOUT_FILL_WEIGHT(2)` → 40 columns (weight 2.0)
-- Child C: `TUI_LAYOUT_FILL` → 20 columns (weight 1.0)
+- Child A: `ZEPHIO_LAYOUT_FIXED(20)` → 20 columns
+- Child B: `ZEPHIO_LAYOUT_FILL_WEIGHT(2)` → 40 columns (weight 2.0)
+- Child C: `ZEPHIO_LAYOUT_FILL` → 20 columns (weight 1.0)
 
 ## Basic API
 
@@ -61,7 +61,7 @@ Example with weights (80 columns, horizontal layout):
 
 ```c
 TuiLayout layout;
-tui_layout_init(&layout, TUI_LAYOUT_VERTICAL, 0, 0, width, height);
+tui_layout_init(&layout, ZEPHIO_LAYOUT_VERTICAL, 0, 0, width, height);
 ```
 
 ### Adding Children
@@ -73,9 +73,9 @@ tui_widget_init(&header, 0, 0, 1, 1, NULL, NULL);
 tui_widget_init(&content, 0, 0, 1, 1, NULL, NULL);
 tui_widget_init(&footer, 0, 0, 1, 1, NULL, NULL);
 
-tui_layout_add(&layout, &header, TUI_LAYOUT_FIXED(1));
-tui_layout_add(&layout, &content, TUI_LAYOUT_FILL);
-tui_layout_add(&layout, &footer, TUI_LAYOUT_FIXED(1));
+tui_layout_add(&layout, &header, ZEPHIO_LAYOUT_FIXED(1));
+tui_layout_add(&layout, &content, ZEPHIO_LAYOUT_FILL);
+tui_layout_add(&layout, &footer, ZEPHIO_LAYOUT_FIXED(1));
 ```
 
 ### Recalculating
@@ -117,28 +117,28 @@ TuiLayout body;       // Horizontal: sidebar, content
 TuiWidget header, sidebar, content, footer;
 
 // Root vertical layout
-tui_layout_init(&root, TUI_LAYOUT_VERTICAL, 0, 0, cols, rows);
+tui_layout_init(&root, ZEPHIO_LAYOUT_VERTICAL, 0, 0, cols, rows);
 
 // Header (fixed height)
 tui_widget_init(&header, 0, 0, 1, 1, NULL, NULL);
-tui_layout_add(&root, &header, TUI_LAYOUT_FIXED(1));
+tui_layout_add(&root, &header, ZEPHIO_LAYOUT_FIXED(1));
 
 // Body (horizontal, fills remaining space)
-tui_layout_init(&body, TUI_LAYOUT_HORIZONTAL, 0, 0, 1, 1);
+tui_layout_init(&body, ZEPHIO_LAYOUT_HORIZONTAL, 0, 0, 1, 1);
 tui_layout_set_padding(&body, 1);
-tui_layout_add(&root, &body.base, TUI_LAYOUT_FILL);
+tui_layout_add(&root, &body.base, ZEPHIO_LAYOUT_FILL);
 
 // Sidebar (fixed width)
 tui_widget_init(&sidebar, 0, 0, 20, 1, NULL, NULL);
-tui_layout_add(&body, &sidebar, TUI_LAYOUT_FIXED(20));
+tui_layout_add(&body, &sidebar, ZEPHIO_LAYOUT_FIXED(20));
 
 // Content (fills remaining width)
 tui_widget_init(&content, 0, 0, 1, 1, NULL, NULL);
-tui_layout_add(&body, &content, TUI_LAYOUT_FILL);
+tui_layout_add(&body, &content, ZEPHIO_LAYOUT_FILL);
 
 // Footer (fixed height)
 tui_widget_init(&footer, 0, 0, 1, 1, NULL, NULL);
-tui_layout_add(&root, &footer, TUI_LAYOUT_FIXED(1));
+tui_layout_add(&root, &footer, ZEPHIO_LAYOUT_FIXED(1));
 
 // Apply layout
 tui_widget_resize(&root.base, cols, rows);
@@ -187,46 +187,46 @@ TuiWidget  editor;
 TuiWidget  preview;
 TuiWidget  statusbar;
 
-tui_layout_init(&root, TUI_LAYOUT_VERTICAL, 0, 0, cols, rows);
+tui_layout_init(&root, ZEPHIO_LAYOUT_VERTICAL, 0, 0, cols, rows);
 tui_layout_set_padding(&root, 0);
 
 // Titlebar
 tui_widget_init(&titlebar, 0, 0, 1, 1, NULL, NULL);
-tui_layout_add(&root, &titlebar, TUI_LAYOUT_FIXED(1));
+tui_layout_add(&root, &titlebar, ZEPHIO_LAYOUT_FIXED(1));
 
 // Main area (horizontal: nav + center)
-tui_layout_init(&main_row, TUI_LAYOUT_HORIZONTAL, 0, 0, 1, 1);
+tui_layout_init(&main_row, ZEPHIO_LAYOUT_HORIZONTAL, 0, 0, 1, 1);
 tui_layout_set_padding(&main_row, 1);
-tui_layout_add(&root, &main_row.base, TUI_LAYOUT_FILL);
+tui_layout_add(&root, &main_row.base, ZEPHIO_LAYOUT_FILL);
 
 // Navigation sidebar
 tui_widget_init(&nav, 0, 0, 18, 1, NULL, NULL);
-tui_layout_add(&main_row, &nav, TUI_LAYOUT_FIXED(18));
+tui_layout_add(&main_row, &nav, ZEPHIO_LAYOUT_FIXED(18));
 
 // Center column (vertical: toolbar + content)
-tui_layout_init(&center_col, TUI_LAYOUT_VERTICAL, 0, 0, 1, 1);
+tui_layout_init(&center_col, ZEPHIO_LAYOUT_VERTICAL, 0, 0, 1, 1);
 tui_layout_set_padding(&center_col, 1);
-tui_layout_add(&main_row, &center_col.base, TUI_LAYOUT_FILL);
+tui_layout_add(&main_row, &center_col.base, ZEPHIO_LAYOUT_FILL);
 
 // Toolbar
 tui_widget_init(&toolbar, 0, 0, 1, 1, NULL, NULL);
-tui_layout_add(&center_col, &toolbar, TUI_LAYOUT_FIXED(1));
+tui_layout_add(&center_col, &toolbar, ZEPHIO_LAYOUT_FIXED(1));
 
 // Content row (horizontal: editor + preview)
-tui_layout_init(&content_row, TUI_LAYOUT_HORIZONTAL, 0, 0, 1, 1);
+tui_layout_init(&content_row, ZEPHIO_LAYOUT_HORIZONTAL, 0, 0, 1, 1);
 tui_layout_set_padding(&content_row, 1);
-tui_layout_add(&center_col, &content_row.base, TUI_LAYOUT_FILL);
+tui_layout_add(&center_col, &content_row.base, ZEPHIO_LAYOUT_FILL);
 
 // Editor gets 2/3, preview gets 1/3
 tui_widget_init(&editor, 0, 0, 1, 1, NULL, NULL);
-tui_layout_add(&content_row, &editor, TUI_LAYOUT_FILL_WEIGHT(2));
+tui_layout_add(&content_row, &editor, ZEPHIO_LAYOUT_FILL_WEIGHT(2));
 
 tui_widget_init(&preview, 0, 0, 1, 1, NULL, NULL);
-tui_layout_add(&content_row, &preview, TUI_LAYOUT_FILL);
+tui_layout_add(&content_row, &preview, ZEPHIO_LAYOUT_FILL);
 
 // Statusbar
 tui_widget_init(&statusbar, 0, 0, 1, 1, NULL, NULL);
-tui_layout_add(&root, &statusbar, TUI_LAYOUT_FIXED(1));
+tui_layout_add(&root, &statusbar, ZEPHIO_LAYOUT_FIXED(1));
 
 // Finalize
 tui_widget_resize(&root.base, cols, rows);
@@ -238,7 +238,7 @@ When the terminal is resized, update the root layout and redraw:
 
 ```c
 static int on_input(const TuiEvent *ev, void *ud) {
-    if (ev->key == TUI_EVENT_RESIZE) {
+    if (ev->key == ZEPHIO_EVENT_RESIZE) {
         tui_screen_resize(ev->size.rows, ev->size.cols);
         tui_widget_resize(&root.base, ev->size.cols, ev->size.rows);
         draw_frame(ev->size.rows, ev->size.cols);
@@ -255,30 +255,30 @@ static int on_input(const TuiEvent *ev, void *ud) {
 ### Equal Split (1:1:1)
 
 ```c
-tui_layout_add(&row, &a, TUI_LAYOUT_FILL);
-tui_layout_add(&row, &b, TUI_LAYOUT_FILL);
-tui_layout_add(&row, &c, TUI_LAYOUT_FILL);
+tui_layout_add(&row, &a, ZEPHIO_LAYOUT_FILL);
+tui_layout_add(&row, &b, ZEPHIO_LAYOUT_FILL);
+tui_layout_add(&row, &c, ZEPHIO_LAYOUT_FILL);
 ```
 
 ### 2:1 Ratio
 
 ```c
-tui_layout_add(&row, &a, TUI_LAYOUT_FILL_WEIGHT(2));
-tui_layout_add(&row, &b, TUI_LAYOUT_FILL);
+tui_layout_add(&row, &a, ZEPHIO_LAYOUT_FILL_WEIGHT(2));
+tui_layout_add(&row, &b, ZEPHIO_LAYOUT_FILL);
 ```
 
 ### Mixed Fixed + Fill
 
 ```c
-tui_layout_add(&row, &sidebar, TUI_LAYOUT_FIXED(20));
-tui_layout_add(&row, &content, TUI_LAYOUT_FILL);
+tui_layout_add(&row, &sidebar, ZEPHIO_LAYOUT_FIXED(20));
+tui_layout_add(&row, &content, ZEPHIO_LAYOUT_FILL);
 ```
 
 ### Auto-Sized + Fill
 
 ```c
-tui_layout_add(&row, &label, TUI_LAYOUT_AUTO);  // Uses label's natural width
-tui_layout_add(&row, &input, TUI_LAYOUT_FILL);  // Takes the rest
+tui_layout_add(&row, &label, ZEPHIO_LAYOUT_AUTO);  // Uses label's natural width
+tui_layout_add(&row, &input, ZEPHIO_LAYOUT_FILL);  // Takes the rest
 ```
 
 ## Cleaning Up
@@ -298,25 +298,25 @@ tui_layout_remove_all(&root);
 
 ```c
 TuiLayout form;
-tui_layout_init(&form, TUI_LAYOUT_VERTICAL, x, y, width, height);
+tui_layout_init(&form, ZEPHIO_LAYOUT_VERTICAL, x, y, width, height);
 tui_layout_set_padding(&form, 1);
 
 for (int i = 0; i < field_count; i++) {
     TuiLayout *row = &rows[i];
-    tui_layout_init(row, TUI_LAYOUT_HORIZONTAL, 0, 0, 1, 1);
-    tui_layout_add(row, &labels[i].base, TUI_LAYOUT_FIXED(15));
-    tui_layout_add(row, &inputs[i].base, TUI_LAYOUT_FILL);
-    tui_layout_add(&form, &row->base, TUI_LAYOUT_FIXED(1));
+    tui_layout_init(row, ZEPHIO_LAYOUT_HORIZONTAL, 0, 0, 1, 1);
+    tui_layout_add(row, &labels[i].base, ZEPHIO_LAYOUT_FIXED(15));
+    tui_layout_add(row, &inputs[i].base, ZEPHIO_LAYOUT_FILL);
+    tui_layout_add(&form, &row->base, ZEPHIO_LAYOUT_FIXED(1));
 }
 ```
 
 ### Full-Screen App Skeleton
 
 ```c
-tui_layout_init(&root, TUI_LAYOUT_VERTICAL, 0, 0, cols, rows);
-tui_layout_add(&root, &titlebar,  TUI_LAYOUT_FIXED(1));
-tui_layout_add(&root, &body,      TUI_LAYOUT_FILL);
-tui_layout_add(&root, &statusbar, TUI_LAYOUT_FIXED(1));
+tui_layout_init(&root, ZEPHIO_LAYOUT_VERTICAL, 0, 0, cols, rows);
+tui_layout_add(&root, &titlebar,  ZEPHIO_LAYOUT_FIXED(1));
+tui_layout_add(&root, &body,      ZEPHIO_LAYOUT_FILL);
+tui_layout_add(&root, &statusbar, ZEPHIO_LAYOUT_FIXED(1));
 ```
 
 ## Next Steps

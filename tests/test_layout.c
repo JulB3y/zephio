@@ -1,15 +1,15 @@
 #include "util.h"
-#include "tui_layout.h"
-#include "tui_widget.h"
+#include "zephio_layout.h"
+#include "zephio_widget.h"
 
 /* ── Layout Init ────────────────────────────────────────────────── */
 
 TEST_BEGIN(layout_init_vertical)
 {
-    TuiLayout layout;
-    TuiResult res = tui_layout_init(&layout, TUI_LAYOUT_VERTICAL, 0, 0, 40, 20);
-    TEST_EQ(res, TUI_OK);
-    TEST_EQ(layout.direction, TUI_LAYOUT_VERTICAL);
+    ZephioLayout layout;
+    ZephioResult res = zephio_layout_init(&layout, ZEPHIO_LAYOUT_VERTICAL, 0, 0, 40, 20);
+    TEST_EQ(res, ZEPHIO_OK);
+    TEST_EQ(layout.direction, ZEPHIO_LAYOUT_VERTICAL);
     TEST_EQ(layout.base.width, 40);
     TEST_EQ(layout.base.height, 20);
     TEST_EQ(layout.padding, 0);
@@ -18,150 +18,150 @@ TEST_BEGIN(layout_init_vertical)
     TEST_EQ(layout.margin_bottom, 0);
     TEST_EQ(layout.margin_left, 0);
     TEST_EQ(layout.margin_right, 0);
-    tui_widget_destroy(&layout.base);
+    zephio_widget_destroy(&layout.base);
 }
 
 TEST_BEGIN(layout_init_horizontal)
 {
-    TuiLayout layout;
-    TuiResult res = tui_layout_init(&layout, TUI_LAYOUT_HORIZONTAL, 5, 3, 60, 15);
-    TEST_EQ(res, TUI_OK);
-    TEST_EQ(layout.direction, TUI_LAYOUT_HORIZONTAL);
+    ZephioLayout layout;
+    ZephioResult res = zephio_layout_init(&layout, ZEPHIO_LAYOUT_HORIZONTAL, 5, 3, 60, 15);
+    TEST_EQ(res, ZEPHIO_OK);
+    TEST_EQ(layout.direction, ZEPHIO_LAYOUT_HORIZONTAL);
     TEST_EQ(layout.base.x, 5);
     TEST_EQ(layout.base.y, 3);
-    tui_widget_destroy(&layout.base);
+    zephio_widget_destroy(&layout.base);
 }
 
 TEST_BEGIN(layout_init_null)
 {
-    TEST_NE(tui_layout_init(NULL, TUI_LAYOUT_VERTICAL, 0, 0, 40, 20), TUI_OK);
+    TEST_NE(zephio_layout_init(NULL, ZEPHIO_LAYOUT_VERTICAL, 0, 0, 40, 20), ZEPHIO_OK);
 }
 
 TEST_BEGIN(layout_init_invalid_size)
 {
-    TuiLayout layout;
-    TEST_NE(tui_layout_init(&layout, TUI_LAYOUT_VERTICAL, 0, 0, 0, 20), TUI_OK);
-    TEST_NE(tui_layout_init(&layout, TUI_LAYOUT_VERTICAL, 0, 0, 40, 0), TUI_OK);
-    TEST_NE(tui_layout_init(&layout, TUI_LAYOUT_VERTICAL, 0, 0, -5, 20), TUI_OK);
+    ZephioLayout layout;
+    TEST_NE(zephio_layout_init(&layout, ZEPHIO_LAYOUT_VERTICAL, 0, 0, 0, 20), ZEPHIO_OK);
+    TEST_NE(zephio_layout_init(&layout, ZEPHIO_LAYOUT_VERTICAL, 0, 0, 40, 0), ZEPHIO_OK);
+    TEST_NE(zephio_layout_init(&layout, ZEPHIO_LAYOUT_VERTICAL, 0, 0, -5, 20), ZEPHIO_OK);
 }
 
 /* ── Layout Add / Remove ────────────────────────────────────────── */
 
 TEST_BEGIN(layout_add_fixed)
 {
-    TuiLayout layout;
-    tui_layout_init(&layout, TUI_LAYOUT_VERTICAL, 0, 0, 40, 20);
+    ZephioLayout layout;
+    zephio_layout_init(&layout, ZEPHIO_LAYOUT_VERTICAL, 0, 0, 40, 20);
 
-    TuiWidget a, b;
-    tui_widget_init(&a, 0, 0, 40, 5, NULL, NULL);
-    tui_widget_init(&b, 0, 0, 40, 10, NULL, NULL);
+    ZephioWidget a, b;
+    zephio_widget_init(&a, 0, 0, 40, 5, NULL, NULL);
+    zephio_widget_init(&b, 0, 0, 40, 10, NULL, NULL);
 
-    tui_layout_add(&layout, &a, TUI_LAYOUT_FIXED(5));
-    tui_layout_add(&layout, &b, TUI_LAYOUT_FIXED(10));
+    zephio_layout_add(&layout, &a, ZEPHIO_LAYOUT_FIXED(5));
+    zephio_layout_add(&layout, &b, ZEPHIO_LAYOUT_FIXED(10));
 
     TEST_EQ(layout.item_count, 2);
     TEST_EQ(layout.base.child_count, 2);
     TEST_EQ(a.parent, &layout.base);
     TEST_EQ(b.parent, &layout.base);
 
-    tui_widget_destroy(&layout.base);
+    zephio_widget_destroy(&layout.base);
 }
 
 TEST_BEGIN(layout_add_null)
 {
-    TuiLayout layout;
-    tui_layout_init(&layout, TUI_LAYOUT_VERTICAL, 0, 0, 40, 20);
+    ZephioLayout layout;
+    zephio_layout_init(&layout, ZEPHIO_LAYOUT_VERTICAL, 0, 0, 40, 20);
 
-    TuiWidget w;
-    tui_widget_init(&w, 0, 0, 10, 5, NULL, NULL);
+    ZephioWidget w;
+    zephio_widget_init(&w, 0, 0, 10, 5, NULL, NULL);
 
-    TEST_NE(tui_layout_add(NULL, &w, TUI_LAYOUT_FIXED(5)), TUI_OK);
-    TEST_NE(tui_layout_add(&layout, NULL, TUI_LAYOUT_FIXED(5)), TUI_OK);
+    TEST_NE(zephio_layout_add(NULL, &w, ZEPHIO_LAYOUT_FIXED(5)), ZEPHIO_OK);
+    TEST_NE(zephio_layout_add(&layout, NULL, ZEPHIO_LAYOUT_FIXED(5)), ZEPHIO_OK);
 
-    tui_widget_destroy(&layout.base);
-    tui_widget_destroy(&w);
+    zephio_widget_destroy(&layout.base);
+    zephio_widget_destroy(&w);
 }
 
 TEST_BEGIN(layout_add_duplicate)
 {
-    TuiLayout layout;
-    tui_layout_init(&layout, TUI_LAYOUT_VERTICAL, 0, 0, 40, 20);
+    ZephioLayout layout;
+    zephio_layout_init(&layout, ZEPHIO_LAYOUT_VERTICAL, 0, 0, 40, 20);
 
-    TuiWidget w;
-    tui_widget_init(&w, 0, 0, 10, 5, NULL, NULL);
+    ZephioWidget w;
+    zephio_widget_init(&w, 0, 0, 10, 5, NULL, NULL);
 
-    TuiResult r1 = tui_layout_add(&layout, &w, TUI_LAYOUT_FIXED(5));
-    TEST_EQ(r1, TUI_OK);
+    ZephioResult r1 = zephio_layout_add(&layout, &w, ZEPHIO_LAYOUT_FIXED(5));
+    TEST_EQ(r1, ZEPHIO_OK);
     TEST_EQ(layout.item_count, 1);
 
-    TuiResult r2 = tui_layout_add(&layout, &w, TUI_LAYOUT_FIXED(5));
-    TEST_EQ(r2, TUI_OK);
+    ZephioResult r2 = zephio_layout_add(&layout, &w, ZEPHIO_LAYOUT_FIXED(5));
+    TEST_EQ(r2, ZEPHIO_OK);
     TEST_EQ(layout.item_count, 1);
 
-    tui_widget_destroy(&layout.base);
+    zephio_widget_destroy(&layout.base);
 }
 
 TEST_BEGIN(layout_remove)
 {
-    TuiLayout layout;
-    tui_layout_init(&layout, TUI_LAYOUT_VERTICAL, 0, 0, 40, 20);
+    ZephioLayout layout;
+    zephio_layout_init(&layout, ZEPHIO_LAYOUT_VERTICAL, 0, 0, 40, 20);
 
-    TuiWidget a, b, c;
-    tui_widget_init(&a, 0, 0, 40, 5, NULL, NULL);
-    tui_widget_init(&b, 0, 0, 40, 5, NULL, NULL);
-    tui_widget_init(&c, 0, 0, 40, 5, NULL, NULL);
+    ZephioWidget a, b, c;
+    zephio_widget_init(&a, 0, 0, 40, 5, NULL, NULL);
+    zephio_widget_init(&b, 0, 0, 40, 5, NULL, NULL);
+    zephio_widget_init(&c, 0, 0, 40, 5, NULL, NULL);
 
-    tui_layout_add(&layout, &a, TUI_LAYOUT_FIXED(5));
-    tui_layout_add(&layout, &b, TUI_LAYOUT_FIXED(5));
-    tui_layout_add(&layout, &c, TUI_LAYOUT_FIXED(5));
+    zephio_layout_add(&layout, &a, ZEPHIO_LAYOUT_FIXED(5));
+    zephio_layout_add(&layout, &b, ZEPHIO_LAYOUT_FIXED(5));
+    zephio_layout_add(&layout, &c, ZEPHIO_LAYOUT_FIXED(5));
 
-    tui_layout_remove(&layout, &b);
+    zephio_layout_remove(&layout, &b);
     TEST_EQ(layout.item_count, 2);
     TEST_EQ(layout.base.child_count, 2);
     TEST_EQ(b.parent, (void *)NULL);
     TEST_EQ(layout.items[0].widget, &a);
     TEST_EQ(layout.items[1].widget, &c);
 
-    tui_widget_destroy(&layout.base);
-    tui_widget_destroy(&b);
+    zephio_widget_destroy(&layout.base);
+    zephio_widget_destroy(&b);
 }
 
 TEST_BEGIN(layout_remove_all)
 {
-    TuiLayout layout;
-    tui_layout_init(&layout, TUI_LAYOUT_VERTICAL, 0, 0, 40, 20);
+    ZephioLayout layout;
+    zephio_layout_init(&layout, ZEPHIO_LAYOUT_VERTICAL, 0, 0, 40, 20);
 
-    TuiWidget a, b;
-    tui_widget_init(&a, 0, 0, 40, 5, NULL, NULL);
-    tui_widget_init(&b, 0, 0, 40, 5, NULL, NULL);
+    ZephioWidget a, b;
+    zephio_widget_init(&a, 0, 0, 40, 5, NULL, NULL);
+    zephio_widget_init(&b, 0, 0, 40, 5, NULL, NULL);
 
-    tui_layout_add(&layout, &a, TUI_LAYOUT_FIXED(5));
-    tui_layout_add(&layout, &b, TUI_LAYOUT_FIXED(5));
+    zephio_layout_add(&layout, &a, ZEPHIO_LAYOUT_FIXED(5));
+    zephio_layout_add(&layout, &b, ZEPHIO_LAYOUT_FIXED(5));
 
-    tui_layout_remove_all(&layout);
+    zephio_layout_remove_all(&layout);
     TEST_EQ(layout.item_count, 0);
     TEST_EQ(layout.base.child_count, 0);
     TEST_EQ(a.parent, (void *)NULL);
     TEST_EQ(b.parent, (void *)NULL);
 
-    tui_widget_destroy(&layout.base);
-    tui_widget_destroy(&a);
-    tui_widget_destroy(&b);
+    zephio_widget_destroy(&layout.base);
+    zephio_widget_destroy(&a);
+    zephio_widget_destroy(&b);
 }
 
 /* ── Layout Vertical Sizing ─────────────────────────────────────── */
 
 TEST_BEGIN(layout_vertical_fixed)
 {
-    TuiLayout layout;
-    tui_layout_init(&layout, TUI_LAYOUT_VERTICAL, 0, 0, 40, 20);
+    ZephioLayout layout;
+    zephio_layout_init(&layout, ZEPHIO_LAYOUT_VERTICAL, 0, 0, 40, 20);
 
-    TuiWidget a, b;
-    tui_widget_init(&a, 0, 0, 40, 5, NULL, NULL);
-    tui_widget_init(&b, 0, 0, 40, 10, NULL, NULL);
+    ZephioWidget a, b;
+    zephio_widget_init(&a, 0, 0, 40, 5, NULL, NULL);
+    zephio_widget_init(&b, 0, 0, 40, 10, NULL, NULL);
 
-    tui_layout_add(&layout, &a, TUI_LAYOUT_FIXED(8));
-    tui_layout_add(&layout, &b, TUI_LAYOUT_FIXED(12));
+    zephio_layout_add(&layout, &a, ZEPHIO_LAYOUT_FIXED(8));
+    zephio_layout_add(&layout, &b, ZEPHIO_LAYOUT_FIXED(12));
 
     TEST_EQ(a.y, 0);
     TEST_EQ(a.height, 8);
@@ -170,20 +170,20 @@ TEST_BEGIN(layout_vertical_fixed)
     TEST_EQ(b.height, 12);
     TEST_EQ(b.width, 40);
 
-    tui_widget_destroy(&layout.base);
+    zephio_widget_destroy(&layout.base);
 }
 
 TEST_BEGIN(layout_vertical_fill_equal)
 {
-    TuiLayout layout;
-    tui_layout_init(&layout, TUI_LAYOUT_VERTICAL, 0, 0, 40, 20);
+    ZephioLayout layout;
+    zephio_layout_init(&layout, ZEPHIO_LAYOUT_VERTICAL, 0, 0, 40, 20);
 
-    TuiWidget a, b;
-    tui_widget_init(&a, 0, 0, 40, 1, NULL, NULL);
-    tui_widget_init(&b, 0, 0, 40, 1, NULL, NULL);
+    ZephioWidget a, b;
+    zephio_widget_init(&a, 0, 0, 40, 1, NULL, NULL);
+    zephio_widget_init(&b, 0, 0, 40, 1, NULL, NULL);
 
-    tui_layout_add(&layout, &a, TUI_LAYOUT_FILL);
-    tui_layout_add(&layout, &b, TUI_LAYOUT_FILL);
+    zephio_layout_add(&layout, &a, ZEPHIO_LAYOUT_FILL);
+    zephio_layout_add(&layout, &b, ZEPHIO_LAYOUT_FILL);
 
     TEST_EQ(a.y, 0);
     TEST_EQ(a.height, 10);
@@ -192,58 +192,58 @@ TEST_BEGIN(layout_vertical_fill_equal)
     TEST_EQ(a.width, 40);
     TEST_EQ(b.width, 40);
 
-    tui_widget_destroy(&layout.base);
+    zephio_widget_destroy(&layout.base);
 }
 
 TEST_BEGIN(layout_vertical_fill_weighted)
 {
-    TuiLayout layout;
-    tui_layout_init(&layout, TUI_LAYOUT_VERTICAL, 0, 0, 40, 30);
+    ZephioLayout layout;
+    zephio_layout_init(&layout, ZEPHIO_LAYOUT_VERTICAL, 0, 0, 40, 30);
 
-    TuiWidget a, b;
-    tui_widget_init(&a, 0, 0, 40, 1, NULL, NULL);
-    tui_widget_init(&b, 0, 0, 40, 1, NULL, NULL);
+    ZephioWidget a, b;
+    zephio_widget_init(&a, 0, 0, 40, 1, NULL, NULL);
+    zephio_widget_init(&b, 0, 0, 40, 1, NULL, NULL);
 
-    tui_layout_add(&layout, &a, TUI_LAYOUT_FILL_WEIGHT(2.0f));
-    tui_layout_add(&layout, &b, TUI_LAYOUT_FILL_WEIGHT(1.0f));
+    zephio_layout_add(&layout, &a, ZEPHIO_LAYOUT_FILL_WEIGHT(2.0f));
+    zephio_layout_add(&layout, &b, ZEPHIO_LAYOUT_FILL_WEIGHT(1.0f));
 
     TEST_EQ(a.y, 0);
     TEST_EQ(a.height, 20);
     TEST_EQ(b.y, 20);
     TEST_EQ(b.height, 10);
 
-    tui_widget_destroy(&layout.base);
+    zephio_widget_destroy(&layout.base);
 }
 
 TEST_BEGIN(layout_vertical_auto)
 {
-    TuiLayout layout;
-    tui_layout_init(&layout, TUI_LAYOUT_VERTICAL, 0, 0, 40, 20);
+    ZephioLayout layout;
+    zephio_layout_init(&layout, ZEPHIO_LAYOUT_VERTICAL, 0, 0, 40, 20);
 
-    TuiWidget a;
-    tui_widget_init(&a, 0, 0, 40, 7, NULL, NULL);
+    ZephioWidget a;
+    zephio_widget_init(&a, 0, 0, 40, 7, NULL, NULL);
 
-    tui_layout_add(&layout, &a, TUI_LAYOUT_AUTO);
+    zephio_layout_add(&layout, &a, ZEPHIO_LAYOUT_AUTO);
 
     TEST_EQ(a.y, 0);
     TEST_EQ(a.height, 7);
 
-    tui_widget_destroy(&layout.base);
+    zephio_widget_destroy(&layout.base);
 }
 
 TEST_BEGIN(layout_vertical_mixed)
 {
-    TuiLayout layout;
-    tui_layout_init(&layout, TUI_LAYOUT_VERTICAL, 0, 0, 40, 20);
+    ZephioLayout layout;
+    zephio_layout_init(&layout, ZEPHIO_LAYOUT_VERTICAL, 0, 0, 40, 20);
 
-    TuiWidget fixed_w, auto_w, fill_w;
-    tui_widget_init(&fixed_w, 0, 0, 40, 1, NULL, NULL);
-    tui_widget_init(&auto_w, 0, 0, 40, 3, NULL, NULL);
-    tui_widget_init(&fill_w, 0, 0, 40, 1, NULL, NULL);
+    ZephioWidget fixed_w, auto_w, fill_w;
+    zephio_widget_init(&fixed_w, 0, 0, 40, 1, NULL, NULL);
+    zephio_widget_init(&auto_w, 0, 0, 40, 3, NULL, NULL);
+    zephio_widget_init(&fill_w, 0, 0, 40, 1, NULL, NULL);
 
-    tui_layout_add(&layout, &fixed_w, TUI_LAYOUT_FIXED(5));
-    tui_layout_add(&layout, &auto_w, TUI_LAYOUT_AUTO);
-    tui_layout_add(&layout, &fill_w, TUI_LAYOUT_FILL);
+    zephio_layout_add(&layout, &fixed_w, ZEPHIO_LAYOUT_FIXED(5));
+    zephio_layout_add(&layout, &auto_w, ZEPHIO_LAYOUT_AUTO);
+    zephio_layout_add(&layout, &fill_w, ZEPHIO_LAYOUT_FILL);
 
     TEST_EQ(fixed_w.y, 0);
     TEST_EQ(fixed_w.height, 5);
@@ -252,22 +252,22 @@ TEST_BEGIN(layout_vertical_mixed)
     TEST_EQ(fill_w.y, 8);
     TEST_EQ(fill_w.height, 12);
 
-    tui_widget_destroy(&layout.base);
+    zephio_widget_destroy(&layout.base);
 }
 
 /* ── Layout Horizontal Sizing ───────────────────────────────────── */
 
 TEST_BEGIN(layout_horizontal_fixed)
 {
-    TuiLayout layout;
-    tui_layout_init(&layout, TUI_LAYOUT_HORIZONTAL, 0, 0, 80, 24);
+    ZephioLayout layout;
+    zephio_layout_init(&layout, ZEPHIO_LAYOUT_HORIZONTAL, 0, 0, 80, 24);
 
-    TuiWidget a, b;
-    tui_widget_init(&a, 0, 0, 20, 24, NULL, NULL);
-    tui_widget_init(&b, 0, 0, 40, 24, NULL, NULL);
+    ZephioWidget a, b;
+    zephio_widget_init(&a, 0, 0, 20, 24, NULL, NULL);
+    zephio_widget_init(&b, 0, 0, 40, 24, NULL, NULL);
 
-    tui_layout_add(&layout, &a, TUI_LAYOUT_FIXED(25));
-    tui_layout_add(&layout, &b, TUI_LAYOUT_FIXED(55));
+    zephio_layout_add(&layout, &a, ZEPHIO_LAYOUT_FIXED(25));
+    zephio_layout_add(&layout, &b, ZEPHIO_LAYOUT_FIXED(55));
 
     TEST_EQ(a.x, 0);
     TEST_EQ(a.width, 25);
@@ -276,22 +276,22 @@ TEST_BEGIN(layout_horizontal_fixed)
     TEST_EQ(b.width, 55);
     TEST_EQ(b.height, 24);
 
-    tui_widget_destroy(&layout.base);
+    zephio_widget_destroy(&layout.base);
 }
 
 TEST_BEGIN(layout_horizontal_fill_equal)
 {
-    TuiLayout layout;
-    tui_layout_init(&layout, TUI_LAYOUT_HORIZONTAL, 0, 0, 80, 24);
+    ZephioLayout layout;
+    zephio_layout_init(&layout, ZEPHIO_LAYOUT_HORIZONTAL, 0, 0, 80, 24);
 
-    TuiWidget a, b, c;
-    tui_widget_init(&a, 0, 0, 1, 24, NULL, NULL);
-    tui_widget_init(&b, 0, 0, 1, 24, NULL, NULL);
-    tui_widget_init(&c, 0, 0, 1, 24, NULL, NULL);
+    ZephioWidget a, b, c;
+    zephio_widget_init(&a, 0, 0, 1, 24, NULL, NULL);
+    zephio_widget_init(&b, 0, 0, 1, 24, NULL, NULL);
+    zephio_widget_init(&c, 0, 0, 1, 24, NULL, NULL);
 
-    tui_layout_add(&layout, &a, TUI_LAYOUT_FILL);
-    tui_layout_add(&layout, &b, TUI_LAYOUT_FILL);
-    tui_layout_add(&layout, &c, TUI_LAYOUT_FILL);
+    zephio_layout_add(&layout, &a, ZEPHIO_LAYOUT_FILL);
+    zephio_layout_add(&layout, &b, ZEPHIO_LAYOUT_FILL);
+    zephio_layout_add(&layout, &c, ZEPHIO_LAYOUT_FILL);
 
     TEST_EQ(a.x, 0);
     TEST_EQ(a.width, 26);
@@ -300,20 +300,20 @@ TEST_BEGIN(layout_horizontal_fill_equal)
     TEST_EQ(c.x, 52);
     TEST_EQ(c.width, 28);
 
-    tui_widget_destroy(&layout.base);
+    zephio_widget_destroy(&layout.base);
 }
 
 TEST_BEGIN(layout_horizontal_fill_weighted)
 {
-    TuiLayout layout;
-    tui_layout_init(&layout, TUI_LAYOUT_HORIZONTAL, 0, 0, 90, 24);
+    ZephioLayout layout;
+    zephio_layout_init(&layout, ZEPHIO_LAYOUT_HORIZONTAL, 0, 0, 90, 24);
 
-    TuiWidget a, b;
-    tui_widget_init(&a, 0, 0, 1, 24, NULL, NULL);
-    tui_widget_init(&b, 0, 0, 1, 24, NULL, NULL);
+    ZephioWidget a, b;
+    zephio_widget_init(&a, 0, 0, 1, 24, NULL, NULL);
+    zephio_widget_init(&b, 0, 0, 1, 24, NULL, NULL);
 
-    tui_layout_add(&layout, &a, TUI_LAYOUT_FILL_WEIGHT(3.0f));
-    tui_layout_add(&layout, &b, TUI_LAYOUT_FILL_WEIGHT(1.0f));
+    zephio_layout_add(&layout, &a, ZEPHIO_LAYOUT_FILL_WEIGHT(3.0f));
+    zephio_layout_add(&layout, &b, ZEPHIO_LAYOUT_FILL_WEIGHT(1.0f));
 
     TEST_EQ(a.x, 0);
     TEST_EQ(a.height, 24);
@@ -322,213 +322,213 @@ TEST_BEGIN(layout_horizontal_fill_weighted)
     TEST_EQ(a.width + b.width, 90);
     TEST_ASSERT(a.width > b.width);
 
-    tui_widget_destroy(&layout.base);
+    zephio_widget_destroy(&layout.base);
 }
 
 TEST_BEGIN(layout_horizontal_mixed)
 {
-    TuiLayout layout;
-    tui_layout_init(&layout, TUI_LAYOUT_HORIZONTAL, 0, 0, 80, 24);
+    ZephioLayout layout;
+    zephio_layout_init(&layout, ZEPHIO_LAYOUT_HORIZONTAL, 0, 0, 80, 24);
 
-    TuiWidget sidebar, main;
-    tui_widget_init(&sidebar, 0, 0, 20, 24, NULL, NULL);
-    tui_widget_init(&main, 0, 0, 60, 24, NULL, NULL);
+    ZephioWidget sidebar, main;
+    zephio_widget_init(&sidebar, 0, 0, 20, 24, NULL, NULL);
+    zephio_widget_init(&main, 0, 0, 60, 24, NULL, NULL);
 
-    tui_layout_add(&layout, &sidebar, TUI_LAYOUT_FIXED(20));
-    tui_layout_add(&layout, &main, TUI_LAYOUT_FILL);
+    zephio_layout_add(&layout, &sidebar, ZEPHIO_LAYOUT_FIXED(20));
+    zephio_layout_add(&layout, &main, ZEPHIO_LAYOUT_FILL);
 
     TEST_EQ(sidebar.x, 0);
     TEST_EQ(sidebar.width, 20);
     TEST_EQ(main.x, 20);
     TEST_EQ(main.width, 60);
 
-    tui_widget_destroy(&layout.base);
+    zephio_widget_destroy(&layout.base);
 }
 
 /* ── Padding ────────────────────────────────────────────────────── */
 
 TEST_BEGIN(layout_padding_vertical)
 {
-    TuiLayout layout;
-    tui_layout_init(&layout, TUI_LAYOUT_VERTICAL, 0, 0, 40, 20);
-    tui_layout_set_padding(&layout, 2);
+    ZephioLayout layout;
+    zephio_layout_init(&layout, ZEPHIO_LAYOUT_VERTICAL, 0, 0, 40, 20);
+    zephio_layout_set_padding(&layout, 2);
 
-    TuiWidget a, b;
-    tui_widget_init(&a, 0, 0, 40, 1, NULL, NULL);
-    tui_widget_init(&b, 0, 0, 40, 1, NULL, NULL);
+    ZephioWidget a, b;
+    zephio_widget_init(&a, 0, 0, 40, 1, NULL, NULL);
+    zephio_widget_init(&b, 0, 0, 40, 1, NULL, NULL);
 
-    tui_layout_add(&layout, &a, TUI_LAYOUT_FIXED(5));
-    tui_layout_add(&layout, &b, TUI_LAYOUT_FIXED(5));
+    zephio_layout_add(&layout, &a, ZEPHIO_LAYOUT_FIXED(5));
+    zephio_layout_add(&layout, &b, ZEPHIO_LAYOUT_FIXED(5));
 
     TEST_EQ(a.y, 0);
     TEST_EQ(b.y, 7);
 
-    tui_widget_destroy(&layout.base);
+    zephio_widget_destroy(&layout.base);
 }
 
 TEST_BEGIN(layout_padding_horizontal)
 {
-    TuiLayout layout;
-    tui_layout_init(&layout, TUI_LAYOUT_HORIZONTAL, 0, 0, 80, 24);
-    tui_layout_set_padding(&layout, 5);
+    ZephioLayout layout;
+    zephio_layout_init(&layout, ZEPHIO_LAYOUT_HORIZONTAL, 0, 0, 80, 24);
+    zephio_layout_set_padding(&layout, 5);
 
-    TuiWidget a, b;
-    tui_widget_init(&a, 0, 0, 1, 24, NULL, NULL);
-    tui_widget_init(&b, 0, 0, 1, 24, NULL, NULL);
+    ZephioWidget a, b;
+    zephio_widget_init(&a, 0, 0, 1, 24, NULL, NULL);
+    zephio_widget_init(&b, 0, 0, 1, 24, NULL, NULL);
 
-    tui_layout_add(&layout, &a, TUI_LAYOUT_FIXED(30));
-    tui_layout_add(&layout, &b, TUI_LAYOUT_FIXED(30));
+    zephio_layout_add(&layout, &a, ZEPHIO_LAYOUT_FIXED(30));
+    zephio_layout_add(&layout, &b, ZEPHIO_LAYOUT_FIXED(30));
 
     TEST_EQ(a.x, 0);
     TEST_EQ(b.x, 35);
 
-    tui_widget_destroy(&layout.base);
+    zephio_widget_destroy(&layout.base);
 }
 
 /* ── Margin ─────────────────────────────────────────────────────── */
 
 TEST_BEGIN(layout_margin_vertical)
 {
-    TuiLayout layout;
-    tui_layout_init(&layout, TUI_LAYOUT_VERTICAL, 0, 0, 40, 20);
-    tui_layout_set_margin(&layout, 2, 1, 2, 1);
+    ZephioLayout layout;
+    zephio_layout_init(&layout, ZEPHIO_LAYOUT_VERTICAL, 0, 0, 40, 20);
+    zephio_layout_set_margin(&layout, 2, 1, 2, 1);
 
-    TuiWidget a;
-    tui_widget_init(&a, 0, 0, 40, 1, NULL, NULL);
+    ZephioWidget a;
+    zephio_widget_init(&a, 0, 0, 40, 1, NULL, NULL);
 
-    tui_layout_add(&layout, &a, TUI_LAYOUT_FILL);
+    zephio_layout_add(&layout, &a, ZEPHIO_LAYOUT_FILL);
 
     TEST_EQ(a.y, 2);
     TEST_EQ(a.height, 16);
     TEST_EQ(a.x, 1);
     TEST_EQ(a.width, 38);
 
-    tui_widget_destroy(&layout.base);
+    zephio_widget_destroy(&layout.base);
 }
 
 TEST_BEGIN(layout_margin_horizontal)
 {
-    TuiLayout layout;
-    tui_layout_init(&layout, TUI_LAYOUT_HORIZONTAL, 0, 0, 80, 24);
-    tui_layout_set_margin(&layout, 1, 3, 1, 3);
+    ZephioLayout layout;
+    zephio_layout_init(&layout, ZEPHIO_LAYOUT_HORIZONTAL, 0, 0, 80, 24);
+    zephio_layout_set_margin(&layout, 1, 3, 1, 3);
 
-    TuiWidget a;
-    tui_widget_init(&a, 0, 0, 1, 24, NULL, NULL);
+    ZephioWidget a;
+    zephio_widget_init(&a, 0, 0, 1, 24, NULL, NULL);
 
-    tui_layout_add(&layout, &a, TUI_LAYOUT_FILL);
+    zephio_layout_add(&layout, &a, ZEPHIO_LAYOUT_FILL);
 
     TEST_EQ(a.x, 3);
     TEST_EQ(a.width, 74);
     TEST_EQ(a.y, 1);
     TEST_EQ(a.height, 22);
 
-    tui_widget_destroy(&layout.base);
+    zephio_widget_destroy(&layout.base);
 }
 
 /* ── Set Direction ──────────────────────────────────────────────── */
 
 TEST_BEGIN(layout_set_direction)
 {
-    TuiLayout layout;
-    tui_layout_init(&layout, TUI_LAYOUT_VERTICAL, 0, 0, 40, 20);
+    ZephioLayout layout;
+    zephio_layout_init(&layout, ZEPHIO_LAYOUT_VERTICAL, 0, 0, 40, 20);
 
-    TuiWidget a, b;
-    tui_widget_init(&a, 0, 0, 40, 1, NULL, NULL);
-    tui_widget_init(&b, 0, 0, 40, 1, NULL, NULL);
+    ZephioWidget a, b;
+    zephio_widget_init(&a, 0, 0, 40, 1, NULL, NULL);
+    zephio_widget_init(&b, 0, 0, 40, 1, NULL, NULL);
 
-    tui_layout_add(&layout, &a, TUI_LAYOUT_FIXED(10));
-    tui_layout_add(&layout, &b, TUI_LAYOUT_FIXED(10));
+    zephio_layout_add(&layout, &a, ZEPHIO_LAYOUT_FIXED(10));
+    zephio_layout_add(&layout, &b, ZEPHIO_LAYOUT_FIXED(10));
 
     TEST_EQ(a.y, 0);
     TEST_EQ(b.y, 10);
 
-    tui_layout_set_direction(&layout, TUI_LAYOUT_HORIZONTAL);
-    TEST_EQ(layout.direction, TUI_LAYOUT_HORIZONTAL);
+    zephio_layout_set_direction(&layout, ZEPHIO_LAYOUT_HORIZONTAL);
+    TEST_EQ(layout.direction, ZEPHIO_LAYOUT_HORIZONTAL);
     TEST_EQ(a.x, 0);
     TEST_EQ(b.x, 10);
     TEST_EQ(a.height, 20);
     TEST_EQ(b.height, 20);
 
-    tui_widget_destroy(&layout.base);
+    zephio_widget_destroy(&layout.base);
 }
 
 /* ── Weight Rounding (last FILL gets remainder) ─────────────────── */
 
 TEST_BEGIN(layout_fill_rounding_last_gets_remainder)
 {
-    TuiLayout layout;
-    tui_layout_init(&layout, TUI_LAYOUT_VERTICAL, 0, 0, 40, 10);
+    ZephioLayout layout;
+    zephio_layout_init(&layout, ZEPHIO_LAYOUT_VERTICAL, 0, 0, 40, 10);
 
-    TuiWidget a, b, c;
-    tui_widget_init(&a, 0, 0, 40, 1, NULL, NULL);
-    tui_widget_init(&b, 0, 0, 40, 1, NULL, NULL);
-    tui_widget_init(&c, 0, 0, 40, 1, NULL, NULL);
+    ZephioWidget a, b, c;
+    zephio_widget_init(&a, 0, 0, 40, 1, NULL, NULL);
+    zephio_widget_init(&b, 0, 0, 40, 1, NULL, NULL);
+    zephio_widget_init(&c, 0, 0, 40, 1, NULL, NULL);
 
-    tui_layout_add(&layout, &a, TUI_LAYOUT_FILL);
-    tui_layout_add(&layout, &b, TUI_LAYOUT_FILL);
-    tui_layout_add(&layout, &c, TUI_LAYOUT_FILL);
+    zephio_layout_add(&layout, &a, ZEPHIO_LAYOUT_FILL);
+    zephio_layout_add(&layout, &b, ZEPHIO_LAYOUT_FILL);
+    zephio_layout_add(&layout, &c, ZEPHIO_LAYOUT_FILL);
 
     int total = a.height + b.height + c.height;
     TEST_EQ(total, 10);
 
-    tui_widget_destroy(&layout.base);
+    zephio_widget_destroy(&layout.base);
 }
 
 TEST_BEGIN(layout_fill_rounding_weighted)
 {
-    TuiLayout layout;
-    tui_layout_init(&layout, TUI_LAYOUT_HORIZONTAL, 0, 0, 100, 24);
+    ZephioLayout layout;
+    zephio_layout_init(&layout, ZEPHIO_LAYOUT_HORIZONTAL, 0, 0, 100, 24);
 
-    TuiWidget a, b, c;
-    tui_widget_init(&a, 0, 0, 1, 24, NULL, NULL);
-    tui_widget_init(&b, 0, 0, 1, 24, NULL, NULL);
-    tui_widget_init(&c, 0, 0, 1, 24, NULL, NULL);
+    ZephioWidget a, b, c;
+    zephio_widget_init(&a, 0, 0, 1, 24, NULL, NULL);
+    zephio_widget_init(&b, 0, 0, 1, 24, NULL, NULL);
+    zephio_widget_init(&c, 0, 0, 1, 24, NULL, NULL);
 
-    tui_layout_add(&layout, &a, TUI_LAYOUT_FILL_WEIGHT(1.0f));
-    tui_layout_add(&layout, &b, TUI_LAYOUT_FILL_WEIGHT(1.0f));
-    tui_layout_add(&layout, &c, TUI_LAYOUT_FILL_WEIGHT(1.0f));
+    zephio_layout_add(&layout, &a, ZEPHIO_LAYOUT_FILL_WEIGHT(1.0f));
+    zephio_layout_add(&layout, &b, ZEPHIO_LAYOUT_FILL_WEIGHT(1.0f));
+    zephio_layout_add(&layout, &c, ZEPHIO_LAYOUT_FILL_WEIGHT(1.0f));
 
     int total = a.width + b.width + c.width;
     TEST_EQ(total, 100);
 
-    tui_widget_destroy(&layout.base);
+    zephio_widget_destroy(&layout.base);
 }
 
 TEST_BEGIN(layout_single_fill_takes_all)
 {
-    TuiLayout layout;
-    tui_layout_init(&layout, TUI_LAYOUT_VERTICAL, 0, 0, 40, 25);
+    ZephioLayout layout;
+    zephio_layout_init(&layout, ZEPHIO_LAYOUT_VERTICAL, 0, 0, 40, 25);
 
-    TuiWidget w;
-    tui_widget_init(&w, 0, 0, 40, 1, NULL, NULL);
+    ZephioWidget w;
+    zephio_widget_init(&w, 0, 0, 40, 1, NULL, NULL);
 
-    tui_layout_add(&layout, &w, TUI_LAYOUT_FILL);
+    zephio_layout_add(&layout, &w, ZEPHIO_LAYOUT_FILL);
 
     TEST_EQ(w.height, 25);
     TEST_EQ(w.width, 40);
 
-    tui_widget_destroy(&layout.base);
+    zephio_widget_destroy(&layout.base);
 }
 
 /* ── Dual-tracking sync ─────────────────────────────────────────── */
 
 TEST_BEGIN(layout_items_children_sync)
 {
-    TuiLayout layout;
-    tui_layout_init(&layout, TUI_LAYOUT_VERTICAL, 0, 0, 40, 20);
+    ZephioLayout layout;
+    zephio_layout_init(&layout, ZEPHIO_LAYOUT_VERTICAL, 0, 0, 40, 20);
 
-    TuiWidget a, b, c;
-    tui_widget_init(&a, 0, 0, 40, 1, NULL, NULL);
-    tui_widget_init(&b, 0, 0, 40, 1, NULL, NULL);
-    tui_widget_init(&c, 0, 0, 40, 1, NULL, NULL);
+    ZephioWidget a, b, c;
+    zephio_widget_init(&a, 0, 0, 40, 1, NULL, NULL);
+    zephio_widget_init(&b, 0, 0, 40, 1, NULL, NULL);
+    zephio_widget_init(&c, 0, 0, 40, 1, NULL, NULL);
 
-    tui_layout_add(&layout, &a, TUI_LAYOUT_FIXED(5));
-    tui_layout_add(&layout, &b, TUI_LAYOUT_FIXED(5));
-    tui_layout_add(&layout, &c, TUI_LAYOUT_FIXED(5));
+    zephio_layout_add(&layout, &a, ZEPHIO_LAYOUT_FIXED(5));
+    zephio_layout_add(&layout, &b, ZEPHIO_LAYOUT_FIXED(5));
+    zephio_layout_add(&layout, &c, ZEPHIO_LAYOUT_FIXED(5));
 
     TEST_EQ(layout.item_count, layout.base.child_count);
 
-    tui_layout_remove(&layout, &b);
+    zephio_layout_remove(&layout, &b);
     TEST_EQ(layout.item_count, 2);
     TEST_EQ(layout.base.child_count, 2);
 
@@ -536,22 +536,22 @@ TEST_BEGIN(layout_items_children_sync)
         TEST_ASSERT(layout.items[i].widget == layout.base.children[i]);
     }
 
-    tui_widget_destroy(&layout.base);
-    tui_widget_destroy(&b);
+    zephio_widget_destroy(&layout.base);
+    zephio_widget_destroy(&b);
 }
 
 /* ── Layout destroy ─────────────────────────────────────────────── */
 
 TEST_BEGIN(layout_destroy)
 {
-    TuiLayout layout;
-    tui_layout_init(&layout, TUI_LAYOUT_VERTICAL, 0, 0, 40, 20);
+    ZephioLayout layout;
+    zephio_layout_init(&layout, ZEPHIO_LAYOUT_VERTICAL, 0, 0, 40, 20);
 
-    TuiWidget a;
-    tui_widget_init(&a, 0, 0, 40, 1, NULL, NULL);
-    tui_layout_add(&layout, &a, TUI_LAYOUT_FIXED(5));
+    ZephioWidget a;
+    zephio_widget_init(&a, 0, 0, 40, 1, NULL, NULL);
+    zephio_layout_add(&layout, &a, ZEPHIO_LAYOUT_FIXED(5));
 
-    tui_widget_destroy(&layout.base);
+    zephio_widget_destroy(&layout.base);
     TEST_EQ(layout.items, (void *)NULL);
     TEST_EQ(layout.item_count, 0);
 }

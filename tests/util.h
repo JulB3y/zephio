@@ -44,9 +44,9 @@ static int g_test_fail = 0;
         return g_test_fail > 0 ? 1 : 0;                                   \
     } while (0)
 
-#ifdef TUI_TEST_CAPTURE
+#ifdef ZEPHIO_TEST_CAPTURE
 #include <unistd.h>
-#include "tui_terminal.h"
+#include "zephio_terminal.h"
 
 static char g_output_buf[8192];
 static int g_output_len = 0;

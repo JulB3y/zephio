@@ -1,16 +1,16 @@
 #define _POSIX_C_SOURCE 200809L
 
-#include "tui_tabbar.h"
-#include "tui_context.h"
+#include "zephio_tabbar.h"
+#include "zephio_context.h"
 
 #include <stdlib.h>
 #include <string.h>
 
-static void tabbar_recompute_layout(TuiTabBar *tb)
+static void tabbar_recompute_layout(ZephioTabBar *tb)
 {
     int x = 0;
     for (int i = 0; i < tb->tab_count; i++) {
-        TuiTab *tab = &tb->tabs[i];
+        ZephioTab *tab = &tb->tabs[i];
         tab->label_width = tab->label ? (int)strlen(tab->label) : 0;
         tab->tab_width   = tab->label_width + 4;
         tab->start_x     = x;
@@ -18,11 +18,11 @@ static void tabbar_recompute_layout(TuiTabBar *tb)
     }
 }
 
-static void tabbar_ensure_visible(TuiTabBar *tb)
+static void tabbar_ensure_visible(ZephioTabBar *tb)
 {
     if (tb->active_tab < 0 || tb->active_tab >= tb->tab_count) return;
 
-    TuiTab *active = &tb->tabs[tb->active_tab];
+    ZephioTab *active = &tb->tabs[tb->active_tab];
     int tab_end = active->start_x + active->tab_width;
 
     if (active->start_x < tb->scroll_offset) {
@@ -34,24 +34,24 @@ static void tabbar_ensure_visible(TuiTabBar *tb)
     if (tb->scroll_offset < 0) tb->scroll_offset = 0;
 }
 
-static void tabbar_render(TuiWidget *widget)
+static void tabbar_render(ZephioWidget *widget)
 {
-    TuiTabBar *tb = (TuiTabBar *)widget;
+    ZephioTabBar *tb = (ZephioTabBar *)widget;
 
-    tui_screen_fill(widget->ctx, widget->abs_y, widget->abs_x,
+    zephio_screen_fill(widget->ctx, widget->abs_y, widget->abs_x,
                     widget->width, widget->height, " ",
                     tb->fg, tb->bg, tb->attr);
 
     for (int i = 0; i < tb->tab_count; i++) {
-        TuiTab *tab = &tb->tabs[i];
+        ZephioTab *tab = &tb->tabs[i];
 
         int screen_x = tab->start_x - tb->scroll_offset;
         if (screen_x + tab->tab_width <= 0 || screen_x >= widget->width)
             continue;
 
-        TuiColor fg = tb->fg;
-        TuiColor bg = tb->bg;
-        TuiAttr  at = tb->attr;
+        ZephioColor fg = tb->fg;
+        ZephioColor bg = tb->bg;
+        ZephioAttr  at = tb->attr;
 
         if (i == tb->active_tab) {
             fg = tb->fg_active;
@@ -66,7 +66,7 @@ static void tabbar_render(TuiWidget *widget)
         int fill_end   = screen_x + tab->tab_width;
         if (fill_end > widget->width) fill_end = widget->width;
         if (fill_start < fill_end) {
-            tui_screen_fill(widget->ctx, widget->abs_y, widget->abs_x + fill_start,
+            zephio_screen_fill(widget->ctx, widget->abs_y, widget->abs_x + fill_start,
                             fill_end - fill_start, 1, " ", fg, bg, at);
         }
 
@@ -82,7 +82,7 @@ static void tabbar_render(TuiWidget *widget)
                            ? wlen : (int)sizeof(buf) - 1;
                 memcpy(buf, tab->label, (size_t)clen);
                 buf[clen] = '\0';
-                tui_screen_write(widget->ctx, widget->abs_y,
+                zephio_screen_write(widget->ctx, widget->abs_y,
                                  widget->abs_x + screen_x + 2,
                                  buf, fg, bg, at);
             }
@@ -90,19 +90,19 @@ static void tabbar_render(TuiWidget *widget)
 
         if (screen_x + tab->tab_width - 1 >= 0 &&
             screen_x + tab->tab_width - 1 < widget->width) {
-            tui_screen_set_cell(widget->ctx, widget->abs_y,
+            zephio_screen_set_cell(widget->ctx, widget->abs_y,
                                 widget->abs_x + screen_x + tab->tab_width - 1,
                                 "\xe2\x94\x82", tb->fg, tb->bg, ZEPHIO_ATTR_DIM);
         }
     }
 }
 
-static int tabbar_handle_input(TuiWidget *widget, const TuiEvent *event)
+static int tabbar_handle_input(ZephioWidget *widget, const ZephioEvent *event)
 {
-    TuiTabBar *tb = (TuiTabBar *)widget;
+    ZephioTabBar *tb = (ZephioTabBar *)widget;
     if (tb->tab_count == 0) return 0;
 
-    if (event->key == TUI_KEY_RIGHT) {
+    if (event->key == ZEPHIO_KEY_RIGHT) {
         if (tb->active_tab < tb->tab_count - 1) {
             tb->active_tab++;
             tabbar_ensure_visible(tb);
@@ -115,7 +115,7 @@ static int tabbar_handle_input(TuiWidget *widget, const TuiEvent *event)
         return 1;
     }
 
-    if (event->key == TUI_KEY_LEFT) {
+    if (event->key == ZEPHIO_KEY_LEFT) {
         if (tb->active_tab > 0) {
             tb->active_tab--;
             tabbar_ensure_visible(tb);
@@ -128,7 +128,7 @@ static int tabbar_handle_input(TuiWidget *widget, const TuiEvent *event)
         return 1;
     }
 
-    if (event->key == TUI_KEY_HOME) {
+    if (event->key == ZEPHIO_KEY_HOME) {
         if (tb->active_tab != 0) {
             tb->active_tab = 0;
             tabbar_ensure_visible(tb);
@@ -140,7 +140,7 @@ static int tabbar_handle_input(TuiWidget *widget, const TuiEvent *event)
         return 1;
     }
 
-    if (event->key == TUI_KEY_END) {
+    if (event->key == ZEPHIO_KEY_END) {
         int last = tb->tab_count - 1;
         if (tb->active_tab != last) {
             tb->active_tab = last;
@@ -153,7 +153,7 @@ static int tabbar_handle_input(TuiWidget *widget, const TuiEvent *event)
         return 1;
     }
 
-    if (event->modifiers & TUI_MOD_CTRL && event->key == TUI_KEY_TAB) {
+    if (event->modifiers & ZEPHIO_MOD_CTRL && event->key == ZEPHIO_KEY_TAB) {
         int next = (tb->active_tab + 1) % tb->tab_count;
         if (next != tb->active_tab) {
             tb->active_tab = next;
@@ -169,15 +169,15 @@ static int tabbar_handle_input(TuiWidget *widget, const TuiEvent *event)
     return 0;
 }
 
-static int tabbar_handle_mouse(TuiWidget *widget, const TuiMouseEvent *mouse)
+static int tabbar_handle_mouse(ZephioWidget *widget, const ZephioMouseEvent *mouse)
 {
-    TuiTabBar *tb = (TuiTabBar *)widget;
+    ZephioTabBar *tb = (ZephioTabBar *)widget;
     if (tb->tab_count == 0) return 0;
 
-    if (mouse->action == TUI_MOUSE_PRESS && mouse->button == TUI_MOUSE_BTN_LEFT) {
+    if (mouse->action == ZEPHIO_MOUSE_PRESS && mouse->button == ZEPHIO_MOUSE_BTN_LEFT) {
         int col = mouse->col - widget->abs_x + tb->scroll_offset;
         for (int i = 0; i < tb->tab_count; i++) {
-            TuiTab *tab = &tb->tabs[i];
+            ZephioTab *tab = &tb->tabs[i];
             if (col >= tab->start_x && col < tab->start_x + tab->tab_width) {
                 if (tb->active_tab != i) {
                     tb->active_tab = i;
@@ -192,16 +192,16 @@ static int tabbar_handle_mouse(TuiWidget *widget, const TuiMouseEvent *mouse)
         }
     }
 
-    if (mouse->action == TUI_MOUSE_MOTION) {
+    if (mouse->action == ZEPHIO_MOUSE_MOTION) {
         return 1;
     }
 
     return 0;
 }
 
-static void tabbar_destroy(TuiWidget *widget)
+static void tabbar_destroy(ZephioWidget *widget)
 {
-    TuiTabBar *tb = (TuiTabBar *)widget;
+    ZephioTabBar *tb = (ZephioTabBar *)widget;
     for (int i = 0; i < tb->tab_count; i++)
         free(tb->tabs[i].label);
     free(tb->tabs);
@@ -210,7 +210,7 @@ static void tabbar_destroy(TuiWidget *widget)
     tb->tab_capacity = 0;
 }
 
-static TuiWidgetVTable tabbar_vtable = {
+static ZephioWidgetVTable tabbar_vtable = {
     .render       = tabbar_render,
     .handle_input = tabbar_handle_input,
     .handle_mouse = tabbar_handle_mouse,
@@ -220,13 +220,13 @@ static TuiWidgetVTable tabbar_vtable = {
     .on_blur      = NULL
 };
 
-TuiResult tui_tabbar_init_ctx(TuiTabBar *tabbar, TuiContext *ctx, int x, int y, int width)
+ZephioResult zephio_tabbar_init_ctx(ZephioTabBar *tabbar, ZephioContext *ctx, int x, int y, int width)
 {
     if (!tabbar) return TUI_ERR_MEMORY;
 
-    TuiResult res = tui_widget_init_ctx(&tabbar->base, x, y, width, 1,
+    ZephioResult res = zephio_widget_init_ctx(&tabbar->base, x, y, width, 1,
                                         &tabbar_vtable, ctx, NULL);
-    if (res != TUI_OK) return res;
+    if (res != ZEPHIO_OK) return res;
 
     tabbar->base.focusable = 1;
 
@@ -247,11 +247,11 @@ TuiResult tui_tabbar_init_ctx(TuiTabBar *tabbar, TuiContext *ctx, int x, int y, 
     tabbar->on_change = NULL;
     tabbar->user_data = NULL;
 
-    return TUI_OK;
+    return ZEPHIO_OK;
 }
 
-int tui_tabbar_add_tab(TuiTabBar *tabbar, const char *label,
-                       TuiWidget *content)
+int zephio_tabbar_add_tab(ZephioTabBar *tabbar, const char *label,
+                       ZephioWidget *content)
 {
     if (!tabbar) return -1;
 
@@ -259,15 +259,15 @@ int tui_tabbar_add_tab(TuiTabBar *tabbar, const char *label,
         int newcap = tabbar->tab_capacity == 0
                      ? ZEPHIO_TABBAR_INIT_CAP
                      : tabbar->tab_capacity * 2;
-        TuiTab *nt = (TuiTab *)realloc(tabbar->tabs,
-                                       (size_t)newcap * sizeof(TuiTab));
+        ZephioTab *nt = (ZephioTab *)realloc(tabbar->tabs,
+                                       (size_t)newcap * sizeof(ZephioTab));
         if (!nt) return -1;
         tabbar->tabs         = nt;
         tabbar->tab_capacity = newcap;
     }
 
     int idx = tabbar->tab_count++;
-    TuiTab *tab = &tabbar->tabs[idx];
+    ZephioTab *tab = &tabbar->tabs[idx];
     tab->label        = label ? strdup(label) : NULL;
     tab->content      = content;
     tab->start_x      = 0;
@@ -279,7 +279,7 @@ int tui_tabbar_add_tab(TuiTabBar *tabbar, const char *label,
     return idx;
 }
 
-void tui_tabbar_remove_tab(TuiTabBar *tabbar, int index)
+void zephio_tabbar_remove_tab(ZephioTabBar *tabbar, int index)
 {
     if (!tabbar || index < 0 || index >= tabbar->tab_count) return;
 
@@ -297,19 +297,19 @@ void tui_tabbar_remove_tab(TuiTabBar *tabbar, int index)
     tabbar->base.dirty = 1;
 }
 
-int tui_tabbar_get_active(const TuiTabBar *tabbar)
+int zephio_tabbar_get_active(const ZephioTabBar *tabbar)
 {
     return tabbar ? tabbar->active_tab : -1;
 }
 
-TuiWidget *tui_tabbar_get_content(const TuiTabBar *tabbar, int index)
+ZephioWidget *zephio_tabbar_get_content(const ZephioTabBar *tabbar, int index)
 {
     if (!tabbar || index < 0 || index >= tabbar->tab_count)
         return NULL;
     return tabbar->tabs[index].content;
 }
 
-void tui_tabbar_set_active(TuiTabBar *tabbar, int index)
+void zephio_tabbar_set_active(ZephioTabBar *tabbar, int index)
 {
     if (!tabbar || index < 0 || index >= tabbar->tab_count) return;
     if (tabbar->active_tab == index) return;
@@ -322,7 +322,7 @@ void tui_tabbar_set_active(TuiTabBar *tabbar, int index)
                           tabbar->user_data);
 }
 
-void tui_tabbar_set_tab_label(TuiTabBar *tabbar, int index,
+void zephio_tabbar_set_tab_label(ZephioTabBar *tabbar, int index,
                               const char *label)
 {
     if (!tabbar || index < 0 || index >= tabbar->tab_count) return;
@@ -332,16 +332,16 @@ void tui_tabbar_set_tab_label(TuiTabBar *tabbar, int index,
     tabbar->base.dirty = 1;
 }
 
-void tui_tabbar_set_tab_content(TuiTabBar *tabbar, int index,
-                                TuiWidget *content)
+void zephio_tabbar_set_tab_content(ZephioTabBar *tabbar, int index,
+                                ZephioWidget *content)
 {
     if (!tabbar || index < 0 || index >= tabbar->tab_count) return;
     tabbar->tabs[index].content = content;
 }
 
-void tui_tabbar_set_colors(TuiTabBar *tabbar,
-                           TuiColor fg, TuiColor bg,
-                           TuiColor fg_active, TuiColor bg_active)
+void zephio_tabbar_set_colors(ZephioTabBar *tabbar,
+                           ZephioColor fg, ZephioColor bg,
+                           ZephioColor fg_active, ZephioColor bg_active)
 {
     if (!tabbar) return;
     tabbar->fg        = fg;
@@ -351,8 +351,8 @@ void tui_tabbar_set_colors(TuiTabBar *tabbar,
     tabbar->base.dirty = 1;
 }
 
-void tui_tabbar_set_hover_colors(TuiTabBar *tabbar,
-                                 TuiColor fg, TuiColor bg)
+void zephio_tabbar_set_hover_colors(ZephioTabBar *tabbar,
+                                 ZephioColor fg, ZephioColor bg)
 {
     if (!tabbar) return;
     tabbar->fg_hover = fg;
@@ -360,8 +360,8 @@ void tui_tabbar_set_hover_colors(TuiTabBar *tabbar,
     tabbar->base.dirty = 1;
 }
 
-void tui_tabbar_set_on_change(TuiTabBar *tabbar,
-                              TuiTabBarCallback callback,
+void zephio_tabbar_set_on_change(ZephioTabBar *tabbar,
+                              ZephioTabBarCallback callback,
                               void *user_data)
 {
     if (!tabbar) return;

@@ -1,18 +1,18 @@
 #define _POSIX_C_SOURCE 200809L
 
-#include "tui_layout.h"
+#include "zephio_layout.h"
 
 #include <stdlib.h>
 #include <string.h>
 
 #define ITEMS_INITIAL_CAPACITY 8
 
-static void tui_layout_recalculate(TuiLayout *layout);
+static void zephio_layout_recalculate(ZephioLayout *layout);
 
-static void layout_on_resize(TuiWidget *widget, int width, int height);
-static void layout_destroy(TuiWidget *widget);
+static void layout_on_resize(ZephioWidget *widget, int width, int height);
+static void layout_destroy(ZephioWidget *widget);
 
-static TuiWidgetVTable layout_vtable = {
+static ZephioWidgetVTable layout_vtable = {
     .render        = NULL,
     .handle_input  = NULL,
     .handle_mouse  = NULL,
@@ -22,17 +22,17 @@ static TuiWidgetVTable layout_vtable = {
     .on_blur       = NULL
 };
 
-static void layout_on_resize(TuiWidget *widget, int width, int height)
+static void layout_on_resize(ZephioWidget *widget, int width, int height)
 {
-    TuiLayout *layout = (TuiLayout *)widget;
+    ZephioLayout *layout = (ZephioLayout *)widget;
     (void)width;
     (void)height;
-    tui_layout_recalculate(layout);
+    zephio_layout_recalculate(layout);
 }
 
-static void layout_destroy(TuiWidget *widget)
+static void layout_destroy(ZephioWidget *widget)
 {
-    TuiLayout *layout = (TuiLayout *)widget;
+    ZephioLayout *layout = (ZephioLayout *)widget;
 
     free(layout->items);
     layout->items       = NULL;
@@ -40,15 +40,15 @@ static void layout_destroy(TuiWidget *widget)
     layout->item_capacity = 0;
 }
 
-TuiResult tui_layout_init_ctx(TuiLayout *layout, TuiContext *ctx, TuiLayoutDirection direction,
+ZephioResult zephio_layout_init_ctx(ZephioLayout *layout, ZephioContext *ctx, ZephioLayoutDirection direction,
                               int x, int y, int width, int height)
 {
     if (!layout) return TUI_ERR_MEMORY;
     if (width <= 0 || height <= 0) return TUI_ERR_MEMORY;
 
-    TuiResult res = tui_widget_init_ctx(&layout->base, x, y, width, height,
+    ZephioResult res = zephio_widget_init_ctx(&layout->base, x, y, width, height,
                                         &layout_vtable, ctx, NULL);
-    if (res != TUI_OK) return res;
+    if (res != ZEPHIO_OK) return res;
 
     layout->direction     = direction;
     layout->items         = NULL;
@@ -60,10 +60,10 @@ TuiResult tui_layout_init_ctx(TuiLayout *layout, TuiContext *ctx, TuiLayoutDirec
     layout->margin_left   = 0;
     layout->margin_right  = 0;
 
-    return TUI_OK;
+    return ZEPHIO_OK;
 }
 
-static int find_item_index(TuiLayout *layout, TuiWidget *child)
+static int find_item_index(ZephioLayout *layout, ZephioWidget *child)
 {
     for (int i = 0; i < layout->item_count; i++) {
         if (layout->items[i].widget == child) return i;
@@ -71,39 +71,39 @@ static int find_item_index(TuiLayout *layout, TuiWidget *child)
     return -1;
 }
 
-TuiResult tui_layout_add(TuiLayout *layout, TuiWidget *child,
-                         TuiLayoutConstraints constraints)
+ZephioResult zephio_layout_add(ZephioLayout *layout, ZephioWidget *child,
+                         ZephioLayoutConstraints constraints)
 {
     if (!layout || !child) return TUI_ERR_MEMORY;
 
-    if (find_item_index(layout, child) >= 0) return TUI_OK;
+    if (find_item_index(layout, child) >= 0) return ZEPHIO_OK;
 
     if (layout->item_count >= layout->item_capacity) {
         int new_cap = layout->item_capacity == 0
             ? ITEMS_INITIAL_CAPACITY
             : layout->item_capacity * 2;
 
-        TuiLayoutItem *new_items = (TuiLayoutItem *)realloc(
-            layout->items, (size_t)new_cap * sizeof(TuiLayoutItem));
+        ZephioLayoutItem *new_items = (ZephioLayoutItem *)realloc(
+            layout->items, (size_t)new_cap * sizeof(ZephioLayoutItem));
         if (!new_items) return TUI_ERR_MEMORY;
 
         layout->items       = new_items;
         layout->item_capacity = new_cap;
     }
 
-    TuiResult res = tui_widget_add_child(&layout->base, child);
-    if (res != TUI_OK) return res;
+    ZephioResult res = zephio_widget_add_child(&layout->base, child);
+    if (res != ZEPHIO_OK) return res;
 
     layout->items[layout->item_count].widget      = child;
     layout->items[layout->item_count].constraints  = constraints;
     layout->item_count++;
 
-    tui_layout_recalculate(layout);
+    zephio_layout_recalculate(layout);
 
-    return TUI_OK;
+    return ZEPHIO_OK;
 }
 
-void tui_layout_remove(TuiLayout *layout, TuiWidget *child)
+void zephio_layout_remove(ZephioLayout *layout, ZephioWidget *child)
 {
     if (!layout || !child) return;
 
@@ -111,21 +111,21 @@ void tui_layout_remove(TuiLayout *layout, TuiWidget *child)
     if (idx < 0) return;
 
     memmove(&layout->items[idx], &layout->items[idx + 1],
-            (size_t)(layout->item_count - idx - 1) * sizeof(TuiLayoutItem));
+            (size_t)(layout->item_count - idx - 1) * sizeof(ZephioLayoutItem));
     layout->item_count--;
 
-    tui_widget_remove_child(&layout->base, child);
+    zephio_widget_remove_child(&layout->base, child);
 
-    tui_layout_recalculate(layout);
+    zephio_layout_recalculate(layout);
 }
 
-void tui_layout_remove_all(TuiLayout *layout)
+void zephio_layout_remove_all(ZephioLayout *layout)
 {
     if (!layout) return;
 
     layout->item_count = 0;
 
-    tui_widget_remove_all_children(&layout->base);
+    zephio_widget_remove_all_children(&layout->base);
 }
 
 static int clamp_size(int size, int min_size, int max_size)
@@ -135,7 +135,7 @@ static int clamp_size(int size, int min_size, int max_size)
     return size;
 }
 
-static void tui_layout_recalculate(TuiLayout *layout)
+static void zephio_layout_recalculate(ZephioLayout *layout)
 {
     if (!layout) return;
 
@@ -145,7 +145,7 @@ static void tui_layout_recalculate(TuiLayout *layout)
 
     if (count == 0) return;
 
-    int is_vertical = (layout->direction == TUI_LAYOUT_VERTICAL);
+    int is_vertical = (layout->direction == ZEPHIO_LAYOUT_VERTICAL);
     int available = is_vertical ? total_height : total_width;
     int cross_size = is_vertical ? total_width : total_height;
 
@@ -162,23 +162,23 @@ static void tui_layout_recalculate(TuiLayout *layout)
     float total_weight = 0.0f;
 
     for (int i = 0; i < count; i++) {
-        TuiLayoutConstraints *c = &layout->items[i].constraints;
-        TuiWidget *w = layout->items[i].widget;
+        ZephioLayoutConstraints *c = &layout->items[i].constraints;
+        ZephioWidget *w = layout->items[i].widget;
 
         switch (c->size_type) {
-        case TUI_LAYOUT_SIZE_FIXED:
+        case ZEPHIO_LAYOUT_SIZE_FIXED:
             sizes[i] = clamp_size(c->fixed_size, c->min_size, c->max_size);
             remaining -= sizes[i];
             break;
 
-        case TUI_LAYOUT_SIZE_AUTO:
+        case ZEPHIO_LAYOUT_SIZE_AUTO:
             sizes[i] = clamp_size(
                 is_vertical ? w->height : w->width,
                 c->min_size, c->max_size);
             remaining -= sizes[i];
             break;
 
-        case TUI_LAYOUT_SIZE_FILL:
+        case ZEPHIO_LAYOUT_SIZE_FILL:
             total_weight += c->weight;
             break;
         }
@@ -191,7 +191,7 @@ static void tui_layout_recalculate(TuiLayout *layout)
         int distributed = 0;
 
         for (int i = 0; i < count; i++) {
-            if (layout->items[i].constraints.size_type != TUI_LAYOUT_SIZE_FILL)
+            if (layout->items[i].constraints.size_type != ZEPHIO_LAYOUT_SIZE_FILL)
                 continue;
 
             last_fill = i;
@@ -218,19 +218,19 @@ static void tui_layout_recalculate(TuiLayout *layout)
     int cross_pos = is_vertical ? layout->margin_left : layout->margin_top;
 
     for (int i = 0; i < count; i++) {
-        TuiWidget *child = layout->items[i].widget;
+        ZephioWidget *child = layout->items[i].widget;
 
         int main_size = sizes[i];
         if (main_size < 0) main_size = 0;
 
         if (is_vertical) {
             if (pos + main_size > total_height + layout->margin_top) break;
-            tui_widget_set_position(child, cross_pos, pos);
-            tui_widget_set_size(child, cross_size, main_size);
+            zephio_widget_set_position(child, cross_pos, pos);
+            zephio_widget_set_size(child, cross_size, main_size);
         } else {
             if (pos + main_size > total_width + layout->margin_left) break;
-            tui_widget_set_position(child, pos, cross_pos);
-            tui_widget_set_size(child, main_size, cross_size);
+            zephio_widget_set_position(child, pos, cross_pos);
+            zephio_widget_set_size(child, main_size, cross_size);
         }
 
         if (child->vtable && child->vtable->on_resize) {
@@ -243,29 +243,29 @@ static void tui_layout_recalculate(TuiLayout *layout)
     free(sizes);
 
     layout->base.dirty = 1;
-    tui_widget_mark_dirty_recursive(&layout->base);
+    zephio_widget_mark_dirty_recursive(&layout->base);
 }
 
-void tui_layout_set_direction(TuiLayout *layout, TuiLayoutDirection direction)
+void zephio_layout_set_direction(ZephioLayout *layout, ZephioLayoutDirection direction)
 {
     if (!layout) return;
     layout->direction = direction;
-    tui_layout_recalculate(layout);
+    zephio_layout_recalculate(layout);
 }
 
-void tui_layout_set_padding(TuiLayout *layout, int padding)
+void zephio_layout_set_padding(ZephioLayout *layout, int padding)
 {
     if (!layout) return;
     layout->padding = padding;
-    tui_layout_recalculate(layout);
+    zephio_layout_recalculate(layout);
 }
 
-void tui_layout_set_margin(TuiLayout *layout, int top, int right, int bottom, int left)
+void zephio_layout_set_margin(ZephioLayout *layout, int top, int right, int bottom, int left)
 {
     if (!layout) return;
     layout->margin_top    = top;
     layout->margin_right  = right;
     layout->margin_bottom = bottom;
     layout->margin_left   = left;
-    tui_layout_recalculate(layout);
+    zephio_layout_recalculate(layout);
 }

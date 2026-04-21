@@ -1,29 +1,29 @@
 #define _POSIX_C_SOURCE 200809L
 
-#include "tui_statusbar.h"
-#include "tui_context.h"
+#include "zephio_statusbar.h"
+#include "zephio_context.h"
 
 #include <stdlib.h>
 #include <string.h>
 
-static void statusbar_render(TuiWidget *widget)
+static void statusbar_render(ZephioWidget *widget)
 {
-    TuiStatusBar *sb = (TuiStatusBar *)widget;
+    ZephioStatusBar *sb = (ZephioStatusBar *)widget;
 
-    TuiColor fg = sb->fg;
-    TuiColor bg = sb->bg;
-    TuiAttr  at = sb->attr;
+    ZephioColor fg = sb->fg;
+    ZephioColor bg = sb->bg;
+    ZephioAttr  at = sb->attr;
 
     if (sb->message && sb->message_ticks > 0) {
         fg = sb->fg_message;
         bg = sb->bg_message;
     }
 
-    tui_screen_fill(widget->ctx, widget->abs_y, widget->abs_x,
+    zephio_screen_fill(widget->ctx, widget->abs_y, widget->abs_x,
                     widget->width, widget->height, " ", fg, bg, at);
 
     if (sb->message && sb->message_ticks > 0) {
-        tui_screen_write(widget->ctx, widget->abs_y, widget->abs_x,
+        zephio_screen_write(widget->ctx, widget->abs_y, widget->abs_x,
                          sb->message, fg, bg, at);
         return;
     }
@@ -39,7 +39,7 @@ static void statusbar_render(TuiWidget *widget)
         int clen = wlen < (int)sizeof(buf) - 1 ? wlen : (int)sizeof(buf) - 1;
         memcpy(buf, sb->text_left, (size_t)clen);
         buf[clen] = '\0';
-        tui_screen_write(widget->ctx, widget->abs_y, widget->abs_x + 1, buf, fg, bg, at);
+        zephio_screen_write(widget->ctx, widget->abs_y, widget->abs_x + 1, buf, fg, bg, at);
     }
 
     if (center_len > 0) {
@@ -51,7 +51,7 @@ static void statusbar_render(TuiWidget *widget)
         buf[clen] = '\0';
         int cx = (widget->width - wlen) / 2;
         if (cx < 0) cx = 0;
-        tui_screen_write(widget->ctx, widget->abs_y, widget->abs_x + cx, buf, fg, bg, at);
+        zephio_screen_write(widget->ctx, widget->abs_y, widget->abs_x + cx, buf, fg, bg, at);
     }
 
     if (right_len > 0) {
@@ -63,13 +63,13 @@ static void statusbar_render(TuiWidget *widget)
         buf[clen] = '\0';
         int rx = widget->width - wlen - 1;
         if (rx < 0) rx = 0;
-        tui_screen_write(widget->ctx, widget->abs_y, widget->abs_x + rx, buf, fg, bg, at);
+        zephio_screen_write(widget->ctx, widget->abs_y, widget->abs_x + rx, buf, fg, bg, at);
     }
 }
 
-static void statusbar_destroy(TuiWidget *widget)
+static void statusbar_destroy(ZephioWidget *widget)
 {
-    TuiStatusBar *sb = (TuiStatusBar *)widget;
+    ZephioStatusBar *sb = (ZephioStatusBar *)widget;
     free(sb->text_left);
     free(sb->text_center);
     free(sb->text_right);
@@ -80,7 +80,7 @@ static void statusbar_destroy(TuiWidget *widget)
     sb->message     = NULL;
 }
 
-static TuiWidgetVTable statusbar_vtable = {
+static ZephioWidgetVTable statusbar_vtable = {
     .render       = statusbar_render,
     .handle_input = NULL,
     .handle_mouse = NULL,
@@ -90,13 +90,13 @@ static TuiWidgetVTable statusbar_vtable = {
     .on_blur      = NULL
 };
 
-TuiResult tui_statusbar_init_ctx(TuiStatusBar *statusbar, TuiContext *ctx, int x, int y, int width)
+ZephioResult zephio_statusbar_init_ctx(ZephioStatusBar *statusbar, ZephioContext *ctx, int x, int y, int width)
 {
     if (!statusbar) return TUI_ERR_MEMORY;
 
-    TuiResult res = tui_widget_init_ctx(&statusbar->base, x, y, width, 1,
+    ZephioResult res = zephio_widget_init_ctx(&statusbar->base, x, y, width, 1,
                                         &statusbar_vtable, ctx, NULL);
-    if (res != TUI_OK) return res;
+    if (res != ZEPHIO_OK) return res;
 
     statusbar->base.focusable = 0;
 
@@ -112,10 +112,10 @@ TuiResult tui_statusbar_init_ctx(TuiStatusBar *statusbar, TuiContext *ctx, int x
     statusbar->bg_message  = ZEPHIO_COLOR_INDEX(11);
     statusbar->attr        = ZEPHIO_ATTR_BOLD;
 
-    return TUI_OK;
+    return ZEPHIO_OK;
 }
 
-void tui_statusbar_set_text(TuiStatusBar *statusbar,
+void zephio_statusbar_set_text(ZephioStatusBar *statusbar,
                             const char *left, const char *center,
                             const char *right)
 {
@@ -131,7 +131,7 @@ void tui_statusbar_set_text(TuiStatusBar *statusbar,
     statusbar->base.dirty  = 1;
 }
 
-void tui_statusbar_set_message(TuiStatusBar *statusbar,
+void zephio_statusbar_set_message(ZephioStatusBar *statusbar,
                                const char *message, int ticks)
 {
     if (!statusbar) return;
@@ -142,8 +142,8 @@ void tui_statusbar_set_message(TuiStatusBar *statusbar,
     statusbar->base.dirty = 1;
 }
 
-void tui_statusbar_set_colors(TuiStatusBar *statusbar,
-                              TuiColor fg, TuiColor bg)
+void zephio_statusbar_set_colors(ZephioStatusBar *statusbar,
+                              ZephioColor fg, ZephioColor bg)
 {
     if (!statusbar) return;
     statusbar->fg = fg;
@@ -151,8 +151,8 @@ void tui_statusbar_set_colors(TuiStatusBar *statusbar,
     statusbar->base.dirty = 1;
 }
 
-void tui_statusbar_set_message_colors(TuiStatusBar *statusbar,
-                                    TuiColor fg, TuiColor bg)
+void zephio_statusbar_set_message_colors(ZephioStatusBar *statusbar,
+                                    ZephioColor fg, ZephioColor bg)
 {
     if (!statusbar) return;
     statusbar->fg_message = fg;
@@ -160,7 +160,7 @@ void tui_statusbar_set_message_colors(TuiStatusBar *statusbar,
     statusbar->base.dirty = 1;
 }
 
-void tui_statusbar_tick(TuiStatusBar *statusbar)
+void zephio_statusbar_tick(ZephioStatusBar *statusbar)
 {
     if (!statusbar) return;
     if (statusbar->message_ticks > 0) {

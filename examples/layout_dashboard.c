@@ -1,36 +1,36 @@
 #define _POSIX_C_SOURCE 200809L
 
 #include "tui.h"
-#include "tui_input.h"
-#include "tui_screen.h"
-#include "tui_terminal.h"
-#include "tui_layout.h"
+#include "zephio_input.h"
+#include "zephio_screen.h"
+#include "zephio_terminal.h"
+#include "zephio_layout.h"
 
 #include <stdio.h>
 #include <string.h>
 
-static TuiLayout root;
-static TuiWidget titlebar;
+static ZephioLayout root;
+static ZephioWidget titlebar;
 
-static TuiLayout main_row;
-static TuiWidget nav;
-static TuiLayout center_col;
-static TuiWidget toolbar;
-static TuiLayout content_row;
-static TuiWidget editor;
-static TuiWidget preview;
-static TuiWidget statusbar;
+static ZephioLayout main_row;
+static ZephioWidget nav;
+static ZephioLayout center_col;
+static ZephioWidget toolbar;
+static ZephioLayout content_row;
+static ZephioWidget editor;
+static ZephioWidget preview;
+static ZephioWidget statusbar;
 
-static void draw_panel(TuiContext *ctx, TuiWidget *w, const char *label,
-                       TuiColor fg, TuiColor bg)
+static void draw_panel(ZephioContext *ctx, ZephioWidget *w, const char *label,
+                       ZephioColor fg, ZephioColor bg)
 {
     if (!w->visible || w->width <= 0 || w->height <= 0) return;
 
-    tui_screen_box_single(ctx, w->abs_y, w->abs_x, w->width, w->height,
+    zephio_screen_box_single(ctx, w->abs_y, w->abs_x, w->width, w->height,
                           fg, bg, ZEPHIO_ATTR_NONE);
 
     if (w->width > 2) {
-        tui_screen_write(ctx, w->abs_y, w->abs_x + 1, label,
+        zephio_screen_write(ctx, w->abs_y, w->abs_x + 1, label,
                          fg, bg, ZEPHIO_ATTR_BOLD);
     }
 
@@ -40,7 +40,7 @@ static void draw_panel(TuiContext *ctx, TuiWidget *w, const char *label,
             snprintf(line, sizeof(line),
                 "row %d: x=%d y=%d w=%d h=%d",
                 r, w->abs_x, w->abs_y, w->width, w->height);
-            tui_screen_write(ctx, w->abs_y + r, w->abs_x + 1, line,
+            zephio_screen_write(ctx, w->abs_y + r, w->abs_x + 1, line,
                              fg, bg, ZEPHIO_ATTR_DIM);
         }
     }
@@ -48,27 +48,27 @@ static void draw_panel(TuiContext *ctx, TuiWidget *w, const char *label,
     char dim[32];
     int dim_len = snprintf(dim, sizeof(dim), "%dx%d", w->width, w->height);
     if (w->height >= 2 && w->width > 2 && dim_len < w->width - 2) {
-        tui_screen_write(ctx, w->abs_y, w->abs_x + w->width - dim_len - 1,
+        zephio_screen_write(ctx, w->abs_y, w->abs_x + w->width - dim_len - 1,
                          dim, fg, bg, ZEPHIO_ATTR_DIM);
     }
 }
 
-static void draw_bar(TuiContext *ctx, TuiWidget *w, const char *text,
-                     TuiColor fg, TuiColor bg)
+static void draw_bar(ZephioContext *ctx, ZephioWidget *w, const char *text,
+                     ZephioColor fg, ZephioColor bg)
 {
     if (!w->visible || w->width <= 0 || w->height <= 0) return;
-    tui_screen_fill(ctx, w->abs_y, w->abs_x, w->width, w->height,
+    zephio_screen_fill(ctx, w->abs_y, w->abs_x, w->width, w->height,
                     " ", fg, bg, ZEPHIO_ATTR_BOLD);
     if (w->width > 2) {
-        tui_screen_write(ctx, w->abs_y, w->abs_x + 1, text, fg, bg, ZEPHIO_ATTR_BOLD);
+        zephio_screen_write(ctx, w->abs_y, w->abs_x + 1, text, fg, bg, ZEPHIO_ATTR_BOLD);
     }
 }
 
-static void draw_frame(TuiContext *ctx, int rows, int cols)
+static void draw_frame(ZephioContext *ctx, int rows, int cols)
 {
-    tui_screen_clear(ctx);
+    zephio_screen_clear(ctx);
 
-    tui_widget_render(&root.base);
+    zephio_widget_render(&root.base);
 
     draw_bar(ctx, &titlebar,
              "Phase 6 - Dashboard Layout  |  Nested H+V Layouts  |  Resize to test",
@@ -83,87 +83,87 @@ static void draw_frame(TuiContext *ctx, int rows, int cols)
              "  Layout: nested V>H>V  |  Press 'q' or Escape to quit",
              ZEPHIO_COLOR_INDEX(15), ZEPHIO_COLOR_INDEX(236));
 
-    tui_screen_render(ctx);
+    zephio_screen_render(ctx);
     (void)rows;
     (void)cols;
 }
 
-static int input_callback(const TuiEvent *event, void *user_data)
+static int input_callback(const ZephioEvent *event, void *user_data)
 {
-    TuiContext *ctx = (TuiContext *)user_data;
+    ZephioContext *ctx = (ZephioContext *)user_data;
 
-    if (event->key == TUI_EVENT_RESIZE) {
-        tui_screen_resize(ctx, event->size.rows, event->size.cols);
-        tui_widget_resize(&root.base, event->size.cols, event->size.rows);
+    if (event->key == ZEPHIO_EVENT_RESIZE) {
+        zephio_screen_resize(ctx, event->size.rows, event->size.cols);
+        zephio_widget_resize(&root.base, event->size.cols, event->size.rows);
         draw_frame(ctx, event->size.rows, event->size.cols);
         return 0;
     }
 
-    if (event->key == TUI_KEY_ESCAPE || event->key == TUI_KEY_CTRL_C) return 1;
-    if (event->codepoint == 'q' && event->modifiers == TUI_MOD_NONE) return 1;
+    if (event->key == ZEPHIO_KEY_ESCAPE || event->key == ZEPHIO_KEY_CTRL_C) return 1;
+    if (event->codepoint == 'q' && event->modifiers == ZEPHIO_MOD_NONE) return 1;
 
     return 0;
 }
 
 int main(void)
 {
-    TuiContext ctx;
+    ZephioContext ctx;
 
-    TuiResult res = tui_init(&ctx);
-    if (res != TUI_OK) {
-        fprintf(stderr, "tui_init failed: %d\n", res);
+    ZephioResult res = zephio_init(&ctx);
+    if (res != ZEPHIO_OK) {
+        fprintf(stderr, "zephio_init failed: %d\n", res);
         return 1;
     }
 
-    tui_input_init(&ctx);
+    zephio_input_init(&ctx);
 
-    TuiSize size = tui_screen_size(&ctx);
+    ZephioSize size = zephio_screen_size(&ctx);
 
-    tui_layout_init_ctx(&root, &ctx, TUI_LAYOUT_VERTICAL, 0, 0, size.cols, size.rows);
-    tui_layout_set_padding(&root, 0);
+    zephio_layout_init_ctx(&root, &ctx, ZEPHIO_LAYOUT_VERTICAL, 0, 0, size.cols, size.rows);
+    zephio_layout_set_padding(&root, 0);
 
-    tui_widget_init_ctx(&titlebar, 0, 0, 1, 1, NULL, &ctx, NULL);
-    tui_layout_add(&root, &titlebar, ZEPHIO_LAYOUT_FIXED(1));
+    zephio_widget_init_ctx(&titlebar, 0, 0, 1, 1, NULL, &ctx, NULL);
+    zephio_layout_add(&root, &titlebar, ZEPHIO_LAYOUT_FIXED(1));
 
-    tui_layout_init_ctx(&main_row, &ctx, TUI_LAYOUT_HORIZONTAL, 0, 0, 1, 1);
-    tui_layout_set_padding(&main_row, 1);
-    tui_layout_add(&root, &main_row.base, ZEPHIO_LAYOUT_FILL);
+    zephio_layout_init_ctx(&main_row, &ctx, ZEPHIO_LAYOUT_HORIZONTAL, 0, 0, 1, 1);
+    zephio_layout_set_padding(&main_row, 1);
+    zephio_layout_add(&root, &main_row.base, ZEPHIO_LAYOUT_FILL);
 
-    tui_widget_init_ctx(&nav, 0, 0, 18, 1, NULL, &ctx, NULL);
-    tui_layout_add(&main_row, &nav, ZEPHIO_LAYOUT_FIXED(18));
+    zephio_widget_init_ctx(&nav, 0, 0, 18, 1, NULL, &ctx, NULL);
+    zephio_layout_add(&main_row, &nav, ZEPHIO_LAYOUT_FIXED(18));
 
-    tui_layout_init_ctx(&center_col, &ctx, TUI_LAYOUT_VERTICAL, 0, 0, 1, 1);
-    tui_layout_set_padding(&center_col, 1);
-    tui_layout_add(&main_row, &center_col.base, ZEPHIO_LAYOUT_FILL);
+    zephio_layout_init_ctx(&center_col, &ctx, ZEPHIO_LAYOUT_VERTICAL, 0, 0, 1, 1);
+    zephio_layout_set_padding(&center_col, 1);
+    zephio_layout_add(&main_row, &center_col.base, ZEPHIO_LAYOUT_FILL);
 
-    tui_widget_init_ctx(&toolbar, 0, 0, 1, 1, NULL, &ctx, NULL);
-    tui_layout_add(&center_col, &toolbar, ZEPHIO_LAYOUT_FIXED(1));
+    zephio_widget_init_ctx(&toolbar, 0, 0, 1, 1, NULL, &ctx, NULL);
+    zephio_layout_add(&center_col, &toolbar, ZEPHIO_LAYOUT_FIXED(1));
 
-    tui_layout_init_ctx(&content_row, &ctx, TUI_LAYOUT_HORIZONTAL, 0, 0, 1, 1);
-    tui_layout_set_padding(&content_row, 1);
-    tui_layout_add(&center_col, &content_row.base, ZEPHIO_LAYOUT_FILL);
+    zephio_layout_init_ctx(&content_row, &ctx, ZEPHIO_LAYOUT_HORIZONTAL, 0, 0, 1, 1);
+    zephio_layout_set_padding(&content_row, 1);
+    zephio_layout_add(&center_col, &content_row.base, ZEPHIO_LAYOUT_FILL);
 
-    tui_widget_init_ctx(&editor, 0, 0, 1, 1, NULL, &ctx, NULL);
-    tui_layout_add(&content_row, &editor, ZEPHIO_LAYOUT_FILL_WEIGHT(2));
+    zephio_widget_init_ctx(&editor, 0, 0, 1, 1, NULL, &ctx, NULL);
+    zephio_layout_add(&content_row, &editor, ZEPHIO_LAYOUT_FILL_WEIGHT(2));
 
-    tui_widget_init_ctx(&preview, 0, 0, 1, 1, NULL, &ctx, NULL);
-    tui_layout_add(&content_row, &preview, ZEPHIO_LAYOUT_FILL);
+    zephio_widget_init_ctx(&preview, 0, 0, 1, 1, NULL, &ctx, NULL);
+    zephio_layout_add(&content_row, &preview, ZEPHIO_LAYOUT_FILL);
 
-    tui_widget_init_ctx(&statusbar, 0, 0, 1, 1, NULL, &ctx, NULL);
-    tui_layout_add(&root, &statusbar, ZEPHIO_LAYOUT_FIXED(1));
+    zephio_widget_init_ctx(&statusbar, 0, 0, 1, 1, NULL, &ctx, NULL);
+    zephio_layout_add(&root, &statusbar, ZEPHIO_LAYOUT_FIXED(1));
 
-    tui_widget_resize(&root.base, size.cols, size.rows);
+    zephio_widget_resize(&root.base, size.cols, size.rows);
 
     draw_frame(&ctx, size.rows, size.cols);
 
-    tui_input_loop(&ctx, input_callback, &ctx);
+    zephio_input_loop(&ctx, input_callback, &ctx);
 
-    tui_layout_remove_all(&content_row);
-    tui_layout_remove_all(&center_col);
-    tui_layout_remove_all(&main_row);
-    tui_layout_remove_all(&root);
+    zephio_layout_remove_all(&content_row);
+    zephio_layout_remove_all(&center_col);
+    zephio_layout_remove_all(&main_row);
+    zephio_layout_remove_all(&root);
 
-    tui_input_shutdown(&ctx);
-    tui_shutdown(&ctx);
+    zephio_input_shutdown(&ctx);
+    zephio_shutdown(&ctx);
     return 0;
 }

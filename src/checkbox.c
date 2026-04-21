@@ -1,12 +1,12 @@
 #define _POSIX_C_SOURCE 200809L
 
-#include "tui_checkbox.h"
-#include "tui_context.h"
+#include "zephio_checkbox.h"
+#include "zephio_context.h"
 
 #include <stdlib.h>
 #include <string.h>
 
-static void checkbox_toggle(TuiCheckbox *cb)
+static void checkbox_toggle(ZephioCheckbox *cb)
 {
     if (cb->tristate) {
         switch (cb->state) {
@@ -27,16 +27,16 @@ static void checkbox_toggle(TuiCheckbox *cb)
     }
 }
 
-static void checkbox_render(TuiWidget *widget)
+static void checkbox_render(ZephioWidget *widget)
 {
-    TuiCheckbox *cb = (TuiCheckbox *)widget;
+    ZephioCheckbox *cb = (ZephioCheckbox *)widget;
 
-    TuiColor fg;
-    TuiColor bg;
-    TuiAttr attr;
+    ZephioColor fg;
+    ZephioColor bg;
+    ZephioAttr attr;
 
     if (widget->theme) {
-        TuiStyle style = tui_widget_get_style(widget);
+        ZephioStyle style = zephio_widget_get_style(widget);
         fg   = style.fg;
         bg   = style.bg;
         attr = style.attr;
@@ -52,7 +52,7 @@ static void checkbox_render(TuiWidget *widget)
         }
     }
 
-    tui_screen_fill(widget->ctx, widget->abs_y, widget->abs_x,
+    zephio_screen_fill(widget->ctx, widget->abs_y, widget->abs_x,
                     widget->width, widget->height, " ", fg, bg, attr);
 
     const char *mark;
@@ -62,7 +62,7 @@ static void checkbox_render(TuiWidget *widget)
     default:                      mark = "[ ]"; break;
     }
 
-    tui_screen_write(widget->ctx, widget->abs_y, widget->abs_x, mark, fg, bg, attr);
+    zephio_screen_write(widget->ctx, widget->abs_y, widget->abs_x, mark, fg, bg, attr);
 
     if (cb->label) {
         int label_start = 4;
@@ -77,16 +77,16 @@ static void checkbox_render(TuiWidget *widget)
         memcpy(buf, cb->label, (size_t)copy_len);
         buf[copy_len] = '\0';
 
-        tui_screen_write(widget->ctx, widget->abs_y, widget->abs_x + label_start,
+        zephio_screen_write(widget->ctx, widget->abs_y, widget->abs_x + label_start,
                            buf, fg, bg, attr);
     }
 }
 
-static int checkbox_handle_input(TuiWidget *widget, const TuiEvent *event)
+static int checkbox_handle_input(ZephioWidget *widget, const ZephioEvent *event)
 {
-    TuiCheckbox *cb = (TuiCheckbox *)widget;
+    ZephioCheckbox *cb = (ZephioCheckbox *)widget;
 
-    if (event->codepoint == ' ' || event->key == TUI_KEY_ENTER) {
+    if (event->codepoint == ' ' || event->key == ZEPHIO_KEY_ENTER) {
         checkbox_toggle(cb);
         widget->dirty = 1;
         if (cb->on_change) {
@@ -98,11 +98,11 @@ static int checkbox_handle_input(TuiWidget *widget, const TuiEvent *event)
     return 0;
 }
 
-static int checkbox_handle_mouse(TuiWidget *widget, const TuiMouseEvent *mouse)
+static int checkbox_handle_mouse(ZephioWidget *widget, const ZephioMouseEvent *mouse)
 {
-    TuiCheckbox *cb = (TuiCheckbox *)widget;
+    ZephioCheckbox *cb = (ZephioCheckbox *)widget;
 
-    if (mouse->action == TUI_MOUSE_PRESS && mouse->button == TUI_MOUSE_BTN_LEFT) {
+    if (mouse->action == ZEPHIO_MOUSE_PRESS && mouse->button == ZEPHIO_MOUSE_BTN_LEFT) {
         checkbox_toggle(cb);
         widget->dirty = 1;
         if (cb->on_change) {
@@ -114,14 +114,14 @@ static int checkbox_handle_mouse(TuiWidget *widget, const TuiMouseEvent *mouse)
     return 0;
 }
 
-static void checkbox_destroy(TuiWidget *widget)
+static void checkbox_destroy(ZephioWidget *widget)
 {
-    TuiCheckbox *cb = (TuiCheckbox *)widget;
+    ZephioCheckbox *cb = (ZephioCheckbox *)widget;
     free(cb->label);
     cb->label = NULL;
 }
 
-static TuiWidgetVTable checkbox_vtable = {
+static ZephioWidgetVTable checkbox_vtable = {
     .render       = checkbox_render,
     .handle_input = checkbox_handle_input,
     .handle_mouse = checkbox_handle_mouse,
@@ -131,14 +131,14 @@ static TuiWidgetVTable checkbox_vtable = {
     .on_blur      = NULL
 };
 
-TuiResult tui_checkbox_init_ctx(TuiCheckbox *checkbox, TuiContext *ctx, int x, int y,
+ZephioResult zephio_checkbox_init_ctx(ZephioCheckbox *checkbox, ZephioContext *ctx, int x, int y,
                                 int width, int height, const char *label)
 {
     if (!checkbox) return TUI_ERR_MEMORY;
 
-    TuiResult res = tui_widget_init_ctx(&checkbox->base, x, y, width, height,
+    ZephioResult res = zephio_widget_init_ctx(&checkbox->base, x, y, width, height,
                                         &checkbox_vtable, ctx, NULL);
-    if (res != TUI_OK) return res;
+    if (res != ZEPHIO_OK) return res;
 
     checkbox->base.focusable = 1;
 
@@ -159,29 +159,29 @@ TuiResult tui_checkbox_init_ctx(TuiCheckbox *checkbox, TuiContext *ctx, int x, i
         checkbox->label = NULL;
     }
 
-    return TUI_OK;
+    return ZEPHIO_OK;
 }
 
-void tui_checkbox_set_state(TuiCheckbox *checkbox, TuiCheckState state)
+void zephio_checkbox_set_state(ZephioCheckbox *checkbox, ZephioCheckState state)
 {
     if (!checkbox) return;
     checkbox->state = state;
     checkbox->base.dirty = 1;
 }
 
-TuiCheckState tui_checkbox_get_state(TuiCheckbox *checkbox)
+ZephioCheckState zephio_checkbox_get_state(ZephioCheckbox *checkbox)
 {
     if (!checkbox) return TUI_CHECK_UNCHECKED;
     return checkbox->state;
 }
 
-void tui_checkbox_set_tristate(TuiCheckbox *checkbox, int tristate)
+void zephio_checkbox_set_tristate(ZephioCheckbox *checkbox, int tristate)
 {
     if (!checkbox) return;
     checkbox->tristate = tristate;
 }
 
-void tui_checkbox_set_label(TuiCheckbox *checkbox, const char *label)
+void zephio_checkbox_set_label(ZephioCheckbox *checkbox, const char *label)
 {
     if (!checkbox) return;
     free(checkbox->label);
@@ -189,9 +189,9 @@ void tui_checkbox_set_label(TuiCheckbox *checkbox, const char *label)
     checkbox->base.dirty = 1;
 }
 
-void tui_checkbox_set_colors(TuiCheckbox *checkbox,
-                             TuiColor fg, TuiColor bg,
-                             TuiColor fg_focused, TuiColor bg_focused)
+void zephio_checkbox_set_colors(ZephioCheckbox *checkbox,
+                             ZephioColor fg, ZephioColor bg,
+                             ZephioColor fg_focused, ZephioColor bg_focused)
 {
     if (!checkbox) return;
     checkbox->fg          = fg;
@@ -201,8 +201,8 @@ void tui_checkbox_set_colors(TuiCheckbox *checkbox,
     checkbox->base.dirty  = 1;
 }
 
-void tui_checkbox_set_on_change(TuiCheckbox *checkbox,
-                                TuiCheckboxCallback callback,
+void zephio_checkbox_set_on_change(ZephioCheckbox *checkbox,
+                                ZephioCheckboxCallback callback,
                                 void *user_data)
 {
     if (!checkbox) return;

@@ -1,8 +1,8 @@
 #define _POSIX_C_SOURCE 200809L
 
-#include "tui_dialog.h"
-#include "tui_context.h"
-#include "tui_screen.h"
+#include "zephio_dialog.h"
+#include "zephio_context.h"
+#include "zephio_screen.h"
 
 #include <stdlib.h>
 #include <string.h>
@@ -33,21 +33,21 @@ static int count_lines(const char *s, int width, int *max_line_len)
     return lines;
 }
 
-static void dialog_render(TuiWidget *widget)
+static void dialog_render(ZephioWidget *widget)
 {
-    TuiDialog *dialog = (TuiDialog *)widget;
+    ZephioDialog *dialog = (ZephioDialog *)widget;
 
-    TuiColor border_fg = ZEPHIO_COLOR_INDEX(TUI_COLOR_BRIGHT_CYAN);
-    TuiColor border_bg = ZEPHIO_COLOR_INDEX(TUI_COLOR_BG_DARK);
-    TuiColor title_fg  = ZEPHIO_COLOR_INDEX(TUI_COLOR_BRIGHT_YELLOW);
-    TuiColor text_fg   = ZEPHIO_COLOR_INDEX(TUI_COLOR_BRIGHT_WHITE);
-    TuiColor text_bg   = ZEPHIO_COLOR_INDEX(TUI_COLOR_BG_DARK);
-    TuiAttr  border_attr = ZEPHIO_ATTR_BOLD;
+    ZephioColor border_fg = ZEPHIO_COLOR_INDEX(ZEPHIO_COLOR_BRIGHT_CYAN);
+    ZephioColor border_bg = ZEPHIO_COLOR_INDEX(ZEPHIO_COLOR_BG_DARK);
+    ZephioColor title_fg  = ZEPHIO_COLOR_INDEX(ZEPHIO_COLOR_BRIGHT_YELLOW);
+    ZephioColor text_fg   = ZEPHIO_COLOR_INDEX(ZEPHIO_COLOR_BRIGHT_WHITE);
+    ZephioColor text_bg   = ZEPHIO_COLOR_INDEX(ZEPHIO_COLOR_BG_DARK);
+    ZephioAttr  border_attr = ZEPHIO_ATTR_BOLD;
 
-    tui_screen_fill(widget->ctx, widget->abs_y, widget->abs_x,
+    zephio_screen_fill(widget->ctx, widget->abs_y, widget->abs_x,
                     widget->width, widget->height, " ", text_fg, text_bg, ZEPHIO_ATTR_NONE);
 
-    tui_screen_box_double(widget->ctx, widget->abs_y, widget->abs_x,
+    zephio_screen_box_double(widget->ctx, widget->abs_y, widget->abs_x,
                           widget->width, widget->height,
                           border_fg, border_bg, border_attr);
 
@@ -62,7 +62,7 @@ static void dialog_render(TuiWidget *widget)
         int copy_len = write_len < (int)sizeof(buf) - 1 ? write_len : (int)sizeof(buf) - 1;
         memcpy(buf, dialog->title, (size_t)copy_len);
         buf[copy_len] = '\0';
-        tui_screen_write(widget->ctx, widget->abs_y, col, buf, title_fg, border_bg,
+        zephio_screen_write(widget->ctx, widget->abs_y, col, buf, title_fg, border_bg,
                          border_attr | ZEPHIO_ATTR_BOLD);
     }
 
@@ -83,7 +83,7 @@ static void dialog_render(TuiWidget *widget)
             memcpy(buf, p, (size_t)copy_len);
             buf[copy_len] = '\0';
 
-            tui_screen_write(widget->ctx, row, widget->abs_x + 2, buf, text_fg, text_bg,
+            zephio_screen_write(widget->ctx, row, widget->abs_x + 2, buf, text_fg, text_bg,
                              ZEPHIO_ATTR_NONE);
             row++;
 
@@ -111,27 +111,27 @@ static void dialog_render(TuiWidget *widget)
             int label_len = (int)strlen(dialog->button_labels[i]);
             int btn_width = label_len + 4;
 
-            TuiColor btn_fg = ZEPHIO_COLOR_INDEX(TUI_COLOR_BRIGHT_WHITE);
-            TuiColor btn_bg = ZEPHIO_COLOR_INDEX(TUI_COLOR_BLUE);
-            TuiAttr  btn_attr = ZEPHIO_ATTR_NONE;
+            ZephioColor btn_fg = ZEPHIO_COLOR_INDEX(ZEPHIO_COLOR_BRIGHT_WHITE);
+            ZephioColor btn_bg = ZEPHIO_COLOR_INDEX(ZEPHIO_COLOR_BLUE);
+            ZephioAttr  btn_attr = ZEPHIO_ATTR_NONE;
 
             if (i == dialog->selected_button) {
                 if (widget->focused) {
-                    btn_fg = ZEPHIO_COLOR_INDEX(TUI_COLOR_BLACK);
-                    btn_bg = ZEPHIO_COLOR_INDEX(TUI_COLOR_BRIGHT_CYAN);
+                    btn_fg = ZEPHIO_COLOR_INDEX(ZEPHIO_COLOR_BLACK);
+                    btn_bg = ZEPHIO_COLOR_INDEX(ZEPHIO_COLOR_BRIGHT_CYAN);
                     btn_attr = ZEPHIO_ATTR_BOLD | ZEPHIO_ATTR_REVERSE;
                 } else {
-                    btn_fg = ZEPHIO_COLOR_INDEX(TUI_COLOR_BRIGHT_CYAN);
-                    btn_bg = ZEPHIO_COLOR_INDEX(TUI_COLOR_BG_MID);
+                    btn_fg = ZEPHIO_COLOR_INDEX(ZEPHIO_COLOR_BRIGHT_CYAN);
+                    btn_bg = ZEPHIO_COLOR_INDEX(ZEPHIO_COLOR_BG_MID);
                     btn_attr = ZEPHIO_ATTR_BOLD;
                 }
             }
 
-            tui_screen_write(widget->ctx, btn_row, btn_col, "[",
+            zephio_screen_write(widget->ctx, btn_row, btn_col, "[",
                              btn_fg, btn_bg, btn_attr);
-            tui_screen_write(widget->ctx, btn_row, btn_col + 1, dialog->button_labels[i],
+            zephio_screen_write(widget->ctx, btn_row, btn_col + 1, dialog->button_labels[i],
                              btn_fg, btn_bg, btn_attr);
-            tui_screen_write(widget->ctx, btn_row, btn_col + 1 + label_len, "]",
+            zephio_screen_write(widget->ctx, btn_row, btn_col + 1 + label_len, "]",
                              btn_fg, btn_bg, btn_attr);
 
             btn_col += btn_width + 2;
@@ -139,11 +139,11 @@ static void dialog_render(TuiWidget *widget)
     }
 }
 
-static int dialog_handle_input(TuiWidget *widget, const TuiEvent *event)
+static int dialog_handle_input(ZephioWidget *widget, const ZephioEvent *event)
 {
-    TuiDialog *dialog = (TuiDialog *)widget;
+    ZephioDialog *dialog = (ZephioDialog *)widget;
 
-    if (event->key == TUI_KEY_RIGHT) {
+    if (event->key == ZEPHIO_KEY_RIGHT) {
         if (dialog->selected_button > 0) {
             dialog->selected_button--;
             widget->dirty = 1;
@@ -151,7 +151,7 @@ static int dialog_handle_input(TuiWidget *widget, const TuiEvent *event)
         return 1;
     }
 
-    if (event->key == TUI_KEY_LEFT) {
+    if (event->key == ZEPHIO_KEY_LEFT) {
         if (dialog->selected_button < dialog->button_count - 1) {
             dialog->selected_button++;
             widget->dirty = 1;
@@ -159,7 +159,7 @@ static int dialog_handle_input(TuiWidget *widget, const TuiEvent *event)
         return 1;
     }
 
-    if (event->key == TUI_KEY_TAB) {
+    if (event->key == ZEPHIO_KEY_TAB) {
         if (dialog->button_count > 0) {
             dialog->selected_button = (dialog->selected_button + 1)
                                        % dialog->button_count;
@@ -168,7 +168,7 @@ static int dialog_handle_input(TuiWidget *widget, const TuiEvent *event)
         return 1;
     }
 
-    if (event->key == TUI_KEY_ENTER || event->codepoint == ' ') {
+    if (event->key == ZEPHIO_KEY_ENTER || event->codepoint == ' ') {
         if (dialog->on_button && dialog->button_count > 0) {
             dialog->on_button(dialog, dialog->selected_button,
                               dialog->user_data);
@@ -176,7 +176,7 @@ static int dialog_handle_input(TuiWidget *widget, const TuiEvent *event)
         return 1;
     }
 
-    if (event->key == TUI_KEY_ESCAPE) {
+    if (event->key == ZEPHIO_KEY_ESCAPE) {
         if (dialog->on_button) {
             dialog->on_button(dialog, -1, dialog->user_data);
         }
@@ -186,11 +186,11 @@ static int dialog_handle_input(TuiWidget *widget, const TuiEvent *event)
     return 1;
 }
 
-static int dialog_handle_mouse(TuiWidget *widget, const TuiMouseEvent *mouse)
+static int dialog_handle_mouse(ZephioWidget *widget, const ZephioMouseEvent *mouse)
 {
-    TuiDialog *dialog = (TuiDialog *)widget;
+    ZephioDialog *dialog = (ZephioDialog *)widget;
 
-    if (mouse->action != TUI_MOUSE_PRESS || mouse->button != TUI_MOUSE_BTN_LEFT)
+    if (mouse->action != ZEPHIO_MOUSE_PRESS || mouse->button != ZEPHIO_MOUSE_BTN_LEFT)
         return 1;
 
     if (dialog->button_count == 0) return 1;
@@ -226,16 +226,16 @@ static int dialog_handle_mouse(TuiWidget *widget, const TuiMouseEvent *mouse)
     return 1;
 }
 
-static void dialog_destroy(TuiWidget *widget)
+static void dialog_destroy(ZephioWidget *widget)
 {
-    TuiDialog *dialog = (TuiDialog *)widget;
+    ZephioDialog *dialog = (ZephioDialog *)widget;
     free(dialog->title);
     dialog->title = NULL;
     free(dialog->message);
     dialog->message = NULL;
 }
 
-static TuiWidgetVTable dialog_vtable = {
+static ZephioWidgetVTable dialog_vtable = {
     .render       = dialog_render,
     .handle_input = dialog_handle_input,
     .handle_mouse = dialog_handle_mouse,
@@ -245,7 +245,7 @@ static TuiWidgetVTable dialog_vtable = {
     .on_blur      = NULL
 };
 
-TuiResult tui_dialog_init_ctx(TuiDialog *dialog, TuiContext *ctx, const char *title,
+ZephioResult zephio_dialog_init_ctx(ZephioDialog *dialog, ZephioContext *ctx, const char *title,
                               const char *message)
 {
     if (!dialog) return TUI_ERR_MEMORY;
@@ -266,9 +266,9 @@ TuiResult tui_dialog_init_ctx(TuiDialog *dialog, TuiContext *ctx, const char *ti
     if (h < 7) h = 7;
     if (h > 23) h = 23;
 
-    TuiResult res = tui_widget_init_ctx(&dialog->base, 0, 0, w, h,
+    ZephioResult res = zephio_widget_init_ctx(&dialog->base, 0, 0, w, h,
                                         &dialog_vtable, ctx, NULL);
-    if (res != TUI_OK) return res;
+    if (res != ZEPHIO_OK) return res;
 
     dialog->base.focusable = 1;
 
@@ -281,10 +281,10 @@ TuiResult tui_dialog_init_ctx(TuiDialog *dialog, TuiContext *ctx, const char *ti
 
     memset(dialog->button_labels, 0, sizeof(dialog->button_labels));
 
-    return TUI_OK;
+    return ZEPHIO_OK;
 }
 
-int tui_dialog_add_button(TuiDialog *dialog, const char *label)
+int zephio_dialog_add_button(ZephioDialog *dialog, const char *label)
 {
     if (!dialog || !label) return -1;
     if (dialog->button_count >= ZEPHIO_DIALOG_MAX_BUTTONS) return -1;
@@ -297,7 +297,7 @@ int tui_dialog_add_button(TuiDialog *dialog, const char *label)
     return idx;
 }
 
-void tui_dialog_set_on_button(TuiDialog *dialog, TuiDialogCallback callback,
+void zephio_dialog_set_on_button(ZephioDialog *dialog, ZephioDialogCallback callback,
                               void *user_data)
 {
     if (!dialog) return;
@@ -305,20 +305,20 @@ void tui_dialog_set_on_button(TuiDialog *dialog, TuiDialogCallback callback,
     dialog->user_data = user_data;
 }
 
-void tui_dialog_center(TuiContext *ctx, TuiDialog *dialog)
+void zephio_dialog_center(ZephioContext *ctx, ZephioDialog *dialog)
 {
     if (!dialog) return;
 
-    TuiSize size = tui_screen_size(ctx);
+    ZephioSize size = zephio_screen_size(ctx);
     int x = (size.cols - dialog->base.width) / 2;
     int y = (size.rows - dialog->base.height) / 2;
     if (x < 0) x = 0;
     if (y < 0) y = 0;
 
-    tui_widget_set_position(&dialog->base, x, y);
+    zephio_widget_set_position(&dialog->base, x, y);
 }
 
-int tui_dialog_get_selected(TuiDialog *dialog)
+int zephio_dialog_get_selected(ZephioDialog *dialog)
 {
     if (!dialog) return -1;
     return dialog->selected_button;

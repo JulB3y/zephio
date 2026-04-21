@@ -1,9 +1,9 @@
 #define _POSIX_C_SOURCE 200809L
 
-#include "tui_input.h"
-#include "tui_terminal.h"
-#include "tui_ansi.h"
-#include "tui_context.h"
+#include "zephio_input.h"
+#include "zephio_terminal.h"
+#include "zephio_ansi.h"
+#include "zephio_context.h"
 
 #include <poll.h>
 #include <signal.h>
@@ -18,7 +18,7 @@ static void input_sigwinch_handler(int sig)
     g_winch_received = 1;
 }
 
-TuiResult tui_input_init(TuiContext *ctx)
+ZephioResult zephio_input_init(ZephioContext *ctx)
 {
     (void)ctx;
     struct sigaction sa;
@@ -28,10 +28,10 @@ TuiResult tui_input_init(TuiContext *ctx)
     sa.sa_flags = SA_RESTART;
     sigaction(SIGWINCH, &sa, NULL);
     g_winch_received = 0;
-    return TUI_OK;
+    return ZEPHIO_OK;
 }
 
-void tui_input_shutdown(TuiContext *ctx)
+void zephio_input_shutdown(ZephioContext *ctx)
 {
     (void)ctx;
     struct sigaction sa;
@@ -60,59 +60,59 @@ static int read_byte(int fd, int timeout_ms)
     return c;
 }
 
-static void apply_key_by_param(int param, TuiEvent *event)
+static void apply_key_by_param(int param, ZephioEvent *event)
 {
     switch (param) {
-        case 1:  event->key = TUI_KEY_HOME;     break;
-        case 2:  event->key = TUI_KEY_INSERT;    break;
-        case 3:  event->key = TUI_KEY_DELETE;    break;
-        case 4:  event->key = TUI_KEY_END;       break;
-        case 5:  event->key = TUI_KEY_PAGE_UP;   break;
-        case 6:  event->key = TUI_KEY_PAGE_DOWN; break;
-        case 11: event->key = TUI_KEY_F1;        break;
-        case 12: event->key = TUI_KEY_F2;        break;
-        case 13: event->key = TUI_KEY_F3;        break;
-        case 14: event->key = TUI_KEY_F4;        break;
-        case 15: event->key = TUI_KEY_F5;        break;
-        case 17: event->key = TUI_KEY_F6;        break;
-        case 18: event->key = TUI_KEY_F7;        break;
-        case 19: event->key = TUI_KEY_F8;        break;
-        case 20: event->key = TUI_KEY_F9;        break;
-        case 21: event->key = TUI_KEY_F10;       break;
-        case 23: event->key = TUI_KEY_F11;       break;
-        case 24: event->key = TUI_KEY_F12;       break;
-        default: event->key = TUI_KEY_UNKNOWN;   break;
+        case 1:  event->key = ZEPHIO_KEY_HOME;     break;
+        case 2:  event->key = ZEPHIO_KEY_INSERT;    break;
+        case 3:  event->key = ZEPHIO_KEY_DELETE;    break;
+        case 4:  event->key = ZEPHIO_KEY_END;       break;
+        case 5:  event->key = ZEPHIO_KEY_PAGE_UP;   break;
+        case 6:  event->key = ZEPHIO_KEY_PAGE_DOWN; break;
+        case 11: event->key = ZEPHIO_KEY_F1;        break;
+        case 12: event->key = ZEPHIO_KEY_F2;        break;
+        case 13: event->key = ZEPHIO_KEY_F3;        break;
+        case 14: event->key = ZEPHIO_KEY_F4;        break;
+        case 15: event->key = ZEPHIO_KEY_F5;        break;
+        case 17: event->key = ZEPHIO_KEY_F6;        break;
+        case 18: event->key = ZEPHIO_KEY_F7;        break;
+        case 19: event->key = ZEPHIO_KEY_F8;        break;
+        case 20: event->key = ZEPHIO_KEY_F9;        break;
+        case 21: event->key = ZEPHIO_KEY_F10;       break;
+        case 23: event->key = ZEPHIO_KEY_F11;       break;
+        case 24: event->key = ZEPHIO_KEY_F12;       break;
+        default: event->key = ZEPHIO_KEY_UNKNOWN;   break;
     }
 }
 
-static void apply_key_by_letter(int letter, TuiEvent *event)
+static void apply_key_by_letter(int letter, ZephioEvent *event)
 {
     switch (letter) {
-        case 'A': event->key = TUI_KEY_UP;    break;
-        case 'B': event->key = TUI_KEY_DOWN;  break;
-        case 'C': event->key = TUI_KEY_RIGHT; break;
-        case 'D': event->key = TUI_KEY_LEFT;  break;
-        case 'H': event->key = TUI_KEY_HOME;  break;
-        case 'F': event->key = TUI_KEY_END;   break;
-        case 'P': event->key = TUI_KEY_F1;    break;
-        case 'Q': event->key = TUI_KEY_F2;    break;
-        case 'R': event->key = TUI_KEY_F3;    break;
-        case 'S': event->key = TUI_KEY_F4;    break;
-        default:  event->key = TUI_KEY_UNKNOWN; break;
+        case 'A': event->key = ZEPHIO_KEY_UP;    break;
+        case 'B': event->key = ZEPHIO_KEY_DOWN;  break;
+        case 'C': event->key = ZEPHIO_KEY_RIGHT; break;
+        case 'D': event->key = ZEPHIO_KEY_LEFT;  break;
+        case 'H': event->key = ZEPHIO_KEY_HOME;  break;
+        case 'F': event->key = ZEPHIO_KEY_END;   break;
+        case 'P': event->key = ZEPHIO_KEY_F1;    break;
+        case 'Q': event->key = ZEPHIO_KEY_F2;    break;
+        case 'R': event->key = ZEPHIO_KEY_F3;    break;
+        case 'S': event->key = ZEPHIO_KEY_F4;    break;
+        default:  event->key = ZEPHIO_KEY_UNKNOWN; break;
     }
 }
 
-static void apply_modifiers(int mod_val, TuiEvent *event)
+static void apply_modifiers(int mod_val, ZephioEvent *event)
 {
     if (mod_val > 1) {
         int m = mod_val - 1;
-        if (m & 1) event->modifiers |= TUI_MOD_SHIFT;
-        if (m & 2) event->modifiers |= TUI_MOD_ALT;
-        if (m & 4) event->modifiers |= TUI_MOD_CTRL;
+        if (m & 1) event->modifiers |= ZEPHIO_MOD_SHIFT;
+        if (m & 2) event->modifiers |= ZEPHIO_MOD_ALT;
+        if (m & 4) event->modifiers |= ZEPHIO_MOD_CTRL;
     }
 }
 
-static void parse_csi_from(int fd, int first_byte, TuiEvent *event)
+static void parse_csi_from(int fd, int first_byte, ZephioEvent *event)
 {
     int params[8] = {0};
     int param_count = 0;
@@ -138,13 +138,13 @@ static void parse_csi_from(int fd, int first_byte, TuiEvent *event)
 
         b = read_byte(fd, 25);
         if (b < 0) {
-            event->key = TUI_KEY_UNKNOWN;
+            event->key = ZEPHIO_KEY_UNKNOWN;
             return;
         }
     }
 
     if (final_byte == 0) {
-        event->key = TUI_KEY_UNKNOWN;
+        event->key = ZEPHIO_KEY_UNKNOWN;
         return;
     }
 
@@ -153,8 +153,8 @@ static void parse_csi_from(int fd, int first_byte, TuiEvent *event)
     }
 
     if (final_byte == 'Z') {
-        event->key = TUI_KEY_TAB;
-        event->modifiers |= TUI_MOD_SHIFT;
+        event->key = ZEPHIO_KEY_TAB;
+        event->modifiers |= ZEPHIO_MOD_SHIFT;
     } else if (final_byte == '~') {
         apply_key_by_param((param_count > 0) ? params[0] : 1, event);
     } else {
@@ -162,7 +162,7 @@ static void parse_csi_from(int fd, int first_byte, TuiEvent *event)
     }
 }
 
-static void parse_sgr_mouse(int fd, TuiEvent *event)
+static void parse_sgr_mouse(int fd, ZephioEvent *event)
 {
     int params[3] = {0, 0, 0};
     int param_count = 0;
@@ -172,7 +172,7 @@ static void parse_sgr_mouse(int fd, TuiEvent *event)
     while (param_count < 3) {
         int b = read_byte(fd, 25);
         if (b < 0) {
-            event->key = TUI_KEY_UNKNOWN;
+            event->key = ZEPHIO_KEY_UNKNOWN;
             return;
         }
 
@@ -189,13 +189,13 @@ static void parse_sgr_mouse(int fd, TuiEvent *event)
             final_byte = b;
             break;
         } else {
-            event->key = TUI_KEY_UNKNOWN;
+            event->key = ZEPHIO_KEY_UNKNOWN;
             return;
         }
     }
 
     if (final_byte == 0) {
-        event->key = TUI_KEY_UNKNOWN;
+        event->key = ZEPHIO_KEY_UNKNOWN;
         return;
     }
 
@@ -206,50 +206,50 @@ static void parse_sgr_mouse(int fd, TuiEvent *event)
     if (cx > 0) cx--;
     if (cy > 0) cy--;
 
-    event->key = TUI_EVENT_MOUSE;
+    event->key = ZEPHIO_EVENT_MOUSE;
     event->mouse.col = cx;
     event->mouse.row = cy;
-    event->mouse.modifiers = TUI_MOD_NONE;
+    event->mouse.modifiers = ZEPHIO_MOD_NONE;
 
-    if (cb & 4)  event->mouse.modifiers |= TUI_MOD_SHIFT;
-    if (cb & 8)  event->mouse.modifiers |= TUI_MOD_ALT;
-    if (cb & 16) event->mouse.modifiers |= TUI_MOD_CTRL;
+    if (cb & 4)  event->mouse.modifiers |= ZEPHIO_MOD_SHIFT;
+    if (cb & 8)  event->mouse.modifiers |= ZEPHIO_MOD_ALT;
+    if (cb & 16) event->mouse.modifiers |= ZEPHIO_MOD_CTRL;
 
     int btn = cb & 0x03;
     int motion = cb & 0x20;
     int wheel  = cb & 0x40;
 
     if (wheel) {
-        event->mouse.button = TUI_MOUSE_BTN_NONE;
-        event->mouse.action = (btn == 0) ? TUI_MOUSE_WHEEL_UP : TUI_MOUSE_WHEEL_DOWN;
+        event->mouse.button = ZEPHIO_MOUSE_BTN_NONE;
+        event->mouse.action = (btn == 0) ? ZEPHIO_MOUSE_WHEEL_UP : ZEPHIO_MOUSE_WHEEL_DOWN;
     } else if (motion) {
-        event->mouse.button = (TuiMouseButton)(btn + 1);
-        event->mouse.action = TUI_MOUSE_MOTION;
+        event->mouse.button = (ZephioMouseButton)(btn + 1);
+        event->mouse.action = ZEPHIO_MOUSE_MOTION;
     } else if (final_byte == 'M') {
         if (btn <= 2) {
-            event->mouse.button = (TuiMouseButton)(btn + 1);
+            event->mouse.button = (ZephioMouseButton)(btn + 1);
         } else {
-            event->mouse.button = TUI_MOUSE_BTN_NONE;
+            event->mouse.button = ZEPHIO_MOUSE_BTN_NONE;
         }
-        event->mouse.action = TUI_MOUSE_PRESS;
+        event->mouse.action = ZEPHIO_MOUSE_PRESS;
     } else {
-        event->mouse.button = TUI_MOUSE_BTN_NONE;
-        event->mouse.action = TUI_MOUSE_RELEASE;
+        event->mouse.button = ZEPHIO_MOUSE_BTN_NONE;
+        event->mouse.action = ZEPHIO_MOUSE_RELEASE;
     }
 }
 
-static void parse_escape(int fd, TuiEvent *event)
+static void parse_escape(int fd, ZephioEvent *event)
 {
     int b = read_byte(fd, 25);
     if (b < 0) {
-        event->key = TUI_KEY_ESCAPE;
+        event->key = ZEPHIO_KEY_ESCAPE;
         return;
     }
 
     if (b == '[') {
         int c = read_byte(fd, 25);
         if (c < 0) {
-            event->key = TUI_KEY_UNKNOWN;
+            event->key = ZEPHIO_KEY_UNKNOWN;
             return;
         }
         if (c == '<') {
@@ -260,16 +260,16 @@ static void parse_escape(int fd, TuiEvent *event)
     } else if (b == 'O') {
         int c1 = read_byte(fd, 25);
         if (c1 < 0) {
-            event->key = TUI_KEY_UNKNOWN;
+            event->key = ZEPHIO_KEY_UNKNOWN;
             return;
         }
         apply_key_by_letter(c1, event);
     } else if (b == 0x1B) {
-        event->key = TUI_KEY_ESCAPE;
-        event->modifiers |= TUI_MOD_ALT;
+        event->key = ZEPHIO_KEY_ESCAPE;
+        event->modifiers |= ZEPHIO_MOD_ALT;
     } else {
-        event->key = TUI_KEY_UNKNOWN;
-        event->modifiers |= TUI_MOD_ALT;
+        event->key = ZEPHIO_KEY_UNKNOWN;
+        event->modifiers |= ZEPHIO_MOD_ALT;
 
         if (b >= 'a' && b <= 'z') {
             event->codepoint = (uint32_t)b;
@@ -314,15 +314,15 @@ static int decode_utf8(int first_byte, int fd, uint32_t *out_codepoint)
     return num_bytes;
 }
 
-TuiResult tui_input_poll(TuiContext *ctx, TuiEvent *event)
+ZephioResult zephio_input_poll(ZephioContext *ctx, ZephioEvent *event)
 {
     memset(event, 0, sizeof(*event));
 
     if (g_winch_received) {
         g_winch_received = 0;
-        event->key = TUI_EVENT_RESIZE;
-        tui_get_size(ctx, &event->size);
-        return TUI_OK;
+        event->key = ZEPHIO_EVENT_RESIZE;
+        zephio_get_size(ctx, &event->size);
+        return ZEPHIO_OK;
     }
 
     int fd = ctx->terminal.fd;
@@ -331,9 +331,9 @@ TuiResult tui_input_poll(TuiContext *ctx, TuiEvent *event)
 
     if (g_winch_received) {
         g_winch_received = 0;
-        event->key = TUI_EVENT_RESIZE;
-        tui_get_size(ctx, &event->size);
-        return TUI_OK;
+        event->key = ZEPHIO_EVENT_RESIZE;
+        zephio_get_size(ctx, &event->size);
+        return ZEPHIO_OK;
     }
 
     if (ret <= 0) {
@@ -349,37 +349,37 @@ TuiResult tui_input_poll(TuiContext *ctx, TuiEvent *event)
     if (c == 0x1B) {
         parse_escape(fd, event);
     } else if (c < 0x20) {
-        event->key = (TuiKey)c;
-        event->modifiers |= TUI_MOD_CTRL;
+        event->key = (ZephioKey)c;
+        event->modifiers |= ZEPHIO_MOD_CTRL;
 
         if (c == 0x0D) {
-            event->key = TUI_KEY_ENTER;
-            event->modifiers = TUI_MOD_NONE;
+            event->key = ZEPHIO_KEY_ENTER;
+            event->modifiers = ZEPHIO_MOD_NONE;
         } else if (c == 0x09) {
-            event->key = TUI_KEY_TAB;
-            event->modifiers = TUI_MOD_NONE;
+            event->key = ZEPHIO_KEY_TAB;
+            event->modifiers = ZEPHIO_MOD_NONE;
         }
     } else if (c == 0x7F) {
-        event->key = TUI_KEY_BACKSPACE;
+        event->key = ZEPHIO_KEY_BACKSPACE;
     } else if (c >= 0x20 && c < 0x7F) {
         event->codepoint = (uint32_t)c;
-        event->key = TUI_KEY_UNKNOWN;
+        event->key = ZEPHIO_KEY_UNKNOWN;
     } else if (c >= 0x80) {
         int num = decode_utf8(c, fd, &event->codepoint);
         (void)num;
-        event->key = TUI_KEY_UNKNOWN;
+        event->key = ZEPHIO_KEY_UNKNOWN;
     }
 
-    return TUI_OK;
+    return ZEPHIO_OK;
 }
 
-int tui_input_loop(TuiContext *ctx, TuiInputCallback callback, void *user_data)
+int zephio_input_loop(ZephioContext *ctx, ZephioInputCallback callback, void *user_data)
 {
-    TuiEvent event;
+    ZephioEvent event;
 
     while (1) {
-        TuiResult res = tui_input_poll(ctx, &event);
-        if (res != TUI_OK) {
+        ZephioResult res = zephio_input_poll(ctx, &event);
+        if (res != ZEPHIO_OK) {
             return -1;
         }
 
@@ -390,74 +390,74 @@ int tui_input_loop(TuiContext *ctx, TuiInputCallback callback, void *user_data)
     }
 }
 
-const char *tui_key_name(TuiKey key)
+const char *zephio_key_name(ZephioKey key)
 {
     switch (key) {
-        case TUI_KEY_UNKNOWN:    return "Unknown";
-        case TUI_KEY_ENTER:      return "Enter";
-        case TUI_KEY_TAB:        return "Tab";
-        case TUI_KEY_BACKSPACE:  return "Backspace";
-        case TUI_KEY_ESCAPE:     return "Escape";
-        case TUI_KEY_CTRL_A:     return "Ctrl+A";
-        case TUI_KEY_CTRL_B:     return "Ctrl+B";
-        case TUI_KEY_CTRL_C:     return "Ctrl+C";
-        case TUI_KEY_CTRL_D:     return "Ctrl+D";
-        case TUI_KEY_CTRL_E:     return "Ctrl+E";
-        case TUI_KEY_CTRL_F:     return "Ctrl+F";
-        case TUI_KEY_CTRL_G:     return "Ctrl+G";
-        case TUI_KEY_CTRL_H:     return "Ctrl+H";
-        case TUI_KEY_CTRL_J:     return "Ctrl+J";
-        case TUI_KEY_CTRL_K:     return "Ctrl+K";
-        case TUI_KEY_CTRL_L:     return "Ctrl+L";
-        case TUI_KEY_CTRL_N:     return "Ctrl+N";
-        case TUI_KEY_CTRL_O:     return "Ctrl+O";
-        case TUI_KEY_CTRL_P:     return "Ctrl+P";
-        case TUI_KEY_CTRL_Q:     return "Ctrl+Q";
-        case TUI_KEY_CTRL_R:     return "Ctrl+R";
-        case TUI_KEY_CTRL_S:     return "Ctrl+S";
-        case TUI_KEY_CTRL_T:     return "Ctrl+T";
-        case TUI_KEY_CTRL_U:     return "Ctrl+U";
-        case TUI_KEY_CTRL_V:     return "Ctrl+V";
-        case TUI_KEY_CTRL_W:     return "Ctrl+W";
-        case TUI_KEY_CTRL_X:     return "Ctrl+X";
-        case TUI_KEY_CTRL_Y:     return "Ctrl+Y";
-        case TUI_KEY_CTRL_Z:     return "Ctrl+Z";
-        case TUI_KEY_UP:         return "Up";
-        case TUI_KEY_DOWN:       return "Down";
-        case TUI_KEY_RIGHT:      return "Right";
-        case TUI_KEY_LEFT:       return "Left";
-        case TUI_KEY_HOME:       return "Home";
-        case TUI_KEY_END:        return "End";
-        case TUI_KEY_INSERT:     return "Insert";
-        case TUI_KEY_DELETE:     return "Delete";
-        case TUI_KEY_PAGE_UP:    return "PageUp";
-        case TUI_KEY_PAGE_DOWN:  return "PageDown";
-        case TUI_KEY_F1:         return "F1";
-        case TUI_KEY_F2:         return "F2";
-        case TUI_KEY_F3:         return "F3";
-        case TUI_KEY_F4:         return "F4";
-        case TUI_KEY_F5:         return "F5";
-        case TUI_KEY_F6:         return "F6";
-        case TUI_KEY_F7:         return "F7";
-        case TUI_KEY_F8:         return "F8";
-        case TUI_KEY_F9:         return "F9";
-        case TUI_KEY_F10:        return "F10";
-        case TUI_KEY_F11:        return "F11";
-        case TUI_KEY_F12:        return "F12";
-        case TUI_EVENT_RESIZE:   return "Resize";
-        case TUI_EVENT_MOUSE:    return "Mouse";
+        case ZEPHIO_KEY_UNKNOWN:    return "Unknown";
+        case ZEPHIO_KEY_ENTER:      return "Enter";
+        case ZEPHIO_KEY_TAB:        return "Tab";
+        case ZEPHIO_KEY_BACKSPACE:  return "Backspace";
+        case ZEPHIO_KEY_ESCAPE:     return "Escape";
+        case ZEPHIO_KEY_CTRL_A:     return "Ctrl+A";
+        case ZEPHIO_KEY_CTRL_B:     return "Ctrl+B";
+        case ZEPHIO_KEY_CTRL_C:     return "Ctrl+C";
+        case ZEPHIO_KEY_CTRL_D:     return "Ctrl+D";
+        case ZEPHIO_KEY_CTRL_E:     return "Ctrl+E";
+        case ZEPHIO_KEY_CTRL_F:     return "Ctrl+F";
+        case ZEPHIO_KEY_CTRL_G:     return "Ctrl+G";
+        case ZEPHIO_KEY_CTRL_H:     return "Ctrl+H";
+        case ZEPHIO_KEY_CTRL_J:     return "Ctrl+J";
+        case ZEPHIO_KEY_CTRL_K:     return "Ctrl+K";
+        case ZEPHIO_KEY_CTRL_L:     return "Ctrl+L";
+        case ZEPHIO_KEY_CTRL_N:     return "Ctrl+N";
+        case ZEPHIO_KEY_CTRL_O:     return "Ctrl+O";
+        case ZEPHIO_KEY_CTRL_P:     return "Ctrl+P";
+        case ZEPHIO_KEY_CTRL_Q:     return "Ctrl+Q";
+        case ZEPHIO_KEY_CTRL_R:     return "Ctrl+R";
+        case ZEPHIO_KEY_CTRL_S:     return "Ctrl+S";
+        case ZEPHIO_KEY_CTRL_T:     return "Ctrl+T";
+        case ZEPHIO_KEY_CTRL_U:     return "Ctrl+U";
+        case ZEPHIO_KEY_CTRL_V:     return "Ctrl+V";
+        case ZEPHIO_KEY_CTRL_W:     return "Ctrl+W";
+        case ZEPHIO_KEY_CTRL_X:     return "Ctrl+X";
+        case ZEPHIO_KEY_CTRL_Y:     return "Ctrl+Y";
+        case ZEPHIO_KEY_CTRL_Z:     return "Ctrl+Z";
+        case ZEPHIO_KEY_UP:         return "Up";
+        case ZEPHIO_KEY_DOWN:       return "Down";
+        case ZEPHIO_KEY_RIGHT:      return "Right";
+        case ZEPHIO_KEY_LEFT:       return "Left";
+        case ZEPHIO_KEY_HOME:       return "Home";
+        case ZEPHIO_KEY_END:        return "End";
+        case ZEPHIO_KEY_INSERT:     return "Insert";
+        case ZEPHIO_KEY_DELETE:     return "Delete";
+        case ZEPHIO_KEY_PAGE_UP:    return "PageUp";
+        case ZEPHIO_KEY_PAGE_DOWN:  return "PageDown";
+        case ZEPHIO_KEY_F1:         return "F1";
+        case ZEPHIO_KEY_F2:         return "F2";
+        case ZEPHIO_KEY_F3:         return "F3";
+        case ZEPHIO_KEY_F4:         return "F4";
+        case ZEPHIO_KEY_F5:         return "F5";
+        case ZEPHIO_KEY_F6:         return "F6";
+        case ZEPHIO_KEY_F7:         return "F7";
+        case ZEPHIO_KEY_F8:         return "F8";
+        case ZEPHIO_KEY_F9:         return "F9";
+        case ZEPHIO_KEY_F10:        return "F10";
+        case ZEPHIO_KEY_F11:        return "F11";
+        case ZEPHIO_KEY_F12:        return "F12";
+        case ZEPHIO_EVENT_RESIZE:   return "Resize";
+        case ZEPHIO_EVENT_MOUSE:    return "Mouse";
         default:                 return "?";
     }
 }
 
-const char *tui_modifier_name(int mod)
+const char *zephio_modifier_name(int mod)
 {
-    if (mod == TUI_MOD_NONE) return "";
-    if (mod == (TUI_MOD_CTRL | TUI_MOD_SHIFT)) return "Ctrl+Shift+";
-    if (mod == (TUI_MOD_CTRL | TUI_MOD_ALT))   return "Ctrl+Alt+";
-    if (mod == (TUI_MOD_ALT | TUI_MOD_SHIFT))   return "Alt+Shift+";
-    if (mod == TUI_MOD_CTRL)  return "Ctrl+";
-    if (mod == TUI_MOD_SHIFT) return "Shift+";
-    if (mod == TUI_MOD_ALT)   return "Alt+";
+    if (mod == ZEPHIO_MOD_NONE) return "";
+    if (mod == (ZEPHIO_MOD_CTRL | ZEPHIO_MOD_SHIFT)) return "Ctrl+Shift+";
+    if (mod == (ZEPHIO_MOD_CTRL | ZEPHIO_MOD_ALT))   return "Ctrl+Alt+";
+    if (mod == (ZEPHIO_MOD_ALT | ZEPHIO_MOD_SHIFT))   return "Alt+Shift+";
+    if (mod == ZEPHIO_MOD_CTRL)  return "Ctrl+";
+    if (mod == ZEPHIO_MOD_SHIFT) return "Shift+";
+    if (mod == ZEPHIO_MOD_ALT)   return "Alt+";
     return "?+";
 }

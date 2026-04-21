@@ -27,7 +27,7 @@ GENERATE_MAN           = NO
 GENERATE_XML           = NO
 GENERATE_DOCSET        = NO
 
-PREDEFINED             = TUI_TEST_CAPTURE=1
+PREDEFINED             = ZEPHIO_TEST_CAPTURE=1
 
 STRIP_FROM_PATH        = include/ src/
 

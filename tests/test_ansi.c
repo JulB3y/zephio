@@ -1,6 +1,6 @@
-#define TUI_TEST_CAPTURE
+#define ZEPHIO_TEST_CAPTURE
 #include "util.h"
-#include "tui_ansi.h"
+#include "zephio_ansi.h"
 
 /* ── cursor movement ────────────────────────────────────────────── */
 

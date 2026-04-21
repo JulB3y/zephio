@@ -12,14 +12,14 @@ This guide walks through building Zephio, running your first TUI application, an
 
 ```sh
 git clone <repo-url> && cd zephio
-make                # Release build: lib/libtui.a + examples
+make                # Release build: lib/libzephio.a + examples
 make DEBUG=1        # Debug build with AddressSanitizer + UBSan
 make examples       # Build examples only
 make clean          # Remove build/ and lib/
 ```
 
 Output:
-- `lib/libtui.a` — static library
+- `lib/libzephio.a` — static library
 - `build/*` — compiled example binaries
 
 ### Running the Examples
@@ -41,7 +41,7 @@ zephio-framework/
 ├── examples/      Ready-to-run demos
 ├── tests/         Unit tests
 ├── docs/          Documentation (Doxygen, architecture, guides)
-├── lib/           Build output (libtui.a)
+├── lib/           Build output (libzephio.a)
 ├── build/         Build output (binaries)
 ├── Makefile
 ├── README.md
@@ -54,10 +54,10 @@ The simplest Zephio program uses the ANSI helpers directly. This is useful for s
 
 ```c
 #include "tui.h"
-#include "tui_ansi.h"
+#include "zephio_ansi.h"
 
 int main(void) {
-    if (tui_init() != TUI_OK) return 1;
+    if (tui_init() != ZEPHIO_OK) return 1;
 
     TuiSize size;
     tui_get_size(&size);
@@ -85,7 +85,7 @@ int main(void) {
 Compile and run:
 
 ```sh
-gcc -std=c11 -Iinclude -o hello hello.c -Llib -ltui -lm
+gcc -std=c11 -Iinclude -o hello hello.c -Llib -lzephio -lm
 ./hello
 ```
 
@@ -96,30 +96,30 @@ For more complex applications, use the double-buffered screen. It eliminates fli
 ```c
 #define _POSIX_C_SOURCE 200809L
 #include "tui.h"
-#include "tui_input.h"
-#include "tui_screen.h"
+#include "zephio_input.h"
+#include "zephio_screen.h"
 
 static void draw_frame(int rows, int cols) {
     tui_screen_clear();
     tui_screen_fill(0, 0, cols, 1, " ",
-        TUI_COLOR_INDEX(15), TUI_COLOR_INDEX(4), TUI_ATTR_BOLD);
+        ZEPHIO_COLOR_INDEX(15), ZEPHIO_COLOR_INDEX(4), ZEPHIO_ATTR_BOLD);
     tui_screen_write(0, 2, "My First Screen App",
-        TUI_COLOR_INDEX(15), TUI_COLOR_INDEX(4), TUI_ATTR_BOLD);
+        ZEPHIO_COLOR_INDEX(15), ZEPHIO_COLOR_INDEX(4), ZEPHIO_ATTR_BOLD);
     tui_screen_render();
 }
 
 static int on_input(const TuiEvent *ev, void *ud) {
-    if (ev->key == TUI_EVENT_RESIZE) {
+    if (ev->key == ZEPHIO_EVENT_RESIZE) {
         tui_screen_resize(ev->size.rows, ev->size.cols);
         draw_frame(ev->size.rows, ev->size.cols);
         return 0;
     }
-    if (ev->key == TUI_KEY_ESCAPE || ev->codepoint == 'q') return 1;
+    if (ev->key == ZEPHIO_KEY_ESCAPE || ev->codepoint == 'q') return 1;
     return 0;
 }
 
 int main(void) {
-    if (tui_init() != TUI_OK) return 1;
+    if (tui_init() != ZEPHIO_OK) return 1;
     tui_input_init();
     TuiSize size = tui_screen_size();
     draw_frame(size.rows, size.cols);
@@ -143,10 +143,10 @@ For real applications with widgets, use `TuiApp`. It manages init, the event loo
 
 ```c
 #include "tui.h"
-#include "tui_app.h"
-#include "tui_label.h"
-#include "tui_button.h"
-#include "tui_widget.h"
+#include "zephio_app.h"
+#include "zephio_label.h"
+#include "zephio_button.h"
+#include "zephio_widget.h"
 
 typedef struct {
     TuiWidget root;
@@ -175,7 +175,7 @@ static int on_render(TuiApp *app, void *ud) {
 }
 
 static int on_input(TuiApp *app, const TuiEvent *ev, void *ud) {
-    if (ev->key == TUI_KEY_ESCAPE) return 1;
+    if (ev->key == ZEPHIO_KEY_ESCAPE) return 1;
     TuiWidget *f = tui_widget_get_focused(&((App *)ud)->root);
     if (f) tui_widget_handle_input(f, ev);
     return 0;
@@ -211,22 +211,22 @@ After building:
 
 ```sh
 gcc -std=c11 -I/path/to/zephio/include -o myapp myapp.c \
-    -L/path/to/zephio/lib -ltui -lm
+    -L/path/to/zephio/lib -lzephio -lm
 ```
 
 Or from within the project:
 
 ```sh
-gcc -std=c11 -Iinclude -o myapp myapp.c -Llib -ltui -lm
+gcc -std=c11 -Iinclude -o myapp myapp.c -Llib -lzephio -lm
 ```
 
 ## Troubleshooting
 
-### "tui_init failed: 2" (TUI_ERR_TCGETATTR)
+### "zephio_init failed: 2" (TUI_ERR_TCGETATTR)
 
 The framework cannot read terminal attributes. This happens when stdin is not a terminal (e.g., piped input). Make sure you run the program directly in a terminal, not via `echo | ./myapp`.
 
-### "tui_init failed: 3" (TUI_ERR_TCSETATTR)
+### "zephio_init failed: 3" (TUI_ERR_TCSETATTR)
 
 The framework cannot set raw mode. This can occur in some SSH sessions or container environments. Ensure your terminal emulator is correctly configured.
 

@@ -1,8 +1,8 @@
 #define _POSIX_C_SOURCE 200809L
 
-#include "tui_tree_view.h"
-#include "tui_context.h"
-#include "tui_screen.h"
+#include "zephio_tree_view.h"
+#include "zephio_context.h"
+#include "zephio_screen.h"
 
 #include <stdlib.h>
 #include <string.h>
@@ -16,21 +16,21 @@
 #define UTF8_EXPAND   "+"
 #define UTF8_COLLAPSE "-"
 
-static void flatten_recursive(TuiTreeView *tv, TuiTreeNode *node,
+static void flatten_recursive(ZephioTreeView *tv, ZephioTreeNode *node,
                               int depth, int is_last,
                               int *last_at_depth, int depth_cap)
 {
     if (tv->visible_count >= tv->visible_capacity) {
         int new_cap = tv->visible_capacity == 0
             ? INITIAL_CAP : tv->visible_capacity * 2;
-        TuiFlatEntry *nv = (TuiFlatEntry *)realloc(
-            tv->visible, (size_t)new_cap * sizeof(TuiFlatEntry));
+        ZephioFlatEntry *nv = (ZephioFlatEntry *)realloc(
+            tv->visible, (size_t)new_cap * sizeof(ZephioFlatEntry));
         if (!nv) return;
         tv->visible          = nv;
         tv->visible_capacity = new_cap;
     }
 
-    TuiFlatEntry *entry = &tv->visible[tv->visible_count];
+    ZephioFlatEntry *entry = &tv->visible[tv->visible_count];
 
     entry->node    = node;
     entry->depth   = depth;
@@ -62,7 +62,7 @@ static void flatten_recursive(TuiTreeView *tv, TuiTreeNode *node,
     }
 }
 
-static void rebuild_visible(TuiTreeView *tv)
+static void rebuild_visible(ZephioTreeView *tv)
 {
     tv->visible_count = 0;
 
@@ -77,7 +77,7 @@ static void rebuild_visible(TuiTreeView *tv)
     }
 }
 
-static void ensure_visible(TuiTreeView *tv)
+static void ensure_visible(ZephioTreeView *tv)
 {
     if (tv->selected < tv->scroll_offset) {
         tv->scroll_offset = tv->selected;
@@ -87,7 +87,7 @@ static void ensure_visible(TuiTreeView *tv)
     }
 }
 
-static void rebuild_clamp(TuiTreeView *tv)
+static void rebuild_clamp(ZephioTreeView *tv)
 {
     rebuild_visible(tv);
     if (tv->selected >= tv->visible_count)
@@ -97,14 +97,14 @@ static void rebuild_clamp(TuiTreeView *tv)
     tv->base.dirty = 1;
 }
 
-static void render_scrollbar(TuiWidget *widget, int total, int offset)
+static void render_scrollbar(ZephioWidget *widget, int total, int offset)
 {
     int wh = widget->height;
     int scroll_col = widget->abs_x + widget->width - 1;
-    TuiColor track_fg = ZEPHIO_COLOR_INDEX(TUI_COLOR_GRAY_DARK);
-    TuiColor track_bg = ZEPHIO_COLOR_INDEX(0);
+    ZephioColor track_fg = ZEPHIO_COLOR_INDEX(ZEPHIO_COLOR_GRAY_DARK);
+    ZephioColor track_bg = ZEPHIO_COLOR_INDEX(0);
 
-    tui_screen_fill(widget->ctx, widget->abs_y, scroll_col, 1, wh, " ",
+    zephio_screen_fill(widget->ctx, widget->abs_y, scroll_col, 1, wh, " ",
                     track_fg, track_bg, ZEPHIO_ATTR_DIM);
 
     int max_scroll = total - wh;
@@ -113,18 +113,18 @@ static void render_scrollbar(TuiWidget *widget, int total, int offset)
         if (thumb_h < 1) thumb_h = 1;
         int thumb_y = offset * (wh - thumb_h) / max_scroll;
         for (int t = 0; t < thumb_h; t++) {
-            tui_screen_set_cell(widget->ctx, widget->abs_y + thumb_y + t, scroll_col,
+            zephio_screen_set_cell(widget->ctx, widget->abs_y + thumb_y + t, scroll_col,
                                 "\xe2\x96\x88",
-                                ZEPHIO_COLOR_INDEX(TUI_COLOR_BRIGHT_WHITE),
-                                ZEPHIO_COLOR_INDEX(TUI_COLOR_GRAY_MID),
+                                ZEPHIO_COLOR_INDEX(ZEPHIO_COLOR_BRIGHT_WHITE),
+                                ZEPHIO_COLOR_INDEX(ZEPHIO_COLOR_GRAY_MID),
                                 ZEPHIO_ATTR_NONE);
         }
     }
 }
 
-static void tree_render(TuiWidget *widget)
+static void tree_render(ZephioWidget *widget)
 {
-    TuiTreeView *tv = (TuiTreeView *)widget;
+    ZephioTreeView *tv = (ZephioTreeView *)widget;
     int wx = widget->abs_x;
     int wy = widget->abs_y;
 
@@ -132,18 +132,18 @@ static void tree_render(TuiWidget *widget)
         int idx = tv->scroll_offset + i;
         if (idx >= tv->visible_count) break;
 
-        TuiFlatEntry *entry = &tv->visible[idx];
+        ZephioFlatEntry *entry = &tv->visible[idx];
 
-        TuiColor fg, bg;
-        TuiAttr  attr;
+        ZephioColor fg, bg;
+        ZephioAttr  attr;
 
         if (widget->theme) {
-            TuiWidgetState state = TUI_STATE_NORMAL;
+            ZephioWidgetState state = ZEPHIO_STATE_NORMAL;
             if (widget->disabled)
-                state = TUI_STATE_DISABLED;
+                state = ZEPHIO_STATE_DISABLED;
             else if (idx == tv->selected && widget->focused)
-                state = TUI_STATE_FOCUSED;
-            TuiStyle s = widget->theme->styles[state];
+                state = ZEPHIO_STATE_FOCUSED;
+            ZephioStyle s = widget->theme->styles[state];
             fg = s.fg; bg = s.bg; attr = s.attr;
         } else {
             fg = tv->fg; bg = tv->bg; attr = ZEPHIO_ATTR_NONE;
@@ -152,32 +152,32 @@ static void tree_render(TuiWidget *widget)
             }
         }
 
-        tui_screen_fill(widget->ctx, wy + i, wx, widget->width, 1, " ", fg, bg, attr);
+        zephio_screen_fill(widget->ctx, wy + i, wx, widget->width, 1, " ", fg, bg, attr);
 
         int col = wx;
 
-        TuiColor conn_fg = tv->fg_connector.type != TUI_COLOR_TYPE_NONE
+        ZephioColor conn_fg = tv->fg_connector.type != ZEPHIO_COLOR_TYPE_NONE
             ? tv->fg_connector : fg;
-        TuiColor conn_bg = bg;
+        ZephioColor conn_bg = bg;
 
         for (int d = 0; d < entry->depth; d++) {
             if (col >= wx + widget->width - 1) break;
 
             if (d < entry->depth - 1) {
                 if (entry->last_at_depth && !entry->last_at_depth[d + 1]) {
-                    tui_screen_write(widget->ctx, wy + i, col, UTF8_PIPE, conn_fg, conn_bg, attr);
+                    zephio_screen_write(widget->ctx, wy + i, col, UTF8_PIPE, conn_fg, conn_bg, attr);
                 } else {
-                    tui_screen_write(widget->ctx, wy + i, col, " ", conn_fg, conn_bg, attr);
+                    zephio_screen_write(widget->ctx, wy + i, col, " ", conn_fg, conn_bg, attr);
                 }
             } else {
                 if (entry->is_last) {
-                    tui_screen_write(widget->ctx, wy + i, col, UTF8_CORNER, conn_fg, conn_bg, attr);
+                    zephio_screen_write(widget->ctx, wy + i, col, UTF8_CORNER, conn_fg, conn_bg, attr);
                     if (col + 1 < wx + widget->width)
-                        tui_screen_write(widget->ctx, wy + i, col + 1, UTF8_HORIZ, conn_fg, conn_bg, attr);
+                        zephio_screen_write(widget->ctx, wy + i, col + 1, UTF8_HORIZ, conn_fg, conn_bg, attr);
                 } else {
-                    tui_screen_write(widget->ctx, wy + i, col, UTF8_TEE, conn_fg, conn_bg, attr);
+                    zephio_screen_write(widget->ctx, wy + i, col, UTF8_TEE, conn_fg, conn_bg, attr);
                     if (col + 1 < wx + widget->width)
-                        tui_screen_write(widget->ctx, wy + i, col + 1, UTF8_HORIZ, conn_fg, conn_bg, attr);
+                        zephio_screen_write(widget->ctx, wy + i, col + 1, UTF8_HORIZ, conn_fg, conn_bg, attr);
                 }
             }
             col += 2;
@@ -186,7 +186,7 @@ static void tree_render(TuiWidget *widget)
         if (entry->node->child_count > 0) {
             if (col >= wx + widget->width) continue;
             const char *exp = entry->node->expanded ? UTF8_COLLAPSE : UTF8_EXPAND;
-            tui_screen_write(widget->ctx, wy + i, col, exp, fg, bg, attr | ZEPHIO_ATTR_BOLD);
+            zephio_screen_write(widget->ctx, wy + i, col, exp, fg, bg, attr | ZEPHIO_ATTR_BOLD);
             col += 1;
         } else {
             col += 1;
@@ -202,7 +202,7 @@ static void tree_render(TuiWidget *widget)
             int cl = w < (int)sizeof(buf) - 1 ? w : (int)sizeof(buf) - 1;
             memcpy(buf, entry->node->text, (size_t)cl);
             buf[cl] = '\0';
-            tui_screen_write(widget->ctx, wy + i, col, buf, fg, bg, attr);
+            zephio_screen_write(widget->ctx, wy + i, col, buf, fg, bg, attr);
         }
     }
 
@@ -212,8 +212,8 @@ static void tree_render(TuiWidget *widget)
         int empty_start = wy + (filled > widget->height ? widget->height : filled);
         int empty_rows = wy + widget->height - empty_start;
 
-        if (empty_rows > 0 && tv->bg_empty.type != TUI_COLOR_TYPE_NONE) {
-            tui_screen_fill(widget->ctx, empty_start, wx, widget->width, empty_rows,
+        if (empty_rows > 0 && tv->bg_empty.type != ZEPHIO_COLOR_TYPE_NONE) {
+            zephio_screen_fill(widget->ctx, empty_start, wx, widget->width, empty_rows,
                             " ", tv->fg, tv->bg_empty, ZEPHIO_ATTR_NONE);
         }
     }
@@ -223,12 +223,12 @@ static void tree_render(TuiWidget *widget)
     }
 }
 
-static int tree_handle_input(TuiWidget *widget, const TuiEvent *event)
+static int tree_handle_input(ZephioWidget *widget, const ZephioEvent *event)
 {
-    TuiTreeView *tv = (TuiTreeView *)widget;
+    ZephioTreeView *tv = (ZephioTreeView *)widget;
 
     switch (event->key) {
-    case TUI_KEY_UP:
+    case ZEPHIO_KEY_UP:
         if (tv->selected > 0) {
             tv->selected--;
             ensure_visible(tv);
@@ -236,7 +236,7 @@ static int tree_handle_input(TuiWidget *widget, const TuiEvent *event)
         }
         return 1;
 
-    case TUI_KEY_DOWN:
+    case ZEPHIO_KEY_DOWN:
         if (tv->selected < tv->visible_count - 1) {
             tv->selected++;
             ensure_visible(tv);
@@ -244,7 +244,7 @@ static int tree_handle_input(TuiWidget *widget, const TuiEvent *event)
         }
         return 1;
 
-    case TUI_KEY_PAGE_UP:
+    case ZEPHIO_KEY_PAGE_UP:
         if (tv->selected > 0) {
             tv->selected -= widget->height;
             if (tv->selected < 0) tv->selected = 0;
@@ -253,7 +253,7 @@ static int tree_handle_input(TuiWidget *widget, const TuiEvent *event)
         }
         return 1;
 
-    case TUI_KEY_PAGE_DOWN:
+    case ZEPHIO_KEY_PAGE_DOWN:
         if (tv->visible_count > 0) {
             tv->selected += widget->height;
             if (tv->selected >= tv->visible_count)
@@ -263,13 +263,13 @@ static int tree_handle_input(TuiWidget *widget, const TuiEvent *event)
         }
         return 1;
 
-    case TUI_KEY_HOME:
+    case ZEPHIO_KEY_HOME:
         tv->selected = 0;
         tv->scroll_offset = 0;
         widget->dirty = 1;
         return 1;
 
-    case TUI_KEY_END:
+    case ZEPHIO_KEY_END:
         if (tv->visible_count > 0) {
             tv->selected = tv->visible_count - 1;
             ensure_visible(tv);
@@ -277,12 +277,12 @@ static int tree_handle_input(TuiWidget *widget, const TuiEvent *event)
         }
         return 1;
 
-    case TUI_KEY_RIGHT:
-    case TUI_KEY_ENTER:
+    case ZEPHIO_KEY_RIGHT:
+    case ZEPHIO_KEY_ENTER:
         if (tv->selected >= 0 && tv->selected < tv->visible_count) {
-            TuiTreeNode *node = tv->visible[tv->selected].node;
+            ZephioTreeNode *node = tv->visible[tv->selected].node;
             if (node->child_count > 0) {
-                tui_tree_view_toggle(tv, node);
+                zephio_tree_view_toggle(tv, node);
                 widget->dirty = 1;
             } else if (tv->on_select) {
                 tv->on_select(widget, node, tv->user_data);
@@ -290,11 +290,11 @@ static int tree_handle_input(TuiWidget *widget, const TuiEvent *event)
         }
         return 1;
 
-    case TUI_KEY_LEFT:
+    case ZEPHIO_KEY_LEFT:
         if (tv->selected >= 0 && tv->selected < tv->visible_count) {
-            TuiTreeNode *node = tv->visible[tv->selected].node;
+            ZephioTreeNode *node = tv->visible[tv->selected].node;
             if (node->expanded) {
-                tui_tree_view_collapse(tv, node);
+                zephio_tree_view_collapse(tv, node);
                 widget->dirty = 1;
             } else if (node->parent && node->parent != tv->root) {
                 for (int i = 0; i < tv->visible_count; i++) {
@@ -316,11 +316,11 @@ static int tree_handle_input(TuiWidget *widget, const TuiEvent *event)
     return 0;
 }
 
-static int tree_handle_mouse(TuiWidget *widget, const TuiMouseEvent *mouse)
+static int tree_handle_mouse(ZephioWidget *widget, const ZephioMouseEvent *mouse)
 {
-    TuiTreeView *tv = (TuiTreeView *)widget;
+    ZephioTreeView *tv = (ZephioTreeView *)widget;
 
-    if (mouse->action == TUI_MOUSE_WHEEL_UP) {
+    if (mouse->action == ZEPHIO_MOUSE_WHEEL_UP) {
         if (tv->scroll_offset > 0) {
             tv->scroll_offset -= 3;
             if (tv->scroll_offset < 0) tv->scroll_offset = 0;
@@ -329,7 +329,7 @@ static int tree_handle_mouse(TuiWidget *widget, const TuiMouseEvent *mouse)
         return 1;
     }
 
-    if (mouse->action == TUI_MOUSE_WHEEL_DOWN) {
+    if (mouse->action == ZEPHIO_MOUSE_WHEEL_DOWN) {
         int max_off = tv->visible_count - widget->height;
         if (max_off < 0) max_off = 0;
         if (tv->scroll_offset < max_off) {
@@ -340,7 +340,7 @@ static int tree_handle_mouse(TuiWidget *widget, const TuiMouseEvent *mouse)
         return 1;
     }
 
-    if (mouse->action != TUI_MOUSE_PRESS || mouse->button != TUI_MOUSE_BTN_LEFT)
+    if (mouse->action != ZEPHIO_MOUSE_PRESS || mouse->button != ZEPHIO_MOUSE_BTN_LEFT)
         return 0;
 
     int rel_row = mouse->row - widget->abs_y;
@@ -353,9 +353,9 @@ static int tree_handle_mouse(TuiWidget *widget, const TuiMouseEvent *mouse)
     ensure_visible(tv);
     widget->dirty = 1;
 
-    TuiTreeNode *node = tv->visible[idx].node;
+    ZephioTreeNode *node = tv->visible[idx].node;
     if (node->child_count > 0) {
-        tui_tree_view_toggle(tv, node);
+        zephio_tree_view_toggle(tv, node);
     } else if (tv->on_select) {
         tv->on_select(widget, node, tv->user_data);
     }
@@ -363,12 +363,12 @@ static int tree_handle_mouse(TuiWidget *widget, const TuiMouseEvent *mouse)
     return 1;
 }
 
-static void tree_destroy(TuiWidget *widget)
+static void tree_destroy(ZephioWidget *widget)
 {
-    TuiTreeView *tv = (TuiTreeView *)widget;
+    ZephioTreeView *tv = (ZephioTreeView *)widget;
 
     if (tv->root) {
-        tui_tree_node_destroy(tv->root);
+        zephio_tree_node_destroy(tv->root);
         tv->root = NULL;
     }
 
@@ -381,7 +381,7 @@ static void tree_destroy(TuiWidget *widget)
     tv->visible_capacity = 0;
 }
 
-static TuiWidgetVTable tree_vtable = {
+static ZephioWidgetVTable tree_vtable = {
     .render       = tree_render,
     .handle_input = tree_handle_input,
     .handle_mouse = tree_handle_mouse,
@@ -391,13 +391,13 @@ static TuiWidgetVTable tree_vtable = {
     .on_blur      = NULL
 };
 
-TuiResult tui_tree_view_init_ctx(TuiTreeView *tv, TuiContext *ctx, int x, int y, int width, int height)
+ZephioResult zephio_tree_view_init_ctx(ZephioTreeView *tv, ZephioContext *ctx, int x, int y, int width, int height)
 {
     if (!tv) return TUI_ERR_MEMORY;
 
-    TuiResult res = tui_widget_init_ctx(&tv->base, x, y, width, height,
+    ZephioResult res = zephio_widget_init_ctx(&tv->base, x, y, width, height,
                                         &tree_vtable, ctx, NULL);
-    if (res != TUI_OK) return res;
+    if (res != ZEPHIO_OK) return res;
 
     tv->base.focusable = 1;
 
@@ -414,15 +414,15 @@ TuiResult tui_tree_view_init_ctx(TuiTreeView *tv, TuiContext *ctx, int x, int y,
     tv->bg              = ZEPHIO_COLOR_INDEX(0);
     tv->fg_selected     = ZEPHIO_COLOR_INDEX(0);
     tv->bg_selected     = ZEPHIO_COLOR_INDEX(12);
-    tv->fg_connector    = ZEPHIO_COLOR_INDEX(TUI_COLOR_BRIGHT_BLACK);
+    tv->fg_connector    = ZEPHIO_COLOR_INDEX(ZEPHIO_COLOR_BRIGHT_BLACK);
     tv->bg_empty        = ZEPHIO_COLOR_NONE;
 
-    return TUI_OK;
+    return ZEPHIO_OK;
 }
 
-TuiTreeNode *tui_tree_node_create(const char *text, void *user_data)
+ZephioTreeNode *zephio_tree_node_create(const char *text, void *user_data)
 {
-    TuiTreeNode *node = (TuiTreeNode *)calloc(1, sizeof(TuiTreeNode));
+    ZephioTreeNode *node = (ZephioTreeNode *)calloc(1, sizeof(ZephioTreeNode));
     if (!node) return NULL;
 
     node->text      = text ? strdup(text) : NULL;
@@ -436,27 +436,27 @@ TuiTreeNode *tui_tree_node_create(const char *text, void *user_data)
     return node;
 }
 
-void tui_tree_node_destroy(TuiTreeNode *node)
+void zephio_tree_node_destroy(ZephioTreeNode *node)
 {
     if (!node) return;
 
     for (int i = 0; i < node->child_count; i++)
-        tui_tree_node_destroy(node->children[i]);
+        zephio_tree_node_destroy(node->children[i]);
 
     free(node->children);
     free(node->text);
     free(node);
 }
 
-TuiResult tui_tree_node_add_child(TuiTreeNode *parent, TuiTreeNode *child)
+ZephioResult zephio_tree_node_add_child(ZephioTreeNode *parent, ZephioTreeNode *child)
 {
     if (!parent || !child) return TUI_ERR_MEMORY;
 
     if (parent->child_count >= parent->child_capacity) {
         int new_cap = parent->child_capacity == 0
             ? INITIAL_CAP : parent->child_capacity * 2;
-        TuiTreeNode **nc = (TuiTreeNode **)realloc(
-            parent->children, (size_t)new_cap * sizeof(TuiTreeNode *));
+        ZephioTreeNode **nc = (ZephioTreeNode **)realloc(
+            parent->children, (size_t)new_cap * sizeof(ZephioTreeNode *));
         if (!nc) return TUI_ERR_MEMORY;
         parent->children      = nc;
         parent->child_capacity = new_cap;
@@ -466,10 +466,10 @@ TuiResult tui_tree_node_add_child(TuiTreeNode *parent, TuiTreeNode *child)
     parent->child_count++;
     child->parent = parent;
 
-    return TUI_OK;
+    return ZEPHIO_OK;
 }
 
-void tui_tree_view_set_root(TuiTreeView *tv, TuiTreeNode *root)
+void zephio_tree_view_set_root(ZephioTreeView *tv, ZephioTreeNode *root)
 {
     if (!tv) return;
     tv->root = root;
@@ -479,30 +479,30 @@ void tui_tree_view_set_root(TuiTreeView *tv, TuiTreeNode *root)
     tv->base.dirty    = 1;
 }
 
-void tui_tree_view_expand(TuiTreeView *tv, TuiTreeNode *node)
+void zephio_tree_view_expand(ZephioTreeView *tv, ZephioTreeNode *node)
 {
     if (!tv || !node) return;
     node->expanded = 1;
     rebuild_clamp(tv);
 }
 
-void tui_tree_view_collapse(TuiTreeView *tv, TuiTreeNode *node)
+void zephio_tree_view_collapse(ZephioTreeView *tv, ZephioTreeNode *node)
 {
     if (!tv || !node) return;
     node->expanded = 0;
     rebuild_clamp(tv);
 }
 
-void tui_tree_view_toggle(TuiTreeView *tv, TuiTreeNode *node)
+void zephio_tree_view_toggle(ZephioTreeView *tv, ZephioTreeNode *node)
 {
     if (!tv || !node) return;
     if (node->expanded)
-        tui_tree_view_collapse(tv, node);
+        zephio_tree_view_collapse(tv, node);
     else
-        tui_tree_view_expand(tv, node);
+        zephio_tree_view_expand(tv, node);
 }
 
-static void expand_recursive(TuiTreeNode *node)
+static void expand_recursive(ZephioTreeNode *node)
 {
     if (!node) return;
     if (node->child_count > 0) node->expanded = 1;
@@ -510,7 +510,7 @@ static void expand_recursive(TuiTreeNode *node)
         expand_recursive(node->children[i]);
 }
 
-static void collapse_recursive(TuiTreeNode *node)
+static void collapse_recursive(ZephioTreeNode *node)
 {
     if (!node) return;
     node->expanded = 0;
@@ -518,14 +518,14 @@ static void collapse_recursive(TuiTreeNode *node)
         collapse_recursive(node->children[i]);
 }
 
-void tui_tree_view_expand_all(TuiTreeView *tv)
+void zephio_tree_view_expand_all(ZephioTreeView *tv)
 {
     if (!tv || !tv->root) return;
     expand_recursive(tv->root);
     rebuild_clamp(tv);
 }
 
-void tui_tree_view_collapse_all(TuiTreeView *tv)
+void zephio_tree_view_collapse_all(ZephioTreeView *tv)
 {
     if (!tv || !tv->root) return;
     collapse_recursive(tv->root);
@@ -535,22 +535,22 @@ void tui_tree_view_collapse_all(TuiTreeView *tv)
     tv->base.dirty    = 1;
 }
 
-int tui_tree_view_get_selected(TuiTreeView *tv)
+int zephio_tree_view_get_selected(ZephioTreeView *tv)
 {
     if (!tv) return -1;
     return tv->selected;
 }
 
-TuiTreeNode *tui_tree_view_get_selected_node(TuiTreeView *tv)
+ZephioTreeNode *zephio_tree_view_get_selected_node(ZephioTreeView *tv)
 {
     if (!tv || tv->selected < 0 || tv->selected >= tv->visible_count)
         return NULL;
     return tv->visible[tv->selected].node;
 }
 
-void tui_tree_view_set_colors(TuiTreeView *tv, TuiColor fg, TuiColor bg,
-                              TuiColor fg_selected, TuiColor bg_selected,
-                              TuiColor fg_connector)
+void zephio_tree_view_set_colors(ZephioTreeView *tv, ZephioColor fg, ZephioColor bg,
+                              ZephioColor fg_selected, ZephioColor bg_selected,
+                              ZephioColor fg_connector)
 {
     if (!tv) return;
     tv->fg            = fg;
@@ -561,7 +561,7 @@ void tui_tree_view_set_colors(TuiTreeView *tv, TuiColor fg, TuiColor bg,
     tv->base.dirty    = 1;
 }
 
-void tui_tree_view_set_on_select(TuiTreeView *tv, TuiTreeViewCallback callback,
+void zephio_tree_view_set_on_select(ZephioTreeView *tv, ZephioTreeViewCallback callback,
                                  void *user_data)
 {
     if (!tv) return;
@@ -569,7 +569,7 @@ void tui_tree_view_set_on_select(TuiTreeView *tv, TuiTreeViewCallback callback,
     tv->user_data = user_data;
 }
 
-void tui_tree_view_set_bg_empty(TuiTreeView *tv, TuiColor bg_empty)
+void zephio_tree_view_set_bg_empty(ZephioTreeView *tv, ZephioColor bg_empty)
 {
     if (!tv) return;
     tv->bg_empty   = bg_empty;

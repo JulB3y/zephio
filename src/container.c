@@ -1,25 +1,25 @@
 #define _POSIX_C_SOURCE 200809L
 
-#include "tui_container.h"
-#include "tui_context.h"
+#include "zephio_container.h"
+#include "zephio_context.h"
 
-static void container_render(TuiWidget *widget)
+static void container_render(ZephioWidget *widget)
 {
-    TuiContainer *container = (TuiContainer *)widget;
+    ZephioContainer *container = (ZephioContainer *)widget;
 
     if (widget->theme) {
-        TuiStyle style = tui_widget_get_style(widget);
-        tui_screen_fill(widget->ctx, widget->abs_y, widget->abs_x,
+        ZephioStyle style = zephio_widget_get_style(widget);
+        zephio_screen_fill(widget->ctx, widget->abs_y, widget->abs_x,
                         widget->width, widget->height,
                         " ", style.fg, style.bg, style.attr);
     } else {
-        tui_screen_fill(widget->ctx, widget->abs_y, widget->abs_x,
+        zephio_screen_fill(widget->ctx, widget->abs_y, widget->abs_x,
                         widget->width, widget->height,
                         " ", ZEPHIO_COLOR_INDEX(0), container->bg, ZEPHIO_ATTR_NONE);
     }
 }
 
-static TuiWidgetVTable container_vtable = {
+static ZephioWidgetVTable container_vtable = {
     .render       = container_render,
     .handle_input = NULL,
     .handle_mouse = NULL,
@@ -29,22 +29,22 @@ static TuiWidgetVTable container_vtable = {
     .on_blur      = NULL
 };
 
-TuiResult tui_container_init_ctx(TuiContainer *container, TuiContext *ctx, int x, int y,
+ZephioResult zephio_container_init_ctx(ZephioContainer *container, ZephioContext *ctx, int x, int y,
                                   int width, int height)
 {
     if (!container) return TUI_ERR_MEMORY;
 
-    TuiResult res = tui_widget_init_ctx(&container->base, x, y, width, height,
+    ZephioResult res = zephio_widget_init_ctx(&container->base, x, y, width, height,
                                         &container_vtable, ctx, NULL);
-    if (res != TUI_OK) return res;
+    if (res != ZEPHIO_OK) return res;
 
     container->base.focusable = 0;
     container->bg             = ZEPHIO_COLOR_INDEX(0);
 
-    return TUI_OK;
+    return ZEPHIO_OK;
 }
 
-void tui_container_set_bg(TuiContainer *container, TuiColor bg)
+void zephio_container_set_bg(ZephioContainer *container, ZephioColor bg)
 {
     if (!container) return;
     container->bg = bg;

@@ -108,8 +108,8 @@ Unified input event structure:
 
 ```c
 typedef struct {
-    TuiKey        key;        // Key code or TUI_EVENT_*
-    int           modifiers;   // TUI_MOD_SHIFT | TUI_MOD_CTRL | ...
+    TuiKey        key;        // Key code or ZEPHIO_EVENT_*
+    int           modifiers;   // ZEPHIO_MOD_SHIFT | ZEPHIO_MOD_CTRL | ...
     uint32_t      codepoint;  // UTF-32 for printable keys
     TuiSize       size;       // For resize events
     TuiMouseEvent mouse;      // For mouse events
@@ -152,7 +152,7 @@ The diff-based approach ensures minimal terminal output: only cells that actuall
 │                                          │                          │
 │                    ┌─────────────────────┼─────────────────────┐   │
 │                    ▼                     ▼                     ▼   │
-│              TUI_EVENT_RESIZE      TUI_EVENT_MOUSE        Keyboard  │
+│              ZEPHIO_EVENT_RESIZE      ZEPHIO_EVENT_MOUSE        Keyboard  │
 │                    │                     │                     │   │
 │                    ▼                     ▼                     ▼   │
 │           tui_screen_resize()   tui_widget_handle_mouse()  dispatch│
@@ -177,20 +177,20 @@ Modal widgets (dialogs, menus) use the overlay stack in `TuiApp`:
 
 | Constraint | Behavior |
 |------------|----------|
-| `TUI_LAYOUT_FIXED(n)` | Exact size in cells |
-| `TUI_LAYOUT_FILL` | Share remaining space equally (weight 1.0) |
-| `TUI_LAYOUT_FILL_WEIGHT(w)` | Share with custom weight |
-| `TUI_LAYOUT_AUTO` | Use child's natural size |
+| `ZEPHIO_LAYOUT_FIXED(n)` | Exact size in cells |
+| `ZEPHIO_LAYOUT_FILL` | Share remaining space equally (weight 1.0) |
+| `ZEPHIO_LAYOUT_FILL_WEIGHT(w)` | Share with custom weight |
+| `ZEPHIO_LAYOUT_AUTO` | Use child's natural size |
 
 ```
 ┌─────────────────────────────────────────┐
-│ TUI_LAYOUT_VERTICAL (padding=1)         │
+│ ZEPHIO_LAYOUT_VERTICAL (padding=1)         │
 │ ┌─────────────────────────────────────┐ │
-│ │ HEADER: TUI_LAYOUT_FIXED(3)         │ │
+│ │ HEADER: ZEPHIO_LAYOUT_FIXED(3)         │ │
 │ ├─────────────────────────────────────┤ │
-│ │ CONTENT: TUI_LAYOUT_FILL_WEIGHT(1) │ │
+│ │ CONTENT: ZEPHIO_LAYOUT_FILL_WEIGHT(1) │ │
 │ ├─────────────────────────────────────┤ │
-│ │ FOOTER: TUI_LAYOUT_FIXED(2)        │ │
+│ │ FOOTER: ZEPHIO_LAYOUT_FIXED(2)        │ │
 │ └─────────────────────────────────────┘ │
 └─────────────────────────────────────────┘
 ```
@@ -205,7 +205,7 @@ Call `tui_layout_recalculate()` after adding/removing children or resizing.
 typedef struct {
     TuiColor fg;
     TuiColor bg;
-    TuiAttr  attr;  // TUI_ATTR_BOLD | TUI_ATTR_UNDERLINE | ...
+    TuiAttr  attr;  // ZEPHIO_ATTR_BOLD | ZEPHIO_ATTR_UNDERLINE | ...
 } TuiStyle;
 ```
 
@@ -215,7 +215,7 @@ Per-widget visual states:
 
 ```c
 typedef struct {
-    TuiStyle styles[TUI_STATE_COUNT];  // NORMAL, FOCUSED, DISABLED, ACTIVE, HOVER
+    TuiStyle styles[ZEPHIO_STATE_COUNT];  // NORMAL, FOCUSED, DISABLED, ACTIVE, HOVER
 } TuiTheme;
 ```
 
@@ -224,8 +224,8 @@ typedef struct {
 ### Colors
 
 Two color types supported:
-- `TUI_COLOR_INDEX(n)` — 256-color palette (0-255)
-- `TUI_COLOR_RGB(r,g,b)` — 24-bit truecolor
+- `ZEPHIO_COLOR_INDEX(n)` — 256-color palette (0-255)
+- `ZEPHIO_COLOR_RGB(r,g,b)` — 24-bit truecolor
 
 ## Widget Hierarchy
 
@@ -261,14 +261,14 @@ TuiLayout
 ## Build System
 
 ```
-make              # Build lib/libtui.a
+make              # Build lib/libzephio.a
 make DEBUG=1      # Debug build with sanitizers
 make examples     # Build examples
 make test         # Run tests
 make clean        # Remove build artifacts
 ```
 
-The library is self-contained: `lib/libtui.a` with no external runtime dependencies beyond libc.
+The library is self-contained: `lib/libzephio.a` with no external runtime dependencies beyond libc.
 
 ## Signal Safety
 

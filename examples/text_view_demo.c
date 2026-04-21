@@ -12,21 +12,21 @@
 #define _POSIX_C_SOURCE 200809L
 
 #include "tui.h"
-#include "tui_input.h"
-#include "tui_label.h"
-#include "tui_mouse.h"
-#include "tui_screen.h"
-#include "tui_text_view.h"
-#include "tui_widget.h"
+#include "zephio_input.h"
+#include "zephio_label.h"
+#include "zephio_mouse.h"
+#include "zephio_screen.h"
+#include "zephio_text_view.h"
+#include "zephio_widget.h"
 
 #include <stdio.h>
 #include <string.h>
 
 typedef struct {
-    TuiWidget    root;
-    TuiLabel     header;
-    TuiTextView  content;
-    TuiLabel     status;
+    ZephioWidget    root;
+    ZephioLabel     header;
+    ZephioTextView  content;
+    ZephioLabel     status;
     char         status_text[256];
     int          initialized;
 } Demo;
@@ -45,7 +45,7 @@ static void build_long_text(void)
         "=============================\n"
         "\n"
         "This is a multi-line text view widget with word-wrapping and\n"
-        "scroll container integration. It demonstrates the TuiTextView\n"
+        "scroll container integration. It demonstrates the ZephioTextView\n"
         "widget which was implemented as Phase 13 of the roadmap.\n"
         "\n"
         "Features\n"
@@ -109,42 +109,42 @@ static void build_long_text(void)
 
 static void update_status(void)
 {
-    int lines = tui_text_view_get_line_count(&g_demo.content);
-    int sy    = tui_text_view_get_scroll_y(&g_demo.content);
+    int lines = zephio_text_view_get_line_count(&g_demo.content);
+    int sy    = zephio_text_view_get_scroll_y(&g_demo.content);
     int wrap  = g_demo.content.word_wrap;
 
     snprintf(g_demo.status_text, sizeof(g_demo.status_text),
              " Lines: %d | Scroll: %d | Wrap: %s | "
              "Arrows/PgUp/PgDn/Home/End: Scroll | w: Toggle Wrap | q/Esc: Quit",
              lines, sy, wrap ? "ON" : "OFF");
-    tui_label_set_text(&g_demo.status, g_demo.status_text);
+    zephio_label_set_text(&g_demo.status, g_demo.status_text);
 }
 
-static void build_ui(int rows, int cols, TuiContext *ctx)
+static void build_ui(int rows, int cols, ZephioContext *ctx)
 {
-    tui_widget_init_ctx(&g_demo.root, 0, 0, cols, rows, NULL, ctx, NULL);
+    zephio_widget_init_ctx(&g_demo.root, 0, 0, cols, rows, NULL, ctx, NULL);
 
-    tui_label_init_ctx(&g_demo.header, ctx, 0, 0, cols, 1,
+    zephio_label_init_ctx(&g_demo.header, ctx, 0, 0, cols, 1,
                    " TextView Demo  |  Phase 13  |  Multi-line text with scrolling");
-    tui_label_set_colors(&g_demo.header,
+    zephio_label_set_colors(&g_demo.header,
                         ZEPHIO_COLOR_INDEX(15), ZEPHIO_COLOR_INDEX(4));
-    tui_label_set_attr(&g_demo.header, ZEPHIO_ATTR_BOLD);
-    tui_widget_add_child(&g_demo.root, &g_demo.header.base);
+    zephio_label_set_attr(&g_demo.header, ZEPHIO_ATTR_BOLD);
+    zephio_widget_add_child(&g_demo.root, &g_demo.header.base);
 
     int content_h = rows - 2;
     if (content_h < 3) content_h = 3;
 
-    tui_text_view_init_ctx(&g_demo.content, ctx, 1, 1, cols - 2, content_h);
-    tui_text_view_set_colors(&g_demo.content,
+    zephio_text_view_init_ctx(&g_demo.content, ctx, 1, 1, cols - 2, content_h);
+    zephio_text_view_set_colors(&g_demo.content,
                              ZEPHIO_COLOR_INDEX(15), ZEPHIO_COLOR_INDEX(234));
     g_demo.content.base.base.focusable = 1;
-    tui_text_view_set_text(&g_demo.content, g_long_text);
-    tui_widget_add_child(&g_demo.root, &g_demo.content.base.base);
+    zephio_text_view_set_text(&g_demo.content, g_long_text);
+    zephio_widget_add_child(&g_demo.root, &g_demo.content.base.base);
 
-    tui_label_init_ctx(&g_demo.status, ctx, 0, rows - 1, cols, 1, "");
-    tui_label_set_colors(&g_demo.status,
+    zephio_label_init_ctx(&g_demo.status, ctx, 0, rows - 1, cols, 1, "");
+    zephio_label_set_colors(&g_demo.status,
                         ZEPHIO_COLOR_INDEX(15), ZEPHIO_COLOR_INDEX(236));
-    tui_widget_add_child(&g_demo.root, &g_demo.status.base);
+    zephio_widget_add_child(&g_demo.root, &g_demo.status.base);
 
     update_status();
     g_demo.initialized = 1;
@@ -154,65 +154,65 @@ static void destroy_ui(void)
 {
     if (!g_demo.initialized) return;
     for (int i = g_demo.root.child_count - 1; i >= 0; i--) {
-        tui_widget_destroy(g_demo.root.children[i]);
+        zephio_widget_destroy(g_demo.root.children[i]);
     }
-    tui_widget_remove_all_children(&g_demo.root);
+    zephio_widget_remove_all_children(&g_demo.root);
     g_demo.initialized = 0;
 }
 
-static void draw_frame(TuiContext *ctx)
+static void draw_frame(ZephioContext *ctx)
 {
-    tui_screen_clear(ctx);
-    tui_widget_render(&g_demo.root);
-    tui_screen_render(ctx);
+    zephio_screen_clear(ctx);
+    zephio_widget_render(&g_demo.root);
+    zephio_screen_render(ctx);
 }
 
-static int input_callback(const TuiEvent *event, void *user_data)
+static int input_callback(const ZephioEvent *event, void *user_data)
 {
-    TuiContext *ctx = (TuiContext *)user_data;
+    ZephioContext *ctx = (ZephioContext *)user_data;
 
-    if (event->key == TUI_EVENT_RESIZE) {
-        tui_screen_resize(ctx, event->size.rows, event->size.cols);
+    if (event->key == ZEPHIO_EVENT_RESIZE) {
+        zephio_screen_resize(ctx, event->size.rows, event->size.cols);
         destroy_ui();
         build_ui( event->size.rows, event->size.cols, ctx);
-        tui_widget_focus_next(&g_demo.root);
+        zephio_widget_focus_next(&g_demo.root);
         draw_frame(ctx);
         return 0;
     }
 
-    if (event->key == TUI_EVENT_MOUSE) {
-        tui_widget_handle_mouse(&g_demo.root, &event->mouse);
+    if (event->key == ZEPHIO_EVENT_MOUSE) {
+        zephio_widget_handle_mouse(&g_demo.root, &event->mouse);
         update_status();
         draw_frame(ctx);
         return 0;
     }
 
-    if (event->key == TUI_KEY_ESCAPE || event->key == TUI_KEY_CTRL_C) {
+    if (event->key == ZEPHIO_KEY_ESCAPE || event->key == ZEPHIO_KEY_CTRL_C) {
         return 1;
     }
 
-    if (event->codepoint == 'q' && event->modifiers == TUI_MOD_NONE) {
-        TuiWidget *focused = tui_widget_get_focused(&g_demo.root);
+    if (event->codepoint == 'q' && event->modifiers == ZEPHIO_MOD_NONE) {
+        ZephioWidget *focused = zephio_widget_get_focused(&g_demo.root);
         if (!focused || focused == &g_demo.root) {
             return 1;
         }
     }
 
-    if (event->codepoint == 'w' && event->modifiers == TUI_MOD_NONE) {
-        TuiWidget *focused = tui_widget_get_focused(&g_demo.root);
+    if (event->codepoint == 'w' && event->modifiers == ZEPHIO_MOD_NONE) {
+        ZephioWidget *focused = zephio_widget_get_focused(&g_demo.root);
         if (focused == &g_demo.content.base.base) {
             int wrap = g_demo.content.word_wrap;
-            tui_text_view_set_word_wrap(&g_demo.content, !wrap);
+            zephio_text_view_set_word_wrap(&g_demo.content, !wrap);
             update_status();
-            tui_widget_mark_dirty_recursive(&g_demo.root);
+            zephio_widget_mark_dirty_recursive(&g_demo.root);
             draw_frame(ctx);
             return 0;
         }
     }
 
-    TuiWidget *focused = tui_widget_get_focused(&g_demo.root);
+    ZephioWidget *focused = zephio_widget_get_focused(&g_demo.root);
     if (focused) {
-        tui_widget_handle_input(focused, event);
+        zephio_widget_handle_input(focused, event);
     }
 
     update_status();
@@ -223,29 +223,29 @@ static int input_callback(const TuiEvent *event, void *user_data)
 
 int main(void)
 {
-    TuiContext ctx;
+    ZephioContext ctx;
 
-    TuiResult res = tui_init(&ctx);
-    if (res != TUI_OK) {
-        fprintf(stderr, "tui_init failed: %d\n", res);
+    ZephioResult res = zephio_init(&ctx);
+    if (res != ZEPHIO_OK) {
+        fprintf(stderr, "zephio_init failed: %d\n", res);
         return 1;
     }
 
-    tui_input_init(&ctx);
-    tui_mouse_enable(&ctx);
+    zephio_input_init(&ctx);
+    zephio_mouse_enable(&ctx);
 
     build_long_text();
 
-    TuiSize size = tui_screen_size(&ctx);
+    ZephioSize size = zephio_screen_size(&ctx);
     build_ui( size.rows, size.cols, &ctx);
-    tui_widget_focus_next(&g_demo.root);
+    zephio_widget_focus_next(&g_demo.root);
     draw_frame(&ctx);
 
-    tui_input_loop(&ctx, input_callback, &ctx);
+    zephio_input_loop(&ctx, input_callback, &ctx);
 
     destroy_ui();
-    tui_mouse_disable(&ctx);
-    tui_input_shutdown(&ctx);
-    tui_shutdown(&ctx);
+    zephio_mouse_disable(&ctx);
+    zephio_input_shutdown(&ctx);
+    zephio_shutdown(&ctx);
     return 0;
 }

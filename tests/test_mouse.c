@@ -1,63 +1,63 @@
 #include "util.h"
-#include "tui_mouse.h"
+#include "zephio_mouse.h"
 
 /* ── mouse_action_name ──────────────────────────────────────────── */
 
 TEST_BEGIN(mouse_action_press)
 {
-    TEST_STR_EQ(tui_mouse_action_name(TUI_MOUSE_PRESS), "Press");
+    TEST_STR_EQ(zephio_mouse_action_name(ZEPHIO_MOUSE_PRESS), "Press");
 }
 
 TEST_BEGIN(mouse_action_release)
 {
-    TEST_STR_EQ(tui_mouse_action_name(TUI_MOUSE_RELEASE), "Release");
+    TEST_STR_EQ(zephio_mouse_action_name(ZEPHIO_MOUSE_RELEASE), "Release");
 }
 
 TEST_BEGIN(mouse_action_motion)
 {
-    TEST_STR_EQ(tui_mouse_action_name(TUI_MOUSE_MOTION), "Motion");
+    TEST_STR_EQ(zephio_mouse_action_name(ZEPHIO_MOUSE_MOTION), "Motion");
 }
 
 TEST_BEGIN(mouse_action_wheel_up)
 {
-    TEST_STR_EQ(tui_mouse_action_name(TUI_MOUSE_WHEEL_UP), "WheelUp");
+    TEST_STR_EQ(zephio_mouse_action_name(ZEPHIO_MOUSE_WHEEL_UP), "WheelUp");
 }
 
 TEST_BEGIN(mouse_action_wheel_down)
 {
-    TEST_STR_EQ(tui_mouse_action_name(TUI_MOUSE_WHEEL_DOWN), "WheelDown");
+    TEST_STR_EQ(zephio_mouse_action_name(ZEPHIO_MOUSE_WHEEL_DOWN), "WheelDown");
 }
 
 TEST_BEGIN(mouse_action_unknown)
 {
-    TEST_STR_EQ(tui_mouse_action_name((TuiMouseAction)99), "Unknown");
+    TEST_STR_EQ(zephio_mouse_action_name((ZephioMouseAction)99), "Unknown");
 }
 
 /* ── mouse_button_name ──────────────────────────────────────────── */
 
 TEST_BEGIN(mouse_button_none)
 {
-    TEST_STR_EQ(tui_mouse_button_name(TUI_MOUSE_BTN_NONE), "None");
+    TEST_STR_EQ(zephio_mouse_button_name(ZEPHIO_MOUSE_BTN_NONE), "None");
 }
 
 TEST_BEGIN(mouse_button_left)
 {
-    TEST_STR_EQ(tui_mouse_button_name(TUI_MOUSE_BTN_LEFT), "Left");
+    TEST_STR_EQ(zephio_mouse_button_name(ZEPHIO_MOUSE_BTN_LEFT), "Left");
 }
 
 TEST_BEGIN(mouse_button_middle)
 {
-    TEST_STR_EQ(tui_mouse_button_name(TUI_MOUSE_BTN_MIDDLE), "Middle");
+    TEST_STR_EQ(zephio_mouse_button_name(ZEPHIO_MOUSE_BTN_MIDDLE), "Middle");
 }
 
 TEST_BEGIN(mouse_button_right)
 {
-    TEST_STR_EQ(tui_mouse_button_name(TUI_MOUSE_BTN_RIGHT), "Right");
+    TEST_STR_EQ(zephio_mouse_button_name(ZEPHIO_MOUSE_BTN_RIGHT), "Right");
 }
 
 TEST_BEGIN(mouse_button_unknown)
 {
-    TEST_STR_EQ(tui_mouse_button_name((TuiMouseButton)99), "Unknown");
+    TEST_STR_EQ(zephio_mouse_button_name((ZephioMouseButton)99), "Unknown");
 }
 
 /* ── main ────────────────────────────────────────────────────────── */

@@ -1,15 +1,15 @@
 #define _POSIX_C_SOURCE 200809L
 
-#include "tui_menubar.h"
-#include "tui_context.h"
-#include "tui_app.h"
-#include "tui_screen.h"
+#include "zephio_menubar.h"
+#include "zephio_context.h"
+#include "zephio_app.h"
+#include "zephio_screen.h"
 
 #include <ctype.h>
 #include <stdlib.h>
 #include <string.h>
 
-static void menubar_recompute_layout(TuiMenuBar *mb)
+static void menubar_recompute_layout(ZephioMenuBar *mb)
 {
     int x = 0;
     for (int i = 0; i < mb->menu_count; i++) {
@@ -20,45 +20,45 @@ static void menubar_recompute_layout(TuiMenuBar *mb)
     }
 }
 
-static void menu_popup_close(TuiMenuPopup *popup)
+static void menu_popup_close(ZephioMenuPopup *popup)
 {
-    TuiMenuBar *mb = popup->owner;
+    ZephioMenuBar *mb = popup->owner;
     if (!mb->is_open) return;
     mb->is_open = 0;
-    TuiApp *app = (TuiApp *)mb->app;
-    if (app) tui_app_pop_overlay(app);
-    tui_widget_focus(&mb->base);
+    ZephioApp *app = (ZephioApp *)mb->app;
+    if (app) zephio_app_pop_overlay(app);
+    zephio_widget_focus(&mb->base);
 }
 
-static void popup_render(TuiWidget *widget)
+static void popup_render(ZephioWidget *widget)
 {
-    TuiMenuPopup *popup = (TuiMenuPopup *)widget;
-    TuiMenuBar *mb  = popup->owner;
-    TuiMenu *menu = &mb->menus[popup->menu_index];
+    ZephioMenuPopup *popup = (ZephioMenuPopup *)widget;
+    ZephioMenuBar *mb  = popup->owner;
+    ZephioMenu *menu = &mb->menus[popup->menu_index];
 
-    TuiColor fg  = mb->fg_popup;
-    TuiColor bg  = mb->bg_popup;
-    TuiColor bfg = ZEPHIO_COLOR_INDEX(14);
+    ZephioColor fg  = mb->fg_popup;
+    ZephioColor bg  = mb->bg_popup;
+    ZephioColor bfg = ZEPHIO_COLOR_INDEX(14);
 
-    tui_screen_fill(widget->ctx, widget->abs_y, widget->abs_x,
+    zephio_screen_fill(widget->ctx, widget->abs_y, widget->abs_x,
                     widget->width, widget->height, " ", fg, bg, ZEPHIO_ATTR_NONE);
-    tui_screen_box_single(widget->ctx, widget->abs_y, widget->abs_x,
+    zephio_screen_box_single(widget->ctx, widget->abs_y, widget->abs_x,
                           widget->width, widget->height, bfg, bg, ZEPHIO_ATTR_BOLD);
 
     for (int i = 0; i < menu->item_count; i++) {
-        TuiMenuItem *item = &menu->items[i];
+        ZephioMenuItem *item = &menu->items[i];
         int row = widget->abs_y + 1 + i;
 
         if (item->is_separator) {
             for (int c = 1; c < widget->width - 1; c++)
-                tui_screen_set_cell(widget->ctx, row, widget->abs_x + c,
+                zephio_screen_set_cell(widget->ctx, row, widget->abs_x + c,
                                     "\xe2\x94\x80", bfg, bg, ZEPHIO_ATTR_DIM);
             continue;
         }
 
-        TuiColor ifg = fg;
-        TuiColor ibg = bg;
-        TuiAttr  iat = ZEPHIO_ATTR_NONE;
+        ZephioColor ifg = fg;
+        ZephioColor ibg = bg;
+        ZephioAttr  iat = ZEPHIO_ATTR_NONE;
 
         if (i == popup->highlighted) {
             ifg = mb->fg_popup_hl;
@@ -66,7 +66,7 @@ static void popup_render(TuiWidget *widget)
             iat = ZEPHIO_ATTR_REVERSE;
         }
 
-        tui_screen_fill(widget->ctx, row, widget->abs_x + 1,
+        zephio_screen_fill(widget->ctx, row, widget->abs_x + 1,
                         widget->width - 2, 1, " ", ifg, ibg, iat);
 
         if (item->label) {
@@ -77,12 +77,12 @@ static void popup_render(TuiWidget *widget)
             int clen = wlen < (int)sizeof(buf) - 1 ? wlen : (int)sizeof(buf) - 1;
             memcpy(buf, item->label, (size_t)clen);
             buf[clen] = '\0';
-            tui_screen_write(widget->ctx, row, widget->abs_x + 2, buf, ifg, ibg, iat);
+            zephio_screen_write(widget->ctx, row, widget->abs_x + 2, buf, ifg, ibg, iat);
         }
     }
 }
 
-static int popup_next_item(TuiMenu *menu, int from, int dir)
+static int popup_next_item(ZephioMenu *menu, int from, int dir)
 {
     int idx = from + dir;
     while (idx >= 0 && idx < menu->item_count) {
@@ -92,7 +92,7 @@ static int popup_next_item(TuiMenu *menu, int from, int dir)
     return from;
 }
 
-static void popup_navigate(TuiMenuPopup *popup, TuiMenu *menu, int dir, TuiWidget *widget)
+static void popup_navigate(ZephioMenuPopup *popup, ZephioMenu *menu, int dir, ZephioWidget *widget)
 {
     int next = popup_next_item(menu, popup->highlighted, dir);
     if (next != popup->highlighted) {
@@ -101,18 +101,18 @@ static void popup_navigate(TuiMenuPopup *popup, TuiMenu *menu, int dir, TuiWidge
     }
 }
 
-static void popup_switch_menu(TuiMenuPopup *popup, TuiMenuBar *mb, int new_idx)
+static void popup_switch_menu(ZephioMenuPopup *popup, ZephioMenuBar *mb, int new_idx)
 {
     if (new_idx >= 0 && new_idx < mb->menu_count) {
         menu_popup_close(popup);
-        tui_menubar_open_menu(mb, new_idx);
+        zephio_menubar_open_menu(mb, new_idx);
     }
 }
 
-static void popup_activate(TuiMenuPopup *popup, TuiMenuBar *mb, TuiMenu *menu)
+static void popup_activate(ZephioMenuPopup *popup, ZephioMenuBar *mb, ZephioMenu *menu)
 {
     if (popup->highlighted >= 0 && popup->highlighted < menu->item_count) {
-        TuiMenuItem *item = &menu->items[popup->highlighted];
+        ZephioMenuItem *item = &menu->items[popup->highlighted];
         if (!item->is_separator && mb->on_select) {
             mb->on_select(mb, menu->label,
                           popup->highlighted, item->label, mb->user_data);
@@ -121,38 +121,38 @@ static void popup_activate(TuiMenuPopup *popup, TuiMenuBar *mb, TuiMenu *menu)
     menu_popup_close(popup);
 }
 
-static int popup_handle_input(TuiWidget *widget, const TuiEvent *event)
+static int popup_handle_input(ZephioWidget *widget, const ZephioEvent *event)
 {
-    TuiMenuPopup *popup = (TuiMenuPopup *)widget;
-    TuiMenuBar *mb  = popup->owner;
-    TuiMenu *menu = &mb->menus[popup->menu_index];
+    ZephioMenuPopup *popup = (ZephioMenuPopup *)widget;
+    ZephioMenuBar *mb  = popup->owner;
+    ZephioMenu *menu = &mb->menus[popup->menu_index];
 
-    if (event->key == TUI_KEY_ESCAPE) {
+    if (event->key == ZEPHIO_KEY_ESCAPE) {
         menu_popup_close(popup);
         return 1;
     }
 
-    if (event->key == TUI_KEY_UP) {
+    if (event->key == ZEPHIO_KEY_UP) {
         popup_navigate(popup, menu, -1, widget);
         return 1;
     }
 
-    if (event->key == TUI_KEY_DOWN) {
+    if (event->key == ZEPHIO_KEY_DOWN) {
         popup_navigate(popup, menu, 1, widget);
         return 1;
     }
 
-    if (event->key == TUI_KEY_LEFT) {
+    if (event->key == ZEPHIO_KEY_LEFT) {
         popup_switch_menu(popup, mb, popup->menu_index - 1);
         return 1;
     }
 
-    if (event->key == TUI_KEY_RIGHT) {
+    if (event->key == ZEPHIO_KEY_RIGHT) {
         popup_switch_menu(popup, mb, popup->menu_index + 1);
         return 1;
     }
 
-    if (event->key == TUI_KEY_ENTER) {
+    if (event->key == ZEPHIO_KEY_ENTER) {
         popup_activate(popup, mb, menu);
         return 1;
     }
@@ -160,14 +160,14 @@ static int popup_handle_input(TuiWidget *widget, const TuiEvent *event)
     return 1;
 }
 
-static int popup_handle_mouse(TuiWidget *widget, const TuiMouseEvent *mouse)
+static int popup_handle_mouse(ZephioWidget *widget, const ZephioMouseEvent *mouse)
 {
-    TuiMenuPopup *popup = (TuiMenuPopup *)widget;
-    TuiMenuBar *mb  = popup->owner;
-    TuiMenu *menu = &mb->menus[popup->menu_index];
+    ZephioMenuPopup *popup = (ZephioMenuPopup *)widget;
+    ZephioMenuBar *mb  = popup->owner;
+    ZephioMenu *menu = &mb->menus[popup->menu_index];
 
-    if (mouse->action == TUI_MOUSE_MOTION) {
-        if (tui_widget_contains(widget, mouse->row, mouse->col)) {
+    if (mouse->action == ZEPHIO_MOUSE_MOTION) {
+        if (zephio_widget_contains(widget, mouse->row, mouse->col)) {
             int idx = mouse->row - widget->abs_y - 1;
             if (idx >= 0 && idx < menu->item_count &&
                 !menu->items[idx].is_separator &&
@@ -179,8 +179,8 @@ static int popup_handle_mouse(TuiWidget *widget, const TuiMouseEvent *mouse)
         return 1;
     }
 
-    if (mouse->action == TUI_MOUSE_PRESS && mouse->button == TUI_MOUSE_BTN_LEFT) {
-        if (!tui_widget_contains(widget, mouse->row, mouse->col)) {
+    if (mouse->action == ZEPHIO_MOUSE_PRESS && mouse->button == ZEPHIO_MOUSE_BTN_LEFT) {
+        if (!zephio_widget_contains(widget, mouse->row, mouse->col)) {
             menu_popup_close(popup);
             return 1;
         }
@@ -198,7 +198,7 @@ static int popup_handle_mouse(TuiWidget *widget, const TuiMouseEvent *mouse)
     return 1;
 }
 
-static TuiWidgetVTable popup_vtable = {
+static ZephioWidgetVTable popup_vtable = {
     .render       = popup_render,
     .handle_input = popup_handle_input,
     .handle_mouse = popup_handle_mouse,
@@ -208,19 +208,19 @@ static TuiWidgetVTable popup_vtable = {
     .on_blur      = NULL
 };
 
-static void menubar_render(TuiWidget *widget)
+static void menubar_render(ZephioWidget *widget)
 {
-    TuiMenuBar *mb = (TuiMenuBar *)widget;
+    ZephioMenuBar *mb = (ZephioMenuBar *)widget;
 
-    tui_screen_fill(widget->ctx, widget->abs_y, widget->abs_x,
+    zephio_screen_fill(widget->ctx, widget->abs_y, widget->abs_x,
                     widget->width, widget->height, " ",
                     mb->fg, mb->bg, mb->attr);
 
     for (int i = 0; i < mb->menu_count; i++) {
-        TuiMenu *m = &mb->menus[i];
-        TuiColor fg = mb->fg;
-        TuiColor bg = mb->bg;
-        TuiAttr  at = mb->attr;
+        ZephioMenu *m = &mb->menus[i];
+        ZephioColor fg = mb->fg;
+        ZephioColor bg = mb->bg;
+        ZephioAttr  at = mb->attr;
 
         if (i == mb->active_menu && (widget->focused || mb->is_open)) {
             fg = mb->fg_active;
@@ -243,14 +243,14 @@ static void menubar_render(TuiWidget *widget)
             buf[2] = '\0';
         }
 
-        tui_screen_write(widget->ctx, widget->abs_y,
+        zephio_screen_write(widget->ctx, widget->abs_y,
                          widget->abs_x + m->start_x,
                          buf, fg, bg, at);
 
         if (m->mnemonic && m->label) {
             for (int j = 0; m->label[j]; j++) {
                 if (tolower((unsigned char)m->label[j]) == tolower((unsigned char)m->mnemonic)) {
-                    tui_screen_set_cell(widget->ctx, widget->abs_y,
+                    zephio_screen_set_cell(widget->ctx, widget->abs_y,
                                         widget->abs_x + m->start_x + 1 + j,
                                         &m->label[j], fg, bg,
                                         at | ZEPHIO_ATTR_UNDERLINE);
@@ -261,12 +261,12 @@ static void menubar_render(TuiWidget *widget)
     }
 }
 
-static int menubar_handle_input(TuiWidget *widget, const TuiEvent *event)
+static int menubar_handle_input(ZephioWidget *widget, const ZephioEvent *event)
 {
-    TuiMenuBar *mb = (TuiMenuBar *)widget;
+    ZephioMenuBar *mb = (ZephioMenuBar *)widget;
     if (mb->is_open) return 0;
 
-    if (event->key == TUI_KEY_LEFT) {
+    if (event->key == ZEPHIO_KEY_LEFT) {
         if (mb->active_menu > 0) {
             mb->active_menu--;
             widget->dirty = 1;
@@ -274,7 +274,7 @@ static int menubar_handle_input(TuiWidget *widget, const TuiEvent *event)
         return 1;
     }
 
-    if (event->key == TUI_KEY_RIGHT) {
+    if (event->key == ZEPHIO_KEY_RIGHT) {
         if (mb->active_menu < mb->menu_count - 1) {
             mb->active_menu++;
             widget->dirty = 1;
@@ -282,15 +282,15 @@ static int menubar_handle_input(TuiWidget *widget, const TuiEvent *event)
         return 1;
     }
 
-    if (event->key == TUI_KEY_DOWN || event->key == TUI_KEY_ENTER) {
+    if (event->key == ZEPHIO_KEY_DOWN || event->key == ZEPHIO_KEY_ENTER) {
         if (mb->active_menu >= 0 && mb->app &&
             mb->menus[mb->active_menu].item_count > 0) {
-            tui_menubar_open_menu(mb, mb->active_menu);
+            zephio_menubar_open_menu(mb, mb->active_menu);
         }
         return 1;
     }
 
-    if (event->modifiers & TUI_MOD_ALT && event->codepoint) {
+    if (event->modifiers & ZEPHIO_MOD_ALT && event->codepoint) {
         char ch = tolower(event->codepoint);
         for (int i = 0; i < mb->menu_count; i++) {
             if (mb->menus[i].mnemonic &&
@@ -298,7 +298,7 @@ static int menubar_handle_input(TuiWidget *widget, const TuiEvent *event)
                 mb->active_menu = i;
                 widget->dirty = 1;
                 if (mb->app && mb->menus[i].item_count > 0)
-                    tui_menubar_open_menu(mb, i);
+                    zephio_menubar_open_menu(mb, i);
                 return 1;
             }
         }
@@ -307,12 +307,12 @@ static int menubar_handle_input(TuiWidget *widget, const TuiEvent *event)
     return 0;
 }
 
-static int menubar_handle_mouse(TuiWidget *widget, const TuiMouseEvent *mouse)
+static int menubar_handle_mouse(ZephioWidget *widget, const ZephioMouseEvent *mouse)
 {
-    TuiMenuBar *mb = (TuiMenuBar *)widget;
+    ZephioMenuBar *mb = (ZephioMenuBar *)widget;
     if (mb->is_open) return 0;
 
-    if (mouse->action == TUI_MOUSE_PRESS && mouse->button == TUI_MOUSE_BTN_LEFT) {
+    if (mouse->action == ZEPHIO_MOUSE_PRESS && mouse->button == ZEPHIO_MOUSE_BTN_LEFT) {
         int col = mouse->col - widget->abs_x;
         for (int i = 0; i < mb->menu_count; i++) {
             int end = mb->menus[i].start_x + mb->menus[i].label_width + 2;
@@ -320,7 +320,7 @@ static int menubar_handle_mouse(TuiWidget *widget, const TuiMouseEvent *mouse)
                 mb->active_menu = i;
                 widget->dirty = 1;
                 if (mb->app && mb->menus[i].item_count > 0)
-                    tui_menubar_open_menu(mb, i);
+                    zephio_menubar_open_menu(mb, i);
                 return 1;
             }
         }
@@ -328,7 +328,7 @@ static int menubar_handle_mouse(TuiWidget *widget, const TuiMouseEvent *mouse)
     return 0;
 }
 
-static void destroy_menu(TuiMenu *menu)
+static void destroy_menu(ZephioMenu *menu)
 {
     for (int i = 0; i < menu->item_count; i++)
         free(menu->items[i].label);
@@ -339,12 +339,12 @@ static void destroy_menu(TuiMenu *menu)
     menu->label      = NULL;
 }
 
-static void menubar_destroy(TuiWidget *widget)
+static void menubar_destroy(ZephioWidget *widget)
 {
-    TuiMenuBar *mb = (TuiMenuBar *)widget;
+    ZephioMenuBar *mb = (ZephioMenuBar *)widget;
     if (mb->is_open && mb->app) {
-        TuiApp *app = (TuiApp *)mb->app;
-        tui_app_pop_overlay(app);
+        ZephioApp *app = (ZephioApp *)mb->app;
+        zephio_app_pop_overlay(app);
         mb->is_open = 0;
     }
     for (int i = 0; i < mb->menu_count; i++)
@@ -354,7 +354,7 @@ static void menubar_destroy(TuiWidget *widget)
     mb->menu_count = 0;
 }
 
-static TuiWidgetVTable menubar_vtable = {
+static ZephioWidgetVTable menubar_vtable = {
     .render       = menubar_render,
     .handle_input = menubar_handle_input,
     .handle_mouse = menubar_handle_mouse,
@@ -364,13 +364,13 @@ static TuiWidgetVTable menubar_vtable = {
     .on_blur      = NULL
 };
 
-TuiResult tui_menubar_init_ctx(TuiMenuBar *menubar, TuiContext *ctx, int x, int y, int width)
+ZephioResult zephio_menubar_init_ctx(ZephioMenuBar *menubar, ZephioContext *ctx, int x, int y, int width)
 {
     if (!menubar) return TUI_ERR_MEMORY;
 
-    TuiResult res = tui_widget_init_ctx(&menubar->base, x, y, width, 1,
+    ZephioResult res = zephio_widget_init_ctx(&menubar->base, x, y, width, 1,
                                         &menubar_vtable, ctx, NULL);
-    if (res != TUI_OK) return res;
+    if (res != ZEPHIO_OK) return res;
 
     menubar->base.focusable = 1;
 
@@ -396,10 +396,10 @@ TuiResult tui_menubar_init_ctx(TuiMenuBar *menubar, TuiContext *ctx, int x, int 
     menubar->on_select = NULL;
     menubar->user_data = NULL;
 
-    return TUI_OK;
+    return ZEPHIO_OK;
 }
 
-int tui_menubar_add_menu(TuiMenuBar *menubar, const char *label, char mnemonic)
+int zephio_menubar_add_menu(ZephioMenuBar *menubar, const char *label, char mnemonic)
 {
     if (!menubar || !label) return -1;
 
@@ -407,15 +407,15 @@ int tui_menubar_add_menu(TuiMenuBar *menubar, const char *label, char mnemonic)
         int newcap = menubar->menu_capacity == 0
                      ? ZEPHIO_MENUS_INIT_CAP
                      : menubar->menu_capacity * 2;
-        TuiMenu *nm = (TuiMenu *)realloc(menubar->menus,
-                                         (size_t)newcap * sizeof(TuiMenu));
+        ZephioMenu *nm = (ZephioMenu *)realloc(menubar->menus,
+                                         (size_t)newcap * sizeof(ZephioMenu));
         if (!nm) return -1;
         menubar->menus        = nm;
         menubar->menu_capacity = newcap;
     }
 
     int idx = menubar->menu_count++;
-    TuiMenu *m = &menubar->menus[idx];
+    ZephioMenu *m = &menubar->menus[idx];
     m->label        = strdup(label);
     m->mnemonic     = mnemonic;
     m->items        = NULL;
@@ -427,14 +427,14 @@ int tui_menubar_add_menu(TuiMenuBar *menubar, const char *label, char mnemonic)
     return idx;
 }
 
-static int ensure_item_capacity(TuiMenu *m)
+static int ensure_item_capacity(ZephioMenu *m)
 {
     if (m->item_count >= m->item_capacity) {
         int newcap = m->item_capacity == 0
                      ? ZEPHIO_MENU_ITEMS_INIT_CAP
                      : m->item_capacity * 2;
-        TuiMenuItem *ni = (TuiMenuItem *)realloc(m->items,
-                            (size_t)newcap * sizeof(TuiMenuItem));
+        ZephioMenuItem *ni = (ZephioMenuItem *)realloc(m->items,
+                            (size_t)newcap * sizeof(ZephioMenuItem));
         if (!ni) return -1;
         m->items        = ni;
         m->item_capacity = newcap;
@@ -442,40 +442,40 @@ static int ensure_item_capacity(TuiMenu *m)
     return 0;
 }
 
-TuiResult tui_menubar_add_menu_item(TuiMenuBar *menubar, int menu_index,
+ZephioResult zephio_menubar_add_menu_item(ZephioMenuBar *menubar, int menu_index,
                                     const char *label)
 {
     if (!menubar || menu_index < 0 || menu_index >= menubar->menu_count)
         return TUI_ERR_MEMORY;
 
-    TuiMenu *m = &menubar->menus[menu_index];
+    ZephioMenu *m = &menubar->menus[menu_index];
     if (ensure_item_capacity(m) < 0) return TUI_ERR_MEMORY;
 
-    TuiMenuItem *it = &m->items[m->item_count++];
+    ZephioMenuItem *it = &m->items[m->item_count++];
     it->label        = label ? strdup(label) : NULL;
     it->is_separator = 0;
 
     menubar->base.dirty = 1;
-    return TUI_OK;
+    return ZEPHIO_OK;
 }
 
-void tui_menubar_add_menu_separator(TuiMenuBar *menubar, int menu_index)
+void zephio_menubar_add_menu_separator(ZephioMenuBar *menubar, int menu_index)
 {
     if (!menubar || menu_index < 0 || menu_index >= menubar->menu_count) return;
 
-    TuiMenu *m = &menubar->menus[menu_index];
+    ZephioMenu *m = &menubar->menus[menu_index];
     if (ensure_item_capacity(m) < 0) return;
 
-    TuiMenuItem *it = &m->items[m->item_count++];
+    ZephioMenuItem *it = &m->items[m->item_count++];
     it->label        = NULL;
     it->is_separator = 1;
 
     menubar->base.dirty = 1;
 }
 
-void tui_menubar_set_colors(TuiMenuBar *menubar,
-                            TuiColor fg, TuiColor bg,
-                            TuiColor fg_active, TuiColor bg_active)
+void zephio_menubar_set_colors(ZephioMenuBar *menubar,
+                            ZephioColor fg, ZephioColor bg,
+                            ZephioColor fg_active, ZephioColor bg_active)
 {
     if (!menubar) return;
     menubar->fg        = fg;
@@ -485,9 +485,9 @@ void tui_menubar_set_colors(TuiMenuBar *menubar,
     menubar->base.dirty = 1;
 }
 
-void tui_menubar_set_popup_colors(TuiMenuBar *menubar,
-                                  TuiColor fg, TuiColor bg,
-                                  TuiColor fg_hl, TuiColor bg_hl)
+void zephio_menubar_set_popup_colors(ZephioMenuBar *menubar,
+                                  ZephioColor fg, ZephioColor bg,
+                                  ZephioColor fg_hl, ZephioColor bg_hl)
 {
     if (!menubar) return;
     menubar->fg_popup    = fg;
@@ -497,8 +497,8 @@ void tui_menubar_set_popup_colors(TuiMenuBar *menubar,
     menubar->base.dirty  = 1;
 }
 
-void tui_menubar_set_on_select(TuiMenuBar *menubar,
-                               TuiMenuBarCallback callback,
+void zephio_menubar_set_on_select(ZephioMenuBar *menubar,
+                               ZephioMenuBarCallback callback,
                                void *user_data)
 {
     if (!menubar) return;
@@ -506,13 +506,13 @@ void tui_menubar_set_on_select(TuiMenuBar *menubar,
     menubar->user_data = user_data;
 }
 
-void tui_menubar_open_menu(TuiMenuBar *menubar, int menu_index)
+void zephio_menubar_open_menu(ZephioMenuBar *menubar, int menu_index)
 {
     if (!menubar || menu_index < 0 || menu_index >= menubar->menu_count)
         return;
     if (!menubar->app) return;
 
-    TuiMenu *menu = &menubar->menus[menu_index];
+    ZephioMenu *menu = &menubar->menus[menu_index];
     if (menu->item_count == 0) return;
 
     menubar->active_menu = menu_index;
@@ -532,17 +532,17 @@ void tui_menubar_open_menu(TuiMenuBar *menubar, int menu_index)
     int px = menubar->base.abs_x + menu->start_x;
     int py = menubar->base.abs_y + menubar->base.height;
 
-    tui_widget_init_ctx(&menubar->popup.base, px, py, pw, ph,
+    zephio_widget_init_ctx(&menubar->popup.base, px, py, pw, ph,
                         &popup_vtable, menubar->base.ctx, NULL);
     menubar->popup.base.focusable = 1;
     menubar->popup.owner       = menubar;
     menubar->popup.menu_index  = menu_index;
     menubar->popup.highlighted = popup_next_item(menu, -1, 1);
 
-    tui_app_push_overlay((TuiApp *)menubar->app, &menubar->popup.base);
+    zephio_app_push_overlay((ZephioApp *)menubar->app, &menubar->popup.base);
 }
 
-void tui_menubar_close_menu(TuiMenuBar *menubar)
+void zephio_menubar_close_menu(ZephioMenuBar *menubar)
 {
     if (!menubar || !menubar->is_open) return;
     menu_popup_close(&menubar->popup);

@@ -1,10 +1,10 @@
 #define _POSIX_C_SOURCE 200809L
 
-#include "tui_scroll_container.h"
-#include "tui_context.h"
-#include "tui_screen.h"
+#include "zephio_scroll_container.h"
+#include "zephio_context.h"
+#include "zephio_screen.h"
 
-void tui_scroll_container_clamp_scroll(TuiScrollContainer *sc, int cv_width, int cv_height)
+void zephio_scroll_container_clamp_scroll(ZephioScrollContainer *sc, int cv_width, int cv_height)
 {
     int max_y = sc->content_height - cv_height;
     if (max_y < 0) max_y = 0;
@@ -17,32 +17,32 @@ void tui_scroll_container_clamp_scroll(TuiScrollContainer *sc, int cv_width, int
     if (sc->scroll_x > max_x) sc->scroll_x = max_x;
 }
 
-static void render_scrollbars(TuiWidget *widget, TuiScrollContainer *sc,
+static void render_scrollbars(ZephioWidget *widget, ZephioScrollContainer *sc,
                               int has_vscroll, int has_hscroll,
                               int cv_width, int cv_height)
 {
-    tui_scroll_container_render_scrollbars(widget, sc, has_vscroll, has_hscroll,
+    zephio_scroll_container_render_scrollbars(widget, sc, has_vscroll, has_hscroll,
                                            cv_width, cv_height);
 }
 
-void tui_scroll_container_render_scrollbars(TuiWidget *widget, TuiScrollContainer *sc,
+void zephio_scroll_container_render_scrollbars(ZephioWidget *widget, ZephioScrollContainer *sc,
                                              int has_vscroll, int has_hscroll,
                                              int cv_width, int cv_height)
 {
     int vx = widget->abs_x;
     int vy = widget->abs_y;
 
-    TuiColor track_fg = ZEPHIO_COLOR_INDEX(TUI_COLOR_GRAY_DARK);
-    TuiStyle style = tui_widget_get_style(widget);
-    TuiColor track_bg = style.bg;
-    TuiAttr track_attr = ZEPHIO_ATTR_DIM;
+    ZephioColor track_fg = ZEPHIO_COLOR_INDEX(ZEPHIO_COLOR_GRAY_DARK);
+    ZephioStyle style = zephio_widget_get_style(widget);
+    ZephioColor track_bg = style.bg;
+    ZephioAttr track_attr = ZEPHIO_ATTR_DIM;
 
-    TuiColor thumb_fg = ZEPHIO_COLOR_INDEX(TUI_COLOR_BRIGHT_WHITE);
-    TuiColor thumb_bg = ZEPHIO_COLOR_INDEX(TUI_COLOR_GRAY_MID);
+    ZephioColor thumb_fg = ZEPHIO_COLOR_INDEX(ZEPHIO_COLOR_BRIGHT_WHITE);
+    ZephioColor thumb_bg = ZEPHIO_COLOR_INDEX(ZEPHIO_COLOR_GRAY_MID);
 
     if (has_vscroll) {
         int scroll_col = vx + widget->width - 1;
-        tui_screen_fill(widget->ctx, vy, scroll_col, 1, cv_height, " ",
+        zephio_screen_fill(widget->ctx, vy, scroll_col, 1, cv_height, " ",
                         track_fg, track_bg, track_attr);
 
         int max_scroll = sc->content_height - cv_height;
@@ -54,7 +54,7 @@ void tui_scroll_container_render_scrollbars(TuiWidget *widget, TuiScrollContaine
             int thumb_y = sc->scroll_y * (cv_height - thumb_h) / max_scroll;
 
             for (int r = 0; r < thumb_h; r++) {
-                tui_screen_set_cell(widget->ctx, vy + thumb_y + r, scroll_col,
+                zephio_screen_set_cell(widget->ctx, vy + thumb_y + r, scroll_col,
                                     "\xe2\x96\x88", thumb_fg, thumb_bg,
                                     ZEPHIO_ATTR_NONE);
             }
@@ -63,7 +63,7 @@ void tui_scroll_container_render_scrollbars(TuiWidget *widget, TuiScrollContaine
 
     if (has_hscroll) {
         int scroll_row = vy + widget->height - 1;
-        tui_screen_fill(widget->ctx, scroll_row, vx, cv_width, 1, " ",
+        zephio_screen_fill(widget->ctx, scroll_row, vx, cv_width, 1, " ",
                         track_fg, track_bg, track_attr);
 
         int max_scroll = sc->content_width - cv_width;
@@ -75,7 +75,7 @@ void tui_scroll_container_render_scrollbars(TuiWidget *widget, TuiScrollContaine
             int thumb_x = sc->scroll_x * (cv_width - thumb_w) / max_scroll;
 
             for (int c = 0; c < thumb_w; c++) {
-                tui_screen_set_cell(widget->ctx, scroll_row, vx + thumb_x + c,
+                zephio_screen_set_cell(widget->ctx, scroll_row, vx + thumb_x + c,
                                     "\xe2\x96\x88", thumb_fg, thumb_bg,
                                     ZEPHIO_ATTR_NONE);
             }
@@ -83,15 +83,15 @@ void tui_scroll_container_render_scrollbars(TuiWidget *widget, TuiScrollContaine
     }
 
     if (has_vscroll && has_hscroll) {
-        tui_screen_set_cell(widget->ctx, vy + widget->height - 1,
+        zephio_screen_set_cell(widget->ctx, vy + widget->height - 1,
                             vx + widget->width - 1, " ",
                             track_fg, track_bg, track_attr);
     }
 }
 
-static void scroll_render(TuiWidget *widget)
+static void scroll_render(ZephioWidget *widget)
 {
-    TuiScrollContainer *sc = (TuiScrollContainer *)widget;
+    ZephioScrollContainer *sc = (ZephioScrollContainer *)widget;
 
     int has_vscroll = sc->content_height > widget->height;
     int has_hscroll = sc->content_width > widget->width;
@@ -100,15 +100,15 @@ static void scroll_render(TuiWidget *widget)
     if (cv_width < 0) cv_width = 0;
     if (cv_height < 0) cv_height = 0;
 
-    tui_scroll_container_clamp_scroll(sc, cv_width, cv_height);
+    zephio_scroll_container_clamp_scroll(sc, cv_width, cv_height);
 
-    TuiStyle style = tui_widget_get_style(widget);
-    tui_screen_fill(widget->ctx, widget->abs_y, widget->abs_x,
+    ZephioStyle style = zephio_widget_get_style(widget);
+    zephio_screen_fill(widget->ctx, widget->abs_y, widget->abs_x,
                     widget->width, widget->height,
                     " ", style.fg, style.bg, style.attr);
 
     for (int i = 0; i < widget->child_count; i++) {
-        TuiWidget *child = widget->children[i];
+        ZephioWidget *child = widget->children[i];
         if (!child->visible) continue;
 
         int adj_x = child->x - sc->scroll_x;
@@ -127,7 +127,7 @@ static void scroll_render(TuiWidget *widget)
         child->x = adj_x;
         child->y = adj_y;
 
-        tui_widget_render(child);
+        zephio_widget_render(child);
 
         child->x = orig_x;
         child->y = orig_y;
@@ -136,9 +136,9 @@ static void scroll_render(TuiWidget *widget)
     render_scrollbars(widget, sc, has_vscroll, has_hscroll, cv_width, cv_height);
 }
 
-int tui_scroll_container_handle_input(TuiWidget *widget, const TuiEvent *event)
+int zephio_scroll_container_handle_input(ZephioWidget *widget, const ZephioEvent *event)
 {
-    TuiScrollContainer *sc = (TuiScrollContainer *)widget;
+    ZephioScrollContainer *sc = (ZephioScrollContainer *)widget;
 
     int has_vscroll = sc->content_height > widget->height;
     int has_hscroll = sc->content_width > widget->width;
@@ -148,7 +148,7 @@ int tui_scroll_container_handle_input(TuiWidget *widget, const TuiEvent *event)
     if (cv_height < 0) cv_height = 0;
 
     switch (event->key) {
-    case TUI_KEY_UP:
+    case ZEPHIO_KEY_UP:
         if (has_vscroll && sc->scroll_y > 0) {
             sc->scroll_y--;
             widget->dirty = 1;
@@ -156,7 +156,7 @@ int tui_scroll_container_handle_input(TuiWidget *widget, const TuiEvent *event)
         }
         break;
 
-    case TUI_KEY_DOWN:
+    case ZEPHIO_KEY_DOWN:
         if (has_vscroll) {
             int max_y = sc->content_height - cv_height;
             if (max_y < 0) max_y = 0;
@@ -168,7 +168,7 @@ int tui_scroll_container_handle_input(TuiWidget *widget, const TuiEvent *event)
         }
         break;
 
-    case TUI_KEY_LEFT:
+    case ZEPHIO_KEY_LEFT:
         if (has_hscroll && sc->scroll_x > 0) {
             sc->scroll_x--;
             widget->dirty = 1;
@@ -176,7 +176,7 @@ int tui_scroll_container_handle_input(TuiWidget *widget, const TuiEvent *event)
         }
         break;
 
-    case TUI_KEY_RIGHT:
+    case ZEPHIO_KEY_RIGHT:
         if (has_hscroll) {
             int max_x = sc->content_width - cv_width;
             if (max_x < 0) max_x = 0;
@@ -188,7 +188,7 @@ int tui_scroll_container_handle_input(TuiWidget *widget, const TuiEvent *event)
         }
         break;
 
-    case TUI_KEY_PAGE_UP:
+    case ZEPHIO_KEY_PAGE_UP:
         if (has_vscroll && sc->scroll_y > 0) {
             sc->scroll_y -= cv_height;
             if (sc->scroll_y < 0) sc->scroll_y = 0;
@@ -197,7 +197,7 @@ int tui_scroll_container_handle_input(TuiWidget *widget, const TuiEvent *event)
         }
         break;
 
-    case TUI_KEY_PAGE_DOWN:
+    case ZEPHIO_KEY_PAGE_DOWN:
         if (has_vscroll) {
             int max_y = sc->content_height - cv_height;
             if (max_y < 0) max_y = 0;
@@ -208,7 +208,7 @@ int tui_scroll_container_handle_input(TuiWidget *widget, const TuiEvent *event)
         }
         break;
 
-    case TUI_KEY_HOME:
+    case ZEPHIO_KEY_HOME:
         if ((has_vscroll && sc->scroll_y > 0) ||
             (has_hscroll && sc->scroll_x > 0)) {
             sc->scroll_y = 0;
@@ -218,7 +218,7 @@ int tui_scroll_container_handle_input(TuiWidget *widget, const TuiEvent *event)
         }
         break;
 
-    case TUI_KEY_END:
+    case ZEPHIO_KEY_END:
         if (has_vscroll) {
             int max_y = sc->content_height - cv_height;
             if (max_y < 0) max_y = 0;
@@ -237,9 +237,9 @@ int tui_scroll_container_handle_input(TuiWidget *widget, const TuiEvent *event)
     return 0;
 }
 
-int tui_scroll_container_handle_mouse(TuiWidget *widget, const TuiMouseEvent *mouse)
+int zephio_scroll_container_handle_mouse(ZephioWidget *widget, const ZephioMouseEvent *mouse)
 {
-    TuiScrollContainer *sc = (TuiScrollContainer *)widget;
+    ZephioScrollContainer *sc = (ZephioScrollContainer *)widget;
 
     int has_vscroll = sc->content_height > widget->height;
     int has_hscroll = sc->content_width > widget->width;
@@ -248,7 +248,7 @@ int tui_scroll_container_handle_mouse(TuiWidget *widget, const TuiMouseEvent *mo
     if (cv_width < 0) cv_width = 0;
     if (cv_height < 0) cv_height = 0;
 
-    if (mouse->action == TUI_MOUSE_WHEEL_UP) {
+    if (mouse->action == ZEPHIO_MOUSE_WHEEL_UP) {
         if (sc->scroll_y > 0) {
             sc->scroll_y -= 3;
             if (sc->scroll_y < 0) sc->scroll_y = 0;
@@ -257,7 +257,7 @@ int tui_scroll_container_handle_mouse(TuiWidget *widget, const TuiMouseEvent *mo
         return 1;
     }
 
-    if (mouse->action == TUI_MOUSE_WHEEL_DOWN) {
+    if (mouse->action == ZEPHIO_MOUSE_WHEEL_DOWN) {
         int max_y = sc->content_height - cv_height;
         if (max_y < 0) max_y = 0;
         if (sc->scroll_y < max_y) {
@@ -268,7 +268,7 @@ int tui_scroll_container_handle_mouse(TuiWidget *widget, const TuiMouseEvent *mo
         return 1;
     }
 
-    if (mouse->action == TUI_MOUSE_PRESS && mouse->button == TUI_MOUSE_BTN_LEFT) {
+    if (mouse->action == ZEPHIO_MOUSE_PRESS && mouse->button == ZEPHIO_MOUSE_BTN_LEFT) {
         int scroll_col = widget->abs_x + widget->width - 1;
         int scroll_row = widget->abs_y + widget->height - 1;
 
@@ -307,7 +307,7 @@ int tui_scroll_container_handle_mouse(TuiWidget *widget, const TuiMouseEvent *mo
         }
     }
 
-    if (sc->dragging == 1 && mouse->action == TUI_MOUSE_MOTION) {
+    if (sc->dragging == 1 && mouse->action == ZEPHIO_MOUSE_MOTION) {
         int max_y = sc->content_height - cv_height;
         if (max_y > 0) {
             int thumb_h = cv_height * cv_height / sc->content_height;
@@ -321,7 +321,7 @@ int tui_scroll_container_handle_mouse(TuiWidget *widget, const TuiMouseEvent *mo
         return 1;
     }
 
-    if (sc->dragging == 2 && mouse->action == TUI_MOUSE_MOTION) {
+    if (sc->dragging == 2 && mouse->action == ZEPHIO_MOUSE_MOTION) {
         int max_x = sc->content_width - cv_width;
         if (max_x > 0) {
             int thumb_w = cv_width * cv_width / sc->content_width;
@@ -335,7 +335,7 @@ int tui_scroll_container_handle_mouse(TuiWidget *widget, const TuiMouseEvent *mo
         return 1;
     }
 
-    if (mouse->action == TUI_MOUSE_RELEASE) {
+    if (mouse->action == ZEPHIO_MOUSE_RELEASE) {
         if (sc->dragging) {
             sc->dragging = 0;
             return 1;
@@ -345,24 +345,24 @@ int tui_scroll_container_handle_mouse(TuiWidget *widget, const TuiMouseEvent *mo
     return 0;
 }
 
-static TuiWidgetVTable scroll_vtable = {
+static ZephioWidgetVTable scroll_vtable = {
     .render       = scroll_render,
-    .handle_input = tui_scroll_container_handle_input,
-    .handle_mouse = tui_scroll_container_handle_mouse,
+    .handle_input = zephio_scroll_container_handle_input,
+    .handle_mouse = zephio_scroll_container_handle_mouse,
     .destroy      = NULL,
     .on_resize    = NULL,
     .on_focus     = NULL,
     .on_blur      = NULL
 };
 
-TuiResult tui_scroll_container_init_ctx(TuiScrollContainer *sc, TuiContext *ctx, int x, int y,
+ZephioResult zephio_scroll_container_init_ctx(ZephioScrollContainer *sc, ZephioContext *ctx, int x, int y,
                                         int width, int height)
 {
     if (!sc) return TUI_ERR_MEMORY;
 
-    TuiResult res = tui_widget_init_ctx(&sc->base, x, y, width, height,
+    ZephioResult res = zephio_widget_init_ctx(&sc->base, x, y, width, height,
                                         &scroll_vtable, ctx, NULL);
-    if (res != TUI_OK) return res;
+    if (res != ZEPHIO_OK) return res;
 
     sc->base.focusable        = 1;
     sc->base.manages_children = 1;
@@ -373,10 +373,10 @@ TuiResult tui_scroll_container_init_ctx(TuiScrollContainer *sc, TuiContext *ctx,
     sc->content_height = height;
     sc->dragging       = 0;
 
-    return TUI_OK;
+    return ZEPHIO_OK;
 }
 
-void tui_scroll_container_set_content_size(TuiScrollContainer *sc,
+void zephio_scroll_container_set_content_size(ZephioScrollContainer *sc,
                                            int width, int height)
 {
     if (!sc) return;
@@ -385,12 +385,12 @@ void tui_scroll_container_set_content_size(TuiScrollContainer *sc,
     sc->base.dirty = 1;
 }
 
-void tui_scroll_container_auto_content_size(TuiScrollContainer *sc)
+void zephio_scroll_container_auto_content_size(ZephioScrollContainer *sc)
 {
     if (!sc) return;
     int max_w = 0, max_h = 0;
     for (int i = 0; i < sc->base.child_count; i++) {
-        TuiWidget *child = sc->base.children[i];
+        ZephioWidget *child = sc->base.children[i];
         int w = child->x + child->width;
         int h = child->y + child->height;
         if (w > max_w) max_w = w;
@@ -401,7 +401,7 @@ void tui_scroll_container_auto_content_size(TuiScrollContainer *sc)
     sc->base.dirty = 1;
 }
 
-void tui_scroll_container_scroll_to(TuiScrollContainer *sc, int x, int y)
+void zephio_scroll_container_scroll_to(ZephioScrollContainer *sc, int x, int y)
 {
     if (!sc) return;
     sc->scroll_x = x;
@@ -409,14 +409,14 @@ void tui_scroll_container_scroll_to(TuiScrollContainer *sc, int x, int y)
     sc->base.dirty = 1;
 }
 
-void tui_scroll_container_set_scroll_x(TuiScrollContainer *sc, int x)
+void zephio_scroll_container_set_scroll_x(ZephioScrollContainer *sc, int x)
 {
     if (!sc) return;
     sc->scroll_x = x;
     sc->base.dirty = 1;
 }
 
-void tui_scroll_container_set_scroll_y(TuiScrollContainer *sc, int y)
+void zephio_scroll_container_set_scroll_y(ZephioScrollContainer *sc, int y)
 {
     if (!sc) return;
     sc->scroll_y = y;

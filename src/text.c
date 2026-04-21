@@ -1,4 +1,4 @@
-#include "tui_text.h"
+#include "zephio_text.h"
 
 #include <string.h>
 
@@ -675,7 +675,7 @@ int tui_utf8_char_width(uint32_t cp)
     return 1;
 }
 
-int tui_text_width(const char *text, size_t len)
+int zephio_text_width(const char *text, size_t len)
 {
     if (!text) return 0;
 
@@ -701,13 +701,13 @@ int tui_text_width(const char *text, size_t len)
     return width;
 }
 
-int tui_text_str_width(const char *text)
+int zephio_text_str_width(const char *text)
 {
     if (!text) return 0;
-    return tui_text_width(text, strlen(text));
+    return zephio_text_width(text, strlen(text));
 }
 
-int tui_text_clip(const char *text, size_t len, int max_width, size_t *out_len)
+int zephio_text_clip(const char *text, size_t len, int max_width, size_t *out_len)
 {
     if (!text || max_width <= 0) {
         if (out_len) *out_len = 0;
@@ -745,7 +745,7 @@ int tui_text_clip(const char *text, size_t len, int max_width, size_t *out_len)
     return width;
 }
 
-void tui_text_truncate(const char *text, size_t len, int max_width,
+void zephio_text_truncate(const char *text, size_t len, int max_width,
                        const char *ellipsis, char *out, size_t out_size)
 {
     if (!text || !out || out_size == 0) {
@@ -753,7 +753,7 @@ void tui_text_truncate(const char *text, size_t len, int max_width,
         return;
     }
 
-    int full_width = tui_text_width(text, len);
+    int full_width = zephio_text_width(text, len);
 
     if (full_width <= max_width) {
         size_t copy = len < out_size - 1 ? len : out_size - 1;
@@ -763,14 +763,14 @@ void tui_text_truncate(const char *text, size_t len, int max_width,
     }
 
     const char *ell = ellipsis ? ellipsis : "~";
-    int ell_width = tui_text_str_width(ell);
+    int ell_width = zephio_text_str_width(ell);
     size_t ell_len = strlen(ell);
 
     int target_width = max_width - ell_width;
     if (target_width < 0) target_width = 0;
 
     size_t clip_len;
-    tui_text_clip(text, len, target_width, &clip_len);
+    zephio_text_clip(text, len, target_width, &clip_len);
 
     if (clip_len + ell_len >= out_size) {
         clip_len = out_size - ell_len - 1;
@@ -781,7 +781,7 @@ void tui_text_truncate(const char *text, size_t len, int max_width,
     out[clip_len + ell_len] = '\0';
 }
 
-int tui_text_word_wrap(const char *text, size_t len, int max_width,
+int zephio_text_word_wrap(const char *text, size_t len, int max_width,
                        int *breaks, int max_breaks)
 {
     if (!text || max_width <= 0 || !breaks || max_breaks <= 0) return 0;
@@ -847,7 +847,7 @@ int tui_text_word_wrap(const char *text, size_t len, int max_width,
     return break_count;
 }
 
-int tui_text_index_to_col(const char *text, size_t len, size_t index)
+int zephio_text_index_to_col(const char *text, size_t len, size_t index)
 {
     if (!text) return 0;
     if (index > len) index = len;
@@ -874,7 +874,7 @@ int tui_text_index_to_col(const char *text, size_t len, size_t index)
     return col;
 }
 
-int tui_text_col_to_index(const char *text, size_t len, int col)
+int zephio_text_col_to_index(const char *text, size_t len, int col)
 {
     if (!text || col <= 0) return 0;
 
@@ -904,13 +904,13 @@ int tui_text_col_to_index(const char *text, size_t len, int col)
     return (int)i;
 }
 
-int tui_text_expand_tab(int col, int tab_size)
+int zephio_text_expand_tab(int col, int tab_size)
 {
     if (tab_size <= 0) tab_size = ZEPHIO_TAB_SIZE;
     return tab_size - (col % tab_size);
 }
 
-int tui_text_expand_tabs(const char *text, size_t len, int tab_size,
+int zephio_text_expand_tabs(const char *text, size_t len, int tab_size,
                          char *out, size_t out_size)
 {
     if (!text || !out || out_size == 0) return -1;

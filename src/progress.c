@@ -1,28 +1,28 @@
 #define _POSIX_C_SOURCE 200809L
 
-#include "tui_progress.h"
-#include "tui_context.h"
+#include "zephio_progress.h"
+#include "zephio_context.h"
 
 #include <stdlib.h>
 #include <string.h>
 #include <stdio.h>
 
-static void progress_render(TuiWidget *widget)
+static void progress_render(ZephioWidget *widget)
 {
-    TuiProgress *p = (TuiProgress *)widget;
+    ZephioProgress *p = (ZephioProgress *)widget;
 
-    TuiColor fg = p->fg_fill;
-    TuiColor bg = p->bg_fill;
-    TuiAttr attr = p->attr;
+    ZephioColor fg = p->fg_fill;
+    ZephioColor bg = p->bg_fill;
+    ZephioAttr attr = p->attr;
 
     if (widget->theme) {
-        TuiStyle style = tui_widget_get_style(widget);
+        ZephioStyle style = zephio_widget_get_style(widget);
         fg = style.fg;
         bg = style.bg;
         attr = style.attr;
     }
 
-    tui_screen_fill(widget->ctx, widget->abs_y, widget->abs_x,
+    zephio_screen_fill(widget->ctx, widget->abs_y, widget->abs_x,
                     widget->width, widget->height, " ",
                     p->fg_empty, p->bg_empty, attr);
 
@@ -35,12 +35,12 @@ static void progress_render(TuiWidget *widget)
         if (max_label < 0) max_label = 0;
         if (label_len > max_label) label_len = max_label;
 
-        tui_screen_write(widget->ctx, widget->abs_y, col, p->label,
+        zephio_screen_write(widget->ctx, widget->abs_y, col, p->label,
                          p->fg_label, p->bg_label, attr);
         col += label_len;
 
         if (col < widget->abs_x + widget->width) {
-            tui_screen_set_cell(widget->ctx, widget->abs_y, col, " ",
+            zephio_screen_set_cell(widget->ctx, widget->abs_y, col, " ",
                                 p->fg_label, p->bg_label, attr);
             col++;
         }
@@ -61,29 +61,29 @@ static void progress_render(TuiWidget *widget)
     int fill_width = (p->value * bar_width) / 100;
 
     for (int i = 0; i < fill_width && col + i < widget->abs_x + widget->width; i++) {
-        tui_screen_set_cell(widget->ctx, widget->abs_y, col + i, p->fill_char,
+        zephio_screen_set_cell(widget->ctx, widget->abs_y, col + i, p->fill_char,
                             fg, bg, attr);
     }
 
     for (int i = fill_width; i < bar_width && col + i < widget->abs_x + widget->width; i++) {
-        tui_screen_set_cell(widget->ctx, widget->abs_y, col + i, p->empty_char,
+        zephio_screen_set_cell(widget->ctx, widget->abs_y, col + i, p->empty_char,
                             p->fg_empty, p->bg_empty, attr);
     }
 
     if (pct_width > 0) {
-        tui_screen_write(widget->ctx, widget->abs_y, col + bar_width, pct_buf,
+        zephio_screen_write(widget->ctx, widget->abs_y, col + bar_width, pct_buf,
                          fg, bg, attr);
     }
 }
 
-static void progress_destroy(TuiWidget *widget)
+static void progress_destroy(ZephioWidget *widget)
 {
-    TuiProgress *p = (TuiProgress *)widget;
+    ZephioProgress *p = (ZephioProgress *)widget;
     free(p->label);
     p->label = NULL;
 }
 
-static TuiWidgetVTable progress_vtable = {
+static ZephioWidgetVTable progress_vtable = {
     .render       = progress_render,
     .handle_input = NULL,
     .handle_mouse = NULL,
@@ -93,13 +93,13 @@ static TuiWidgetVTable progress_vtable = {
     .on_blur      = NULL
 };
 
-TuiResult tui_progress_init_ctx(TuiProgress *progress, TuiContext *ctx, int x, int y, int width, int height)
+ZephioResult zephio_progress_init_ctx(ZephioProgress *progress, ZephioContext *ctx, int x, int y, int width, int height)
 {
     if (!progress) return TUI_ERR_MEMORY;
 
-    TuiResult res = tui_widget_init_ctx(&progress->base, x, y, width, height,
+    ZephioResult res = zephio_widget_init_ctx(&progress->base, x, y, width, height,
                                         &progress_vtable, ctx, NULL);
-    if (res != TUI_OK) return res;
+    if (res != ZEPHIO_OK) return res;
 
     progress->base.focusable = 0;
 
@@ -117,10 +117,10 @@ TuiResult tui_progress_init_ctx(TuiProgress *progress, TuiContext *ctx, int x, i
     progress->bg_label = ZEPHIO_COLOR_INDEX(0);
     progress->attr     = ZEPHIO_ATTR_NONE;
 
-    return TUI_OK;
+    return ZEPHIO_OK;
 }
 
-void tui_progress_set_value(TuiProgress *progress, int value)
+void zephio_progress_set_value(ZephioProgress *progress, int value)
 {
     if (!progress) return;
     if (value < 0) value = 0;
@@ -129,13 +129,13 @@ void tui_progress_set_value(TuiProgress *progress, int value)
     progress->base.dirty = 1;
 }
 
-int tui_progress_get_value(TuiProgress *progress)
+int zephio_progress_get_value(ZephioProgress *progress)
 {
     if (!progress) return 0;
     return progress->value;
 }
 
-void tui_progress_set_chars(TuiProgress *progress, const char *fill, const char *empty)
+void zephio_progress_set_chars(ZephioProgress *progress, const char *fill, const char *empty)
 {
     if (!progress) return;
 
@@ -156,7 +156,7 @@ void tui_progress_set_chars(TuiProgress *progress, const char *fill, const char 
     progress->base.dirty = 1;
 }
 
-void tui_progress_set_label(TuiProgress *progress, const char *label)
+void zephio_progress_set_label(ZephioProgress *progress, const char *label)
 {
     if (!progress) return;
     free(progress->label);
@@ -164,16 +164,16 @@ void tui_progress_set_label(TuiProgress *progress, const char *label)
     progress->base.dirty = 1;
 }
 
-void tui_progress_set_show_percent(TuiProgress *progress, int show)
+void zephio_progress_set_show_percent(ZephioProgress *progress, int show)
 {
     if (!progress) return;
     progress->show_percent = show;
     progress->base.dirty = 1;
 }
 
-void tui_progress_set_colors(TuiProgress *progress,
-                             TuiColor fg_fill, TuiColor bg_fill,
-                             TuiColor fg_empty, TuiColor bg_empty)
+void zephio_progress_set_colors(ZephioProgress *progress,
+                             ZephioColor fg_fill, ZephioColor bg_fill,
+                             ZephioColor fg_empty, ZephioColor bg_empty)
 {
     if (!progress) return;
     progress->fg_fill  = fg_fill;
@@ -183,8 +183,8 @@ void tui_progress_set_colors(TuiProgress *progress,
     progress->base.dirty = 1;
 }
 
-void tui_progress_set_label_colors(TuiProgress *progress,
-                                   TuiColor fg, TuiColor bg)
+void zephio_progress_set_label_colors(ZephioProgress *progress,
+                                   ZephioColor fg, ZephioColor bg)
 {
     if (!progress) return;
     progress->fg_label = fg;
@@ -192,7 +192,7 @@ void tui_progress_set_label_colors(TuiProgress *progress,
     progress->base.dirty = 1;
 }
 
-void tui_progress_set_attr(TuiProgress *progress, TuiAttr attr)
+void zephio_progress_set_attr(ZephioProgress *progress, ZephioAttr attr)
 {
     if (!progress) return;
     progress->attr = attr;

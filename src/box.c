@@ -1,23 +1,23 @@
 #define _POSIX_C_SOURCE 200809L
 
-#include "tui_box.h"
-#include "tui_context.h"
+#include "zephio_box.h"
+#include "zephio_context.h"
 
 #include <stdlib.h>
 #include <string.h>
 
-static void box_render(TuiWidget *widget)
+static void box_render(ZephioWidget *widget)
 {
-    TuiBox *box = (TuiBox *)widget;
+    ZephioBox *box = (ZephioBox *)widget;
 
     if (widget->width < 2 || widget->height < 2) return;
 
-    TuiColor fg;
-    TuiColor bg;
-    TuiAttr attr;
+    ZephioColor fg;
+    ZephioColor bg;
+    ZephioAttr attr;
 
     if (widget->theme) {
-        TuiStyle style = tui_widget_get_style(widget);
+        ZephioStyle style = zephio_widget_get_style(widget);
         fg   = style.fg;
         bg   = style.bg;
         attr = style.attr;
@@ -27,16 +27,16 @@ static void box_render(TuiWidget *widget)
         attr = box->attr;
     }
 
-    tui_screen_fill(widget->ctx, widget->abs_y + 1, widget->abs_x + 1,
+    zephio_screen_fill(widget->ctx, widget->abs_y + 1, widget->abs_x + 1,
                     widget->width - 2, widget->height - 2,
                     " ", fg, bg, attr);
 
     if (box->border_style == ZEPHIO_BOX_DOUBLE) {
-        tui_screen_box_double(widget->ctx, widget->abs_y, widget->abs_x,
+        zephio_screen_box_double(widget->ctx, widget->abs_y, widget->abs_x,
                                widget->width, widget->height,
                                fg, bg, attr);
     } else {
-        tui_screen_box_single(widget->ctx, widget->abs_y, widget->abs_x,
+        zephio_screen_box_single(widget->ctx, widget->abs_y, widget->abs_x,
                                widget->width, widget->height,
                                fg, bg, attr);
     }
@@ -53,38 +53,38 @@ static void box_render(TuiWidget *widget)
             memcpy(buf, box->title, (size_t)copy_len);
             buf[copy_len] = '\0';
 
-            tui_screen_write(widget->ctx, widget->abs_y, widget->abs_x + 2,
+            zephio_screen_write(widget->ctx, widget->abs_y, widget->abs_x + 2,
                              buf, fg, bg, attr | ZEPHIO_ATTR_BOLD);
         }
     }
 }
 
-static void box_on_resize(TuiWidget *widget, int width, int height)
+static void box_on_resize(ZephioWidget *widget, int width, int height)
 {
     (void)width;
     (void)height;
     for (int i = 0; i < widget->child_count; i++) {
-        TuiWidget *child = widget->children[i];
-        int inner_x = 1 + ((TuiBox *)widget)->padding;
-        int inner_y = 1 + ((TuiBox *)widget)->padding;
-        int inner_w = widget->width - 2 - 2 * ((TuiBox *)widget)->padding;
-        int inner_h = widget->height - 2 - 2 * ((TuiBox *)widget)->padding;
+        ZephioWidget *child = widget->children[i];
+        int inner_x = 1 + ((ZephioBox *)widget)->padding;
+        int inner_y = 1 + ((ZephioBox *)widget)->padding;
+        int inner_w = widget->width - 2 - 2 * ((ZephioBox *)widget)->padding;
+        int inner_h = widget->height - 2 - 2 * ((ZephioBox *)widget)->padding;
         if (inner_w < 0) inner_w = 0;
         if (inner_h < 0) inner_h = 0;
 
-        tui_widget_set_position(child, inner_x, inner_y);
-        tui_widget_set_size(child, inner_w, inner_h);
+        zephio_widget_set_position(child, inner_x, inner_y);
+        zephio_widget_set_size(child, inner_w, inner_h);
     }
 }
 
-static void box_destroy(TuiWidget *widget)
+static void box_destroy(ZephioWidget *widget)
 {
-    TuiBox *box = (TuiBox *)widget;
+    ZephioBox *box = (ZephioBox *)widget;
     free(box->title);
     box->title = NULL;
 }
 
-static TuiWidgetVTable box_vtable = {
+static ZephioWidgetVTable box_vtable = {
     .render       = box_render,
     .handle_input = NULL,
     .handle_mouse = NULL,
@@ -94,14 +94,14 @@ static TuiWidgetVTable box_vtable = {
     .on_blur      = NULL
 };
 
-TuiResult tui_box_init_ctx(TuiBox *box, TuiContext *ctx, int x, int y, int width, int height,
+ZephioResult zephio_box_init_ctx(ZephioBox *box, ZephioContext *ctx, int x, int y, int width, int height,
                             int border_style)
 {
     if (!box) return TUI_ERR_MEMORY;
 
-    TuiResult res = tui_widget_init_ctx(&box->base, x, y, width, height,
+    ZephioResult res = zephio_widget_init_ctx(&box->base, x, y, width, height,
                                         &box_vtable, ctx, NULL);
-    if (res != TUI_OK) return res;
+    if (res != ZEPHIO_OK) return res;
 
     box->base.focusable = 0;
 
@@ -112,10 +112,10 @@ TuiResult tui_box_init_ctx(TuiBox *box, TuiContext *ctx, int x, int y, int width
     box->border_style  = border_style;
     box->padding       = 0;
 
-    return TUI_OK;
+    return ZEPHIO_OK;
 }
 
-void tui_box_set_title(TuiBox *box, const char *title)
+void zephio_box_set_title(ZephioBox *box, const char *title)
 {
     if (!box) return;
     free(box->title);
@@ -123,7 +123,7 @@ void tui_box_set_title(TuiBox *box, const char *title)
     box->base.dirty = 1;
 }
 
-void tui_box_set_colors(TuiBox *box, TuiColor fg, TuiColor bg)
+void zephio_box_set_colors(ZephioBox *box, ZephioColor fg, ZephioColor bg)
 {
     if (!box) return;
     box->fg = fg;
@@ -131,14 +131,14 @@ void tui_box_set_colors(TuiBox *box, TuiColor fg, TuiColor bg)
     box->base.dirty = 1;
 }
 
-void tui_box_set_attr(TuiBox *box, TuiAttr attr)
+void zephio_box_set_attr(ZephioBox *box, ZephioAttr attr)
 {
     if (!box) return;
     box->attr = attr;
     box->base.dirty = 1;
 }
 
-void tui_box_set_padding(TuiBox *box, int padding)
+void zephio_box_set_padding(ZephioBox *box, int padding)
 {
     if (!box) return;
     box->padding = padding;

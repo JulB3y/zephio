@@ -1,10 +1,10 @@
 #define _POSIX_C_SOURCE 200809L
 
-#include "tui_terminal.h"
-#include "tui_ansi.h"
-#include "tui_screen.h"
-#include "tui_mouse.h"
-#include "tui_context.h"
+#include "zephio_terminal.h"
+#include "zephio_ansi.h"
+#include "zephio_screen.h"
+#include "zephio_mouse.h"
+#include "zephio_context.h"
 
 #include <signal.h>
 #include <stdio.h>
@@ -14,14 +14,14 @@
 #include <unistd.h>
 #include <sys/ioctl.h>
 
-static TuiContext *g_ctx = NULL;
+static ZephioContext *g_ctx = NULL;
 static struct termios g_orig_termios;
 static int g_termios_saved = 0;
 
 static void terminal_atexit(void)
 {
     if (g_ctx) {
-        tui_shutdown(g_ctx);
+        zephio_shutdown(g_ctx);
     }
 }
 
@@ -31,7 +31,7 @@ static void terminal_sig_handler(int sig)
     _exit(0);
 }
 
-static TuiResult terminal_raw_mode_enable(Terminal *t)
+static ZephioResult terminal_raw_mode_enable(Terminal *t)
 {
     struct termios raw;
 
@@ -52,53 +52,53 @@ static TuiResult terminal_raw_mode_enable(Terminal *t)
         return TUI_ERR_TCSETATTR;
     }
 
-    return TUI_OK;
+    return ZEPHIO_OK;
 }
 
-static TuiResult terminal_raw_mode_disable(Terminal *t)
+static ZephioResult terminal_raw_mode_disable(Terminal *t)
 {
     if (!g_termios_saved) {
-        return TUI_OK;
+        return ZEPHIO_OK;
     }
     if (tcsetattr(t->fd, TCSAFLUSH, &g_orig_termios) == -1) {
         return TUI_ERR_TCSETATTR;
     }
     g_termios_saved = 0;
-    return TUI_OK;
+    return ZEPHIO_OK;
 }
 
-static TuiResult terminal_enter_alt_screen(Terminal *t)
+static ZephioResult terminal_enter_alt_screen(Terminal *t)
 {
     terminal_write_seq(t, ANSI_ALT_SCREEN_ON, sizeof(ANSI_ALT_SCREEN_ON) - 1);
-    return TUI_OK;
+    return ZEPHIO_OK;
 }
 
-static TuiResult terminal_exit_alt_screen(Terminal *t)
+static ZephioResult terminal_exit_alt_screen(Terminal *t)
 {
     terminal_write_seq(t, ANSI_ALT_SCREEN_OFF, sizeof(ANSI_ALT_SCREEN_OFF) - 1);
-    return TUI_OK;
+    return ZEPHIO_OK;
 }
 
-static TuiResult terminal_cursor_hide(Terminal *t)
+static ZephioResult terminal_cursor_hide(Terminal *t)
 {
     terminal_write_seq(t, ANSI_CURSOR_HIDE, sizeof(ANSI_CURSOR_HIDE) - 1);
-    return TUI_OK;
+    return ZEPHIO_OK;
 }
 
-static TuiResult terminal_cursor_show(Terminal *t)
+static ZephioResult terminal_cursor_show(Terminal *t)
 {
     terminal_write_seq(t, ANSI_CURSOR_SHOW, sizeof(ANSI_CURSOR_SHOW) - 1);
-    return TUI_OK;
+    return ZEPHIO_OK;
 }
 
-static TuiResult terminal_clear_screen(Terminal *t)
+static ZephioResult terminal_clear_screen(Terminal *t)
 {
     terminal_write_seq(t, ANSI_CLEAR_SCREEN, sizeof(ANSI_CLEAR_SCREEN) - 1);
     terminal_write_seq(t, ANSI_CURSOR_HOME, sizeof(ANSI_CURSOR_HOME) - 1);
-    return TUI_OK;
+    return ZEPHIO_OK;
 }
 
-static TuiResult terminal_get_size(Terminal *t)
+static ZephioResult terminal_get_size(Terminal *t)
 {
     struct winsize ws;
 
@@ -107,7 +107,7 @@ static TuiResult terminal_get_size(Terminal *t)
     }
     t->rows = ws.ws_row;
     t->cols = ws.ws_col;
-    return TUI_OK;
+    return ZEPHIO_OK;
 }
 
 void terminal_write_seq(Terminal *t, const char *seq, size_t len)
@@ -117,12 +117,12 @@ void terminal_write_seq(Terminal *t, const char *seq, size_t len)
     }
 }
 
-static void terminal_ensure_cleanup(TuiContext *ctx)
+static void terminal_ensure_cleanup(ZephioContext *ctx)
 {
     Terminal *terminal = &ctx->terminal;
     if (terminal->initialized) {
-        tui_mouse_disable(ctx);
-        tui_screen_free(ctx);
+        zephio_mouse_disable(ctx);
+        zephio_screen_free(ctx);
         terminal_cursor_show(terminal);
         terminal_clear_screen(terminal);
         terminal_exit_alt_screen(terminal);
@@ -131,9 +131,9 @@ static void terminal_ensure_cleanup(TuiContext *ctx)
     }
 }
 
-TuiResult tui_init(TuiContext *ctx)
+ZephioResult zephio_init(ZephioContext *ctx)
 {
-    TuiResult res;
+    ZephioResult res;
     Terminal *terminal = &ctx->terminal;
 
     g_ctx = ctx;
@@ -146,12 +146,12 @@ TuiResult tui_init(TuiContext *ctx)
          strcmp(colorterm, "24bit") == 0));
 
     res = terminal_raw_mode_enable(terminal);
-    if (res != TUI_OK) {
+    if (res != ZEPHIO_OK) {
         return res;
     }
 
     res = terminal_get_size(terminal);
-    if (res != TUI_OK) {
+    if (res != ZEPHIO_OK) {
         terminal_raw_mode_disable(terminal);
         return res;
     }
@@ -160,7 +160,7 @@ TuiResult tui_init(TuiContext *ctx)
     terminal_clear_screen(terminal);
     terminal_cursor_hide(terminal);
 
-    tui_screen_init(ctx, terminal->rows, terminal->cols);
+    zephio_screen_init(ctx, terminal->rows, terminal->cols);
 
     terminal->initialized = 1;
 
@@ -182,25 +182,25 @@ TuiResult tui_init(TuiContext *ctx)
     sigemptyset(&sa_winch.sa_mask);
     sigaction(SIGWINCH, &sa_winch, NULL);
 
-    return TUI_OK;
+    return ZEPHIO_OK;
 }
 
-void tui_shutdown(TuiContext *ctx)
+void zephio_shutdown(ZephioContext *ctx)
 {
     terminal_ensure_cleanup(ctx);
     g_ctx = NULL;
 }
 
-TuiResult tui_get_size(TuiContext *ctx, TuiSize *size)
+ZephioResult zephio_get_size(ZephioContext *ctx, ZephioSize *size)
 {
-    TuiResult res;
+    ZephioResult res;
     Terminal *terminal = &ctx->terminal;
 
     res = terminal_get_size(terminal);
-    if (res != TUI_OK) {
+    if (res != ZEPHIO_OK) {
         return res;
     }
     size->rows = terminal->rows;
     size->cols = terminal->cols;
-    return TUI_OK;
+    return ZEPHIO_OK;
 }

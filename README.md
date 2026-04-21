@@ -28,14 +28,14 @@ A lightweight, portable terminal UI framework in C with **zero external dependen
 Requires `gcc` and `make`.
 
 ```sh
-make              # Release build (lib/libtui.a + examples)
+make              # Release build (lib/libzephio.a + examples)
 make DEBUG=1      # Debug build with -g -O0 -fsanitize=address,undefined
 make examples     # Build examples only
 make clean        # Remove build/ and lib/
 ```
 
 Output:
-- `lib/libtui.a` — static library
+- `lib/libzephio.a` — static library
 - `build/*` — compiled example binaries
 
 ## Quick Start
@@ -44,7 +44,7 @@ Output:
 
 ```c
 #include "tui.h"
-#include "tui_ansi.h"
+#include "zephio_ansi.h"
 
 int main(void) {
     tui_init();
@@ -67,10 +67,10 @@ int main(void) {
 
 ```c
 #include "tui.h"
-#include "tui_app.h"
-#include "tui_label.h"
-#include "tui_button.h"
-#include "tui_widget.h"
+#include "zephio_app.h"
+#include "zephio_label.h"
+#include "zephio_button.h"
+#include "zephio_widget.h"
 
 typedef struct {
     TuiWidget root;

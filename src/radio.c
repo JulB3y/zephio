@@ -1,36 +1,36 @@
 #define _POSIX_C_SOURCE 200809L
 
-#include "tui_radio.h"
-#include "tui_context.h"
+#include "zephio_radio.h"
+#include "zephio_context.h"
 
 #include <stdlib.h>
 #include <string.h>
 
-static void radio_render(TuiWidget *widget)
+static void radio_render(ZephioWidget *widget)
 {
-    TuiRadio *radio = (TuiRadio *)widget;
+    ZephioRadio *radio = (ZephioRadio *)widget;
 
     for (int i = 0; i < widget->height; i++) {
         int idx = i;
         if (idx >= radio->option_count) {
-            tui_screen_fill(widget->ctx, widget->abs_y + i, widget->abs_x,
+            zephio_screen_fill(widget->ctx, widget->abs_y + i, widget->abs_x,
                             widget->width, 1, " ",
                             radio->fg, radio->bg, radio->attr);
             continue;
         }
 
-        TuiColor fg;
-        TuiColor bg;
-        TuiAttr attr;
+        ZephioColor fg;
+        ZephioColor bg;
+        ZephioAttr attr;
 
         if (widget->theme) {
-            TuiWidgetState state = TUI_STATE_NORMAL;
+            ZephioWidgetState state = ZEPHIO_STATE_NORMAL;
             if (widget->disabled) {
-                state = TUI_STATE_DISABLED;
+                state = ZEPHIO_STATE_DISABLED;
             } else if (idx == radio->selected && widget->focused) {
-                state = TUI_STATE_FOCUSED;
+                state = ZEPHIO_STATE_FOCUSED;
             }
-            TuiStyle style = widget->theme->styles[state];
+            ZephioStyle style = widget->theme->styles[state];
             fg   = style.fg;
             bg   = style.bg;
             attr = style.attr;
@@ -46,11 +46,11 @@ static void radio_render(TuiWidget *widget)
             }
         }
 
-        tui_screen_fill(widget->ctx, widget->abs_y + i, widget->abs_x,
+        zephio_screen_fill(widget->ctx, widget->abs_y + i, widget->abs_x,
                         widget->width, 1, " ", fg, bg, attr);
 
         const char *marker = (idx == radio->selected) ? "(x)" : "( )";
-        tui_screen_write(widget->ctx, widget->abs_y + i, widget->abs_x,
+        zephio_screen_write(widget->ctx, widget->abs_y + i, widget->abs_x,
                           marker, fg, bg, attr);
 
         if (radio->options[idx]) {
@@ -67,20 +67,20 @@ static void radio_render(TuiWidget *widget)
             memcpy(buf, radio->options[idx], (size_t)copy_len);
             buf[copy_len] = '\0';
 
-            tui_screen_write(widget->ctx, widget->abs_y + i,
+            zephio_screen_write(widget->ctx, widget->abs_y + i,
                               widget->abs_x + label_start,
                               buf, fg, bg, attr);
         }
     }
 }
 
-static int radio_handle_input(TuiWidget *widget, const TuiEvent *event)
+static int radio_handle_input(ZephioWidget *widget, const ZephioEvent *event)
 {
-    TuiRadio *radio = (TuiRadio *)widget;
+    ZephioRadio *radio = (ZephioRadio *)widget;
 
     if (radio->option_count == 0) return 0;
 
-    if (event->key == TUI_KEY_UP) {
+    if (event->key == ZEPHIO_KEY_UP) {
         if (radio->selected > 0) {
             radio->selected--;
             widget->dirty = 1;
@@ -93,7 +93,7 @@ static int radio_handle_input(TuiWidget *widget, const TuiEvent *event)
         return 1;
     }
 
-    if (event->key == TUI_KEY_DOWN) {
+    if (event->key == ZEPHIO_KEY_DOWN) {
         if (radio->selected < radio->option_count - 1) {
             radio->selected++;
             widget->dirty = 1;
@@ -106,7 +106,7 @@ static int radio_handle_input(TuiWidget *widget, const TuiEvent *event)
         return 1;
     }
 
-    if (event->key == TUI_KEY_ENTER) {
+    if (event->key == ZEPHIO_KEY_ENTER) {
         if (radio->on_change && radio->option_count > 0) {
             radio->on_change(widget, radio->selected,
                              radio->options[radio->selected],
@@ -118,11 +118,11 @@ static int radio_handle_input(TuiWidget *widget, const TuiEvent *event)
     return 0;
 }
 
-static int radio_handle_mouse(TuiWidget *widget, const TuiMouseEvent *mouse)
+static int radio_handle_mouse(ZephioWidget *widget, const ZephioMouseEvent *mouse)
 {
-    TuiRadio *radio = (TuiRadio *)widget;
+    ZephioRadio *radio = (ZephioRadio *)widget;
 
-    if (mouse->action != TUI_MOUSE_PRESS || mouse->button != TUI_MOUSE_BTN_LEFT)
+    if (mouse->action != ZEPHIO_MOUSE_PRESS || mouse->button != ZEPHIO_MOUSE_BTN_LEFT)
         return 0;
 
     int idx = mouse->row - widget->abs_y;
@@ -141,9 +141,9 @@ static int radio_handle_mouse(TuiWidget *widget, const TuiMouseEvent *mouse)
     return 1;
 }
 
-static void radio_destroy(TuiWidget *widget)
+static void radio_destroy(ZephioWidget *widget)
 {
-    TuiRadio *radio = (TuiRadio *)widget;
+    ZephioRadio *radio = (ZephioRadio *)widget;
 
     for (int i = 0; i < radio->option_count; i++) {
         free(radio->options[i]);
@@ -154,7 +154,7 @@ static void radio_destroy(TuiWidget *widget)
     radio->option_capacity = 0;
 }
 
-static TuiWidgetVTable radio_vtable = {
+static ZephioWidgetVTable radio_vtable = {
     .render       = radio_render,
     .handle_input = radio_handle_input,
     .handle_mouse = radio_handle_mouse,
@@ -164,13 +164,13 @@ static TuiWidgetVTable radio_vtable = {
     .on_blur      = NULL
 };
 
-TuiResult tui_radio_init_ctx(TuiRadio *radio, TuiContext *ctx, int x, int y, int width, int height)
+ZephioResult zephio_radio_init_ctx(ZephioRadio *radio, ZephioContext *ctx, int x, int y, int width, int height)
 {
     if (!radio) return TUI_ERR_MEMORY;
 
-    TuiResult res = tui_widget_init_ctx(&radio->base, x, y, width, height,
+    ZephioResult res = zephio_widget_init_ctx(&radio->base, x, y, width, height,
                                         &radio_vtable, ctx, NULL);
-    if (res != TUI_OK) return res;
+    if (res != ZEPHIO_OK) return res;
 
     radio->base.focusable = 1;
 
@@ -186,10 +186,10 @@ TuiResult tui_radio_init_ctx(TuiRadio *radio, TuiContext *ctx, int x, int y, int
     radio->on_change       = NULL;
     radio->user_data       = NULL;
 
-    return TUI_OK;
+    return ZEPHIO_OK;
 }
 
-TuiResult tui_radio_add_option(TuiRadio *radio, const char *option)
+ZephioResult zephio_radio_add_option(ZephioRadio *radio, const char *option)
 {
     if (!radio) return TUI_ERR_MEMORY;
 
@@ -210,10 +210,10 @@ TuiResult tui_radio_add_option(TuiRadio *radio, const char *option)
     radio->option_count++;
     radio->base.dirty = 1;
 
-    return TUI_OK;
+    return ZEPHIO_OK;
 }
 
-void tui_radio_remove_option(TuiRadio *radio, int index)
+void zephio_radio_remove_option(ZephioRadio *radio, int index)
 {
     if (!radio || index < 0 || index >= radio->option_count) return;
 
@@ -229,7 +229,7 @@ void tui_radio_remove_option(TuiRadio *radio, int index)
     radio->base.dirty = 1;
 }
 
-void tui_radio_clear(TuiRadio *radio)
+void zephio_radio_clear(ZephioRadio *radio)
 {
     if (!radio) return;
 
@@ -241,7 +241,7 @@ void tui_radio_clear(TuiRadio *radio)
     radio->base.dirty   = 1;
 }
 
-void tui_radio_set_selected(TuiRadio *radio, int index)
+void zephio_radio_set_selected(ZephioRadio *radio, int index)
 {
     if (!radio) return;
     if (index < 0) index = 0;
@@ -250,21 +250,21 @@ void tui_radio_set_selected(TuiRadio *radio, int index)
     radio->base.dirty = 1;
 }
 
-int tui_radio_get_selected(TuiRadio *radio)
+int zephio_radio_get_selected(ZephioRadio *radio)
 {
     if (!radio) return -1;
     return radio->selected;
 }
 
-const char *tui_radio_get_selected_option(TuiRadio *radio)
+const char *zephio_radio_get_selected_option(ZephioRadio *radio)
 {
     if (!radio || radio->option_count == 0) return NULL;
     return radio->options[radio->selected];
 }
 
-void tui_radio_set_colors(TuiRadio *radio,
-                          TuiColor fg, TuiColor bg,
-                          TuiColor fg_selected, TuiColor bg_selected)
+void zephio_radio_set_colors(ZephioRadio *radio,
+                          ZephioColor fg, ZephioColor bg,
+                          ZephioColor fg_selected, ZephioColor bg_selected)
 {
     if (!radio) return;
     radio->fg           = fg;
@@ -274,7 +274,7 @@ void tui_radio_set_colors(TuiRadio *radio,
     radio->base.dirty   = 1;
 }
 
-void tui_radio_set_on_change(TuiRadio *radio, TuiRadioCallback callback,
+void zephio_radio_set_on_change(ZephioRadio *radio, ZephioRadioCallback callback,
                              void *user_data)
 {
     if (!radio) return;

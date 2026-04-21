@@ -1,7 +1,7 @@
 #define _POSIX_C_SOURCE 200809L
 
-#include "tui_widget.h"
-#include "tui_context.h"
+#include "zephio_widget.h"
+#include "zephio_context.h"
 
 #include <stdlib.h>
 #include <string.h>
@@ -9,8 +9,8 @@
 #define CHILDREN_INITIAL_CAPACITY 8
 #define MAX_FOCUS_CHAIN 128
 
-TuiResult tui_widget_init_ctx(TuiWidget *widget, int x, int y, int width, int height,
-                              TuiWidgetVTable *vtable, struct TuiContext *ctx, void *data)
+ZephioResult zephio_widget_init_ctx(ZephioWidget *widget, int x, int y, int width, int height,
+                              ZephioWidgetVTable *vtable, struct ZephioContext *ctx, void *data)
 {
     if (!widget) return TUI_ERR_MEMORY;
     if (width <= 0 || height <= 0) return TUI_ERR_MEMORY;
@@ -44,15 +44,15 @@ TuiResult tui_widget_init_ctx(TuiWidget *widget, int x, int y, int width, int he
     widget->ctx    = ctx;
     widget->data   = data;
 
-    return TUI_OK;
+    return ZEPHIO_OK;
 }
 
-void tui_widget_destroy(TuiWidget *widget)
+void zephio_widget_destroy(ZephioWidget *widget)
 {
     if (!widget) return;
 
     for (int i = 0; i < widget->child_count; i++) {
-        tui_widget_destroy(widget->children[i]);
+        zephio_widget_destroy(widget->children[i]);
     }
 
     free(widget->children);
@@ -64,7 +64,7 @@ void tui_widget_destroy(TuiWidget *widget)
     }
 }
 
-TuiResult tui_widget_add_child(TuiWidget *parent, TuiWidget *child)
+ZephioResult zephio_widget_add_child(ZephioWidget *parent, ZephioWidget *child)
 {
     if (!parent || !child) return TUI_ERR_MEMORY;
 
@@ -73,8 +73,8 @@ TuiResult tui_widget_add_child(TuiWidget *parent, TuiWidget *child)
             ? CHILDREN_INITIAL_CAPACITY
             : parent->child_capacity * 2;
 
-        TuiWidget **new_children = (TuiWidget **)realloc(
-            parent->children, (size_t)new_cap * sizeof(TuiWidget *));
+        ZephioWidget **new_children = (ZephioWidget **)realloc(
+            parent->children, (size_t)new_cap * sizeof(ZephioWidget *));
         if (!new_children) return TUI_ERR_MEMORY;
 
         parent->children      = new_children;
@@ -92,10 +92,10 @@ TuiResult tui_widget_add_child(TuiWidget *parent, TuiWidget *child)
     parent->children[parent->child_count++] = child;
     parent->dirty = 1;
 
-    return TUI_OK;
+    return ZEPHIO_OK;
 }
 
-void tui_widget_remove_child(TuiWidget *parent, TuiWidget *child)
+void zephio_widget_remove_child(ZephioWidget *parent, ZephioWidget *child)
 {
     if (!parent || !child) return;
 
@@ -110,7 +110,7 @@ void tui_widget_remove_child(TuiWidget *parent, TuiWidget *child)
     if (idx < 0) return;
 
     if (child->focused) {
-        tui_widget_blur(child);
+        zephio_widget_blur(child);
     }
 
     if (parent->focused_child_idx == idx) {
@@ -120,21 +120,21 @@ void tui_widget_remove_child(TuiWidget *parent, TuiWidget *child)
     }
 
     memmove(&parent->children[idx], &parent->children[idx + 1],
-            (size_t)(parent->child_count - idx - 1) * sizeof(TuiWidget *));
+            (size_t)(parent->child_count - idx - 1) * sizeof(ZephioWidget *));
     parent->child_count--;
     parent->dirty = 1;
 
     child->parent = NULL;
 }
 
-void tui_widget_remove_all_children(TuiWidget *parent)
+void zephio_widget_remove_all_children(ZephioWidget *parent)
 {
     if (!parent) return;
 
     for (int i = 0; i < parent->child_count; i++) {
-        TuiWidget *child = parent->children[i];
+        ZephioWidget *child = parent->children[i];
         if (child->focused) {
-            tui_widget_blur(child);
+            zephio_widget_blur(child);
         }
         child->parent = NULL;
     }
@@ -144,7 +144,7 @@ void tui_widget_remove_all_children(TuiWidget *parent)
     parent->dirty             = 1;
 }
 
-static void compute_absolute_position(TuiWidget *widget)
+static void compute_absolute_position(ZephioWidget *widget)
 {
     if (widget->parent) {
         if (widget->parent->manages_children) {
@@ -158,7 +158,7 @@ static void compute_absolute_position(TuiWidget *widget)
     }
 }
 
-void tui_widget_render(TuiWidget *widget)
+void zephio_widget_render(ZephioWidget *widget)
 {
     if (!widget || !widget->visible) return;
 
@@ -171,19 +171,19 @@ void tui_widget_render(TuiWidget *widget)
 
     if (!widget->manages_children) {
         for (int i = 0; i < widget->child_count; i++) {
-            tui_widget_render(widget->children[i]);
+            zephio_widget_render(widget->children[i]);
         }
     }
 }
 
-int tui_widget_handle_input(TuiWidget *widget, const TuiEvent *event)
+int zephio_widget_handle_input(ZephioWidget *widget, const ZephioEvent *event)
 {
     if (!widget || !widget->visible) return 0;
 
     if (widget->focused_child_idx >= 0 &&
         widget->focused_child_idx < widget->child_count) {
-        TuiWidget *focused = widget->children[widget->focused_child_idx];
-        int handled = tui_widget_handle_input(focused, event);
+        ZephioWidget *focused = widget->children[widget->focused_child_idx];
+        int handled = zephio_widget_handle_input(focused, event);
         if (handled) return 1;
     }
 
@@ -194,10 +194,10 @@ int tui_widget_handle_input(TuiWidget *widget, const TuiEvent *event)
     return 0;
 }
 
-static void update_focused_child_chain(TuiWidget *widget, int child_idx)
+static void update_focused_child_chain(ZephioWidget *widget, int child_idx)
 {
-    TuiWidget *current = widget;
-    TuiWidget *parent  = current->parent;
+    ZephioWidget *current = widget;
+    ZephioWidget *parent  = current->parent;
     while (parent) {
         for (int i = 0; i < parent->child_count; i++) {
             if (parent->children[i] == current) {
@@ -210,17 +210,17 @@ static void update_focused_child_chain(TuiWidget *widget, int child_idx)
     }
 }
 
-void tui_widget_focus(TuiWidget *widget)
+void zephio_widget_focus(ZephioWidget *widget)
 {
     if (!widget || widget->focused || !widget->focusable) return;
 
-    TuiWidget *root = widget;
+    ZephioWidget *root = widget;
     while (root->parent)
         root = root->parent;
 
-    TuiWidget *old = tui_widget_get_focused(root);
+    ZephioWidget *old = zephio_widget_get_focused(root);
     if (old && old != widget)
-        tui_widget_blur(old);
+        zephio_widget_blur(old);
 
     widget->focused = 1;
     widget->dirty   = 1;
@@ -232,20 +232,20 @@ void tui_widget_focus(TuiWidget *widget)
     }
 }
 
-void tui_widget_blur(TuiWidget *widget)
+void zephio_widget_blur(ZephioWidget *widget)
 {
     if (!widget || !widget->focused) return;
 
     if (widget->focused_child_idx >= 0 &&
         widget->focused_child_idx < widget->child_count) {
-        tui_widget_blur(widget->children[widget->focused_child_idx]);
+        zephio_widget_blur(widget->children[widget->focused_child_idx]);
     }
 
     widget->focused = 0;
     widget->dirty   = 1;
 
-    TuiWidget *child  = widget;
-    TuiWidget *parent = child->parent;
+    ZephioWidget *child  = widget;
+    ZephioWidget *parent = child->parent;
     while (parent) {
         if (parent->focused_child_idx >= 0 &&
             parent->focused_child_idx < parent->child_count &&
@@ -261,12 +261,12 @@ void tui_widget_blur(TuiWidget *widget)
     }
 }
 
-static int collect_focusable_dfs(TuiWidget *root, TuiWidget **out, int max_count)
+static int collect_focusable_dfs(ZephioWidget *root, ZephioWidget **out, int max_count)
 {
     if (!root || !root->visible) return 0;
     int count = 0;
     for (int i = 0; i < root->child_count && count < max_count; i++) {
-        TuiWidget *child = root->children[i];
+        ZephioWidget *child = root->children[i];
         if (!child->visible) continue;
         if (child->focusable) {
             out[count++] = child;
@@ -276,11 +276,11 @@ static int collect_focusable_dfs(TuiWidget *root, TuiWidget **out, int max_count
     return count;
 }
 
-static void focus_by_offset(TuiWidget *root, int offset)
+static void focus_by_offset(ZephioWidget *root, int offset)
 {
     if (!root || root->child_count == 0) return;
 
-    TuiWidget *chain[MAX_FOCUS_CHAIN];
+    ZephioWidget *chain[MAX_FOCUS_CHAIN];
     int count = collect_focusable_dfs(root, chain, MAX_FOCUS_CHAIN);
     if (count == 0) return;
 
@@ -293,36 +293,36 @@ static void focus_by_offset(TuiWidget *root, int offset)
     }
 
     if (current_idx >= 0) {
-        tui_widget_blur(chain[current_idx]);
+        zephio_widget_blur(chain[current_idx]);
     }
 
     int target = (current_idx + offset + count) % count;
-    tui_widget_focus(chain[target]);
+    zephio_widget_focus(chain[target]);
 }
 
-void tui_widget_focus_next(TuiWidget *root)
+void zephio_widget_focus_next(ZephioWidget *root)
 {
     focus_by_offset(root, 1);
 }
 
-void tui_widget_focus_prev(TuiWidget *root)
+void zephio_widget_focus_prev(ZephioWidget *root)
 {
     focus_by_offset(root, -1);
 }
 
-TuiWidget *tui_widget_get_focused(TuiWidget *root)
+ZephioWidget *zephio_widget_get_focused(ZephioWidget *root)
 {
     if (!root) return NULL;
 
     if (root->focused_child_idx >= 0 &&
         root->focused_child_idx < root->child_count) {
-        return tui_widget_get_focused(root->children[root->focused_child_idx]);
+        return zephio_widget_get_focused(root->children[root->focused_child_idx]);
     }
 
     return root->focused ? root : NULL;
 }
 
-void tui_widget_set_visible(TuiWidget *widget, int visible)
+void zephio_widget_set_visible(ZephioWidget *widget, int visible)
 {
     if (!widget) return;
     if (widget->visible == visible) return;
@@ -331,7 +331,7 @@ void tui_widget_set_visible(TuiWidget *widget, int visible)
     widget->dirty   = 1;
 
     if (!visible && widget->focused) {
-        tui_widget_blur(widget);
+        zephio_widget_blur(widget);
     }
 
     if (widget->parent) {
@@ -339,50 +339,50 @@ void tui_widget_set_visible(TuiWidget *widget, int visible)
     }
 }
 
-void tui_widget_set_dirty(TuiWidget *widget)
+void zephio_widget_set_dirty(ZephioWidget *widget)
 {
     if (!widget) return;
     widget->dirty = 1;
 }
 
-void tui_widget_mark_dirty_recursive(TuiWidget *widget)
+void zephio_widget_mark_dirty_recursive(ZephioWidget *widget)
 {
     if (!widget) return;
     widget->dirty = 1;
     for (int i = 0; i < widget->child_count; i++) {
-        tui_widget_mark_dirty_recursive(widget->children[i]);
+        zephio_widget_mark_dirty_recursive(widget->children[i]);
     }
 }
 
-int tui_widget_is_dirty(TuiWidget *root)
+int zephio_widget_is_dirty(ZephioWidget *root)
 {
     if (!root) return 0;
     if (root->dirty) return 1;
     for (int i = 0; i < root->child_count; i++) {
-        if (tui_widget_is_dirty(root->children[i])) return 1;
+        if (zephio_widget_is_dirty(root->children[i])) return 1;
     }
     return 0;
 }
 
-void tui_widget_set_position(TuiWidget *widget, int x, int y)
+void zephio_widget_set_position(ZephioWidget *widget, int x, int y)
 {
     if (!widget) return;
     widget->x = x;
     widget->y = y;
     widget->dirty = 1;
-    tui_widget_mark_dirty_recursive(widget);
+    zephio_widget_mark_dirty_recursive(widget);
 }
 
-void tui_widget_set_size(TuiWidget *widget, int width, int height)
+void zephio_widget_set_size(ZephioWidget *widget, int width, int height)
 {
     if (!widget) return;
     widget->width  = width;
     widget->height = height;
     widget->dirty  = 1;
-    tui_widget_mark_dirty_recursive(widget);
+    zephio_widget_mark_dirty_recursive(widget);
 }
 
-void tui_widget_resize(TuiWidget *widget, int width, int height)
+void zephio_widget_resize(ZephioWidget *widget, int width, int height)
 {
     if (!widget) return;
 
@@ -394,10 +394,10 @@ void tui_widget_resize(TuiWidget *widget, int width, int height)
         widget->vtable->on_resize(widget, width, height);
     }
 
-    tui_widget_mark_dirty_recursive(widget);
+    zephio_widget_mark_dirty_recursive(widget);
 }
 
-int tui_widget_contains(TuiWidget *widget, int row, int col)
+int zephio_widget_contains(ZephioWidget *widget, int row, int col)
 {
     if (!widget) return 0;
     compute_absolute_position(widget);
@@ -405,50 +405,50 @@ int tui_widget_contains(TuiWidget *widget, int row, int col)
            col >= widget->abs_x && col < widget->abs_x + widget->width;
 }
 
-TuiWidget *tui_widget_find_at(TuiWidget *root, int row, int col)
+ZephioWidget *zephio_widget_find_at(ZephioWidget *root, int row, int col)
 {
     if (!root || !root->visible) return NULL;
 
-    if (!tui_widget_contains(root, row, col)) return NULL;
+    if (!zephio_widget_contains(root, row, col)) return NULL;
 
     for (int i = root->child_count - 1; i >= 0; i--) {
-        TuiWidget *found = tui_widget_find_at(root->children[i], row, col);
+        ZephioWidget *found = zephio_widget_find_at(root->children[i], row, col);
         if (found) return found;
     }
 
     return root;
 }
 
-void tui_widget_set_theme(TuiWidget *widget, const TuiTheme *theme)
+void zephio_widget_set_theme(ZephioWidget *widget, const ZephioTheme *theme)
 {
     if (!widget) return;
     widget->theme = theme;
     widget->dirty = 1;
     for (int i = 0; i < widget->child_count; i++) {
-        tui_widget_set_theme(widget->children[i], theme);
+        zephio_widget_set_theme(widget->children[i], theme);
     }
 }
 
-TuiStyle tui_widget_get_style(TuiWidget *widget)
+ZephioStyle zephio_widget_get_style(ZephioWidget *widget)
 {
     if (!widget || !widget->theme) {
         return ZEPHIO_STYLE_NONE;
     }
 
-    TuiWidgetState state = TUI_STATE_NORMAL;
+    ZephioWidgetState state = ZEPHIO_STATE_NORMAL;
 
     if (widget->disabled) {
-        state = TUI_STATE_DISABLED;
+        state = ZEPHIO_STATE_DISABLED;
     } else if (widget->focused) {
-        state = TUI_STATE_FOCUSED;
+        state = ZEPHIO_STATE_FOCUSED;
     } else if (widget->hovered) {
-        state = TUI_STATE_HOVER;
+        state = ZEPHIO_STATE_HOVER;
     }
 
     return widget->theme->styles[state];
 }
 
-void tui_widget_set_disabled(TuiWidget *widget, int disabled)
+void zephio_widget_set_disabled(ZephioWidget *widget, int disabled)
 {
     if (!widget) return;
     if (widget->disabled == disabled) return;
@@ -457,11 +457,11 @@ void tui_widget_set_disabled(TuiWidget *widget, int disabled)
     widget->dirty = 1;
 
     if (disabled && widget->focused) {
-        tui_widget_blur(widget);
+        zephio_widget_blur(widget);
     }
 }
 
-static void set_hovered_recursive(TuiWidget *widget, int hovered)
+static void set_hovered_recursive(ZephioWidget *widget, int hovered)
 {
     if (!widget) return;
     if (widget->hovered != hovered) {
@@ -473,7 +473,7 @@ static void set_hovered_recursive(TuiWidget *widget, int hovered)
     }
 }
 
-void tui_widget_set_hovered(TuiWidget *root, TuiWidget *widget)
+void zephio_widget_set_hovered(ZephioWidget *root, ZephioWidget *widget)
 {
     if (!root) return;
     set_hovered_recursive(root, 0);
@@ -482,37 +482,37 @@ void tui_widget_set_hovered(TuiWidget *root, TuiWidget *widget)
     }
 }
 
-TuiWidget *tui_widget_get_hovered(TuiWidget *root)
+ZephioWidget *zephio_widget_get_hovered(ZephioWidget *root)
 {
     if (!root) return NULL;
     if (root->hovered && root->child_count == 0) return root;
     for (int i = 0; i < root->child_count; i++) {
-        TuiWidget *found = tui_widget_get_hovered(root->children[i]);
+        ZephioWidget *found = zephio_widget_get_hovered(root->children[i]);
         if (found) return found;
     }
     if (root->hovered) return root;
     return NULL;
 }
 
-int tui_widget_handle_mouse(TuiWidget *root, const TuiMouseEvent *mouse)
+int zephio_widget_handle_mouse(ZephioWidget *root, const ZephioMouseEvent *mouse)
 {
     if (!root || !mouse) return 0;
 
-    TuiWidget *target = tui_widget_find_at(root, mouse->row, mouse->col);
+    ZephioWidget *target = zephio_widget_find_at(root, mouse->row, mouse->col);
 
-    if (mouse->action == TUI_MOUSE_MOTION) {
-        tui_widget_set_hovered(root, target);
+    if (mouse->action == ZEPHIO_MOUSE_MOTION) {
+        zephio_widget_set_hovered(root, target);
     }
 
     if (!target) return 0;
 
-    if (mouse->action == TUI_MOUSE_PRESS && mouse->button == TUI_MOUSE_BTN_LEFT) {
+    if (mouse->action == ZEPHIO_MOUSE_PRESS && mouse->button == ZEPHIO_MOUSE_BTN_LEFT) {
         if (target->focusable && !target->focused) {
-            tui_widget_focus(target);
+            zephio_widget_focus(target);
         }
     }
 
-    TuiWidget *w = target;
+    ZephioWidget *w = target;
     while (w) {
         if (w->vtable && w->vtable->handle_mouse) {
             int handled = w->vtable->handle_mouse(w, mouse);

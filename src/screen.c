@@ -1,15 +1,15 @@
 #define _POSIX_C_SOURCE 200809L
 
-#include "tui_screen.h"
-#include "tui_terminal.h"
-#include "tui_text.h"
-#include "tui_context.h"
+#include "zephio_screen.h"
+#include "zephio_terminal.h"
+#include "zephio_text.h"
+#include "zephio_context.h"
 
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
-static TuiCell DEFAULT_CELL;
+static ZephioCell DEFAULT_CELL;
 
 static int default_cell_ready = 0;
 
@@ -21,9 +21,9 @@ static void init_default_cell(void)
     DEFAULT_CELL.ch[2] = 0;
     DEFAULT_CELL.ch[3] = 0;
     DEFAULT_CELL.width = 1;
-    DEFAULT_CELL.fg.type = TUI_COLOR_TYPE_INDEX;
+    DEFAULT_CELL.fg.type = ZEPHIO_COLOR_TYPE_INDEX;
     DEFAULT_CELL.fg.index = 0;
-    DEFAULT_CELL.bg.type = TUI_COLOR_TYPE_INDEX;
+    DEFAULT_CELL.bg.type = ZEPHIO_COLOR_TYPE_INDEX;
     DEFAULT_CELL.bg.index = 0;
     DEFAULT_CELL.attr = 0;
     default_cell_ready = 1;
@@ -38,7 +38,7 @@ static int utf8_char_len(unsigned char c)
     return 1;
 }
 
-static void cell_set_char(TuiCell *cell, const char *ch)
+static void cell_set_char(ZephioCell *cell, const char *ch)
 {
     int len = utf8_char_len((unsigned char)ch[0]);
     memset(cell->ch, 0, 4);
@@ -53,33 +53,33 @@ static int cell_char_width(const char *ch, int len)
     return w > 0 ? w : 1;
 }
 
-static void clear_continuation(TuiScreen *screen, int row, int col)
+static void clear_continuation(ZephioScreen *screen, int row, int col)
 {
     if (row < 0 || row >= screen->rows) return;
     if (col < 0 || col >= screen->cols) return;
-    TuiCell *cell = &screen->back[row * screen->cols + col];
+    ZephioCell *cell = &screen->back[row * screen->cols + col];
     if (cell->width == 2 && col + 1 < screen->cols) {
-        TuiCell *cont = &screen->back[row * screen->cols + col + 1];
+        ZephioCell *cont = &screen->back[row * screen->cols + col + 1];
         if (cont->width == 0) {
             *cont = DEFAULT_CELL;
         }
     }
 }
 
-static void clear_leader(TuiScreen *screen, int row, int col)
+static void clear_leader(ZephioScreen *screen, int row, int col)
 {
     if (row < 0 || row >= screen->rows) return;
     if (col <= 0 || col >= screen->cols) return;
-    TuiCell *cell = &screen->back[row * screen->cols + col];
+    ZephioCell *cell = &screen->back[row * screen->cols + col];
     if (cell->width == 0) {
-        TuiCell *leader = &screen->back[row * screen->cols + col - 1];
+        ZephioCell *leader = &screen->back[row * screen->cols + col - 1];
         if (leader->width == 2) {
             *leader = DEFAULT_CELL;
         }
     }
 }
 
-static void clear_buffer(TuiCell *buf, int count)
+static void clear_buffer(ZephioCell *buf, int count)
 {
     init_default_cell();
     for (int i = 0; i < count; i++) {
@@ -87,27 +87,27 @@ static void clear_buffer(TuiCell *buf, int count)
     }
 }
 
-TuiResult tui_screen_init(TuiContext *ctx, int rows, int cols)
+ZephioResult zephio_screen_init(ZephioContext *ctx, int rows, int cols)
 {
     if (rows <= 0 || cols <= 0) {
         return TUI_ERR_MEMORY;
     }
 
-    TuiScreen *screen = &ctx->screen;
+    ZephioScreen *screen = &ctx->screen;
 
     if (screen->initialized) {
-        tui_screen_free(ctx);
+        zephio_screen_free(ctx);
     }
 
     int total = rows * cols;
-    size_t buf_size = (size_t)total * sizeof(TuiCell);
+    size_t buf_size = (size_t)total * sizeof(ZephioCell);
 
-    screen->front = (TuiCell *)malloc(buf_size);
+    screen->front = (ZephioCell *)malloc(buf_size);
     if (!screen->front) {
         return TUI_ERR_MEMORY;
     }
 
-    screen->back = (TuiCell *)malloc(buf_size);
+    screen->back = (ZephioCell *)malloc(buf_size);
     if (!screen->back) {
         free(screen->front);
         screen->front = NULL;
@@ -121,12 +121,12 @@ TuiResult tui_screen_init(TuiContext *ctx, int rows, int cols)
     screen->cols = cols;
     screen->initialized = 1;
 
-    return TUI_OK;
+    return ZEPHIO_OK;
 }
 
-void tui_screen_free(TuiContext *ctx)
+void zephio_screen_free(ZephioContext *ctx)
 {
-    TuiScreen *screen = &ctx->screen;
+    ZephioScreen *screen = &ctx->screen;
 
     if (!screen->initialized) {
         return;
@@ -142,12 +142,12 @@ void tui_screen_free(TuiContext *ctx)
     screen->initialized = 0;
 }
 
-TuiResult tui_screen_resize(TuiContext *ctx, int rows, int cols)
+ZephioResult zephio_screen_resize(ZephioContext *ctx, int rows, int cols)
 {
-    TuiScreen *screen = &ctx->screen;
+    ZephioScreen *screen = &ctx->screen;
 
     if (!screen->initialized) {
-        return tui_screen_init(ctx, rows, cols);
+        return zephio_screen_init(ctx, rows, cols);
     }
 
     if (rows <= 0 || cols <= 0) {
@@ -155,15 +155,15 @@ TuiResult tui_screen_resize(TuiContext *ctx, int rows, int cols)
     }
 
     if (rows == screen->rows && cols == screen->cols) {
-        return TUI_OK;
+        return ZEPHIO_OK;
     }
 
-    TuiCell *new_front = (TuiCell *)malloc((size_t)rows * (size_t)cols * sizeof(TuiCell));
+    ZephioCell *new_front = (ZephioCell *)malloc((size_t)rows * (size_t)cols * sizeof(ZephioCell));
     if (!new_front) {
         return TUI_ERR_MEMORY;
     }
 
-    TuiCell *new_back = (TuiCell *)malloc((size_t)rows * (size_t)cols * sizeof(TuiCell));
+    ZephioCell *new_back = (ZephioCell *)malloc((size_t)rows * (size_t)cols * sizeof(ZephioCell));
     if (!new_back) {
         free(new_front);
         return TUI_ERR_MEMORY;
@@ -176,13 +176,13 @@ TuiResult tui_screen_resize(TuiContext *ctx, int rows, int cols)
     int copy_cols = cols < screen->cols ? cols : screen->cols;
 
     for (int r = 0; r < copy_rows; r++) {
-        TuiCell *old_front_row = screen->front + r * screen->cols;
-        TuiCell *old_back_row = screen->back + r * screen->cols;
-        TuiCell *new_front_row = new_front + r * cols;
-        TuiCell *new_back_row = new_back + r * cols;
+        ZephioCell *old_front_row = screen->front + r * screen->cols;
+        ZephioCell *old_back_row = screen->back + r * screen->cols;
+        ZephioCell *new_front_row = new_front + r * cols;
+        ZephioCell *new_back_row = new_back + r * cols;
 
-        memcpy(new_front_row, old_front_row, (size_t)copy_cols * sizeof(TuiCell));
-        memcpy(new_back_row, old_back_row, (size_t)copy_cols * sizeof(TuiCell));
+        memcpy(new_front_row, old_front_row, (size_t)copy_cols * sizeof(ZephioCell));
+        memcpy(new_back_row, old_back_row, (size_t)copy_cols * sizeof(ZephioCell));
     }
 
     free(screen->front);
@@ -193,19 +193,19 @@ TuiResult tui_screen_resize(TuiContext *ctx, int rows, int cols)
     screen->rows = rows;
     screen->cols = cols;
 
-    return TUI_OK;
+    return ZEPHIO_OK;
 }
 
-void tui_screen_clear(TuiContext *ctx)
+void zephio_screen_clear(ZephioContext *ctx)
 {
-    TuiScreen *screen = &ctx->screen;
+    ZephioScreen *screen = &ctx->screen;
     if (!screen->initialized) return;
     clear_buffer(screen->back, screen->rows * screen->cols);
 }
 
-void tui_screen_set_cell(TuiContext *ctx, int row, int col, const char *ch, TuiColor fg, TuiColor bg, TuiAttr attr)
+void zephio_screen_set_cell(ZephioContext *ctx, int row, int col, const char *ch, ZephioColor fg, ZephioColor bg, ZephioAttr attr)
 {
-    TuiScreen *screen = &ctx->screen;
+    ZephioScreen *screen = &ctx->screen;
     if (!screen->initialized) return;
     if (row < 0 || row >= screen->rows) return;
     if (col < 0 || col >= screen->cols) return;
@@ -222,7 +222,7 @@ void tui_screen_set_cell(TuiContext *ctx, int row, int col, const char *ch, TuiC
         w = 1;
     }
 
-    TuiCell *cell = &screen->back[row * screen->cols + col];
+    ZephioCell *cell = &screen->back[row * screen->cols + col];
     cell_set_char(cell, ch);
     cell->fg = fg;
     cell->bg = bg;
@@ -230,7 +230,7 @@ void tui_screen_set_cell(TuiContext *ctx, int row, int col, const char *ch, TuiC
     cell->width = (uint8_t)w;
 
     if (w == 2 && col + 1 < screen->cols) {
-        TuiCell *cont = &screen->back[row * screen->cols + col + 1];
+        ZephioCell *cont = &screen->back[row * screen->cols + col + 1];
         clear_leader(screen, row, col + 1);
         clear_continuation(screen, row, col + 1);
         memset(cont->ch, 0, 4);
@@ -241,9 +241,9 @@ void tui_screen_set_cell(TuiContext *ctx, int row, int col, const char *ch, TuiC
     }
 }
 
-void tui_screen_write(TuiContext *ctx, int row, int col, const char *text, TuiColor fg, TuiColor bg, TuiAttr attr)
+void zephio_screen_write(ZephioContext *ctx, int row, int col, const char *text, ZephioColor fg, ZephioColor bg, ZephioAttr attr)
 {
-    TuiScreen *screen = &ctx->screen;
+    ZephioScreen *screen = &ctx->screen;
     if (!screen->initialized || !text) return;
 
     init_default_cell();
@@ -262,7 +262,7 @@ void tui_screen_write(TuiContext *ctx, int row, int col, const char *text, TuiCo
         if (c + w > screen->cols) break;
 
         if (row >= 0 && row < screen->rows && c >= 0) {
-            TuiCell *cell = &screen->back[row * screen->cols + c];
+            ZephioCell *cell = &screen->back[row * screen->cols + c];
             memset(cell->ch, 0, 4);
             memcpy(cell->ch, p, blen);
             cell->fg = fg;
@@ -271,7 +271,7 @@ void tui_screen_write(TuiContext *ctx, int row, int col, const char *text, TuiCo
             cell->width = (uint8_t)w;
 
             if (w == 2 && c + 1 < screen->cols) {
-                TuiCell *cont = &screen->back[row * screen->cols + c + 1];
+                ZephioCell *cont = &screen->back[row * screen->cols + c + 1];
                 clear_leader(screen, row, c + 1);
                 clear_continuation(screen, row, c + 1);
                 memset(cont->ch, 0, 4);
@@ -287,81 +287,81 @@ void tui_screen_write(TuiContext *ctx, int row, int col, const char *text, TuiCo
     }
 }
 
-void tui_screen_fill(TuiContext *ctx, int row, int col, int width, int height, const char *ch, TuiColor fg, TuiColor bg, TuiAttr attr)
+void zephio_screen_fill(ZephioContext *ctx, int row, int col, int width, int height, const char *ch, ZephioColor fg, ZephioColor bg, ZephioAttr attr)
 {
     if (!ctx->screen.initialized || !ch) return;
 
     for (int r = row; r < row + height; r++) {
         for (int c = col; c < col + width; c++) {
-            tui_screen_set_cell(ctx, r, c, ch, fg, bg, attr);
+            zephio_screen_set_cell(ctx, r, c, ch, fg, bg, attr);
         }
     }
 }
 
-void tui_screen_box_single(TuiContext *ctx, int row, int col, int width, int height, TuiColor fg, TuiColor bg, TuiAttr attr)
+void zephio_screen_box_single(ZephioContext *ctx, int row, int col, int width, int height, ZephioColor fg, ZephioColor bg, ZephioAttr attr)
 {
     if (!ctx->screen.initialized || width < 2 || height < 2) return;
 
-    tui_screen_set_cell(ctx, row, col, "\xe2\x94\x8c", fg, bg, attr);
-    tui_screen_set_cell(ctx, row, col + width - 1, "\xe2\x94\x90", fg, bg, attr);
-    tui_screen_set_cell(ctx, row + height - 1, col, "\xe2\x94\x94", fg, bg, attr);
-    tui_screen_set_cell(ctx, row + height - 1, col + width - 1, "\xe2\x94\x98", fg, bg, attr);
+    zephio_screen_set_cell(ctx, row, col, "\xe2\x94\x8c", fg, bg, attr);
+    zephio_screen_set_cell(ctx, row, col + width - 1, "\xe2\x94\x90", fg, bg, attr);
+    zephio_screen_set_cell(ctx, row + height - 1, col, "\xe2\x94\x94", fg, bg, attr);
+    zephio_screen_set_cell(ctx, row + height - 1, col + width - 1, "\xe2\x94\x98", fg, bg, attr);
 
     for (int c = col + 1; c < col + width - 1; c++) {
-        tui_screen_set_cell(ctx, row, c, "\xe2\x94\x80", fg, bg, attr);
-        tui_screen_set_cell(ctx, row + height - 1, c, "\xe2\x94\x80", fg, bg, attr);
+        zephio_screen_set_cell(ctx, row, c, "\xe2\x94\x80", fg, bg, attr);
+        zephio_screen_set_cell(ctx, row + height - 1, c, "\xe2\x94\x80", fg, bg, attr);
     }
 
     for (int r = row + 1; r < row + height - 1; r++) {
-        tui_screen_set_cell(ctx, r, col, "\xe2\x94\x82", fg, bg, attr);
-        tui_screen_set_cell(ctx, r, col + width - 1, "\xe2\x94\x82", fg, bg, attr);
+        zephio_screen_set_cell(ctx, r, col, "\xe2\x94\x82", fg, bg, attr);
+        zephio_screen_set_cell(ctx, r, col + width - 1, "\xe2\x94\x82", fg, bg, attr);
     }
 }
 
-void tui_screen_box_double(TuiContext *ctx, int row, int col, int width, int height, TuiColor fg, TuiColor bg, TuiAttr attr)
+void zephio_screen_box_double(ZephioContext *ctx, int row, int col, int width, int height, ZephioColor fg, ZephioColor bg, ZephioAttr attr)
 {
     if (!ctx->screen.initialized || width < 2 || height < 2) return;
 
-    tui_screen_set_cell(ctx, row, col, "\xe2\x95\x94", fg, bg, attr);
-    tui_screen_set_cell(ctx, row, col + width - 1, "\xe2\x95\x97", fg, bg, attr);
-    tui_screen_set_cell(ctx, row + height - 1, col, "\xe2\x95\x9a", fg, bg, attr);
-    tui_screen_set_cell(ctx, row + height - 1, col + width - 1, "\xe2\x95\x9d", fg, bg, attr);
+    zephio_screen_set_cell(ctx, row, col, "\xe2\x95\x94", fg, bg, attr);
+    zephio_screen_set_cell(ctx, row, col + width - 1, "\xe2\x95\x97", fg, bg, attr);
+    zephio_screen_set_cell(ctx, row + height - 1, col, "\xe2\x95\x9a", fg, bg, attr);
+    zephio_screen_set_cell(ctx, row + height - 1, col + width - 1, "\xe2\x95\x9d", fg, bg, attr);
 
     for (int c = col + 1; c < col + width - 1; c++) {
-        tui_screen_set_cell(ctx, row, c, "\xe2\x95\x90", fg, bg, attr);
-        tui_screen_set_cell(ctx, row + height - 1, c, "\xe2\x95\x90", fg, bg, attr);
+        zephio_screen_set_cell(ctx, row, c, "\xe2\x95\x90", fg, bg, attr);
+        zephio_screen_set_cell(ctx, row + height - 1, c, "\xe2\x95\x90", fg, bg, attr);
     }
 
     for (int r = row + 1; r < row + height - 1; r++) {
-        tui_screen_set_cell(ctx, r, col, "\xe2\x95\x91", fg, bg, attr);
-        tui_screen_set_cell(ctx, r, col + width - 1, "\xe2\x95\x91", fg, bg, attr);
+        zephio_screen_set_cell(ctx, r, col, "\xe2\x95\x91", fg, bg, attr);
+        zephio_screen_set_cell(ctx, r, col + width - 1, "\xe2\x95\x91", fg, bg, attr);
     }
 }
 
-void tui_screen_invert_cell(TuiContext *ctx, int row, int col)
+void zephio_screen_invert_cell(ZephioContext *ctx, int row, int col)
 {
-    TuiScreen *screen = &ctx->screen;
+    ZephioScreen *screen = &ctx->screen;
     if (!screen->initialized) return;
     if (row < 0 || row >= screen->rows) return;
     if (col < 0 || col >= screen->cols) return;
 
-    TuiCell *cell = &screen->back[row * screen->cols + col];
+    ZephioCell *cell = &screen->back[row * screen->cols + col];
 
     if (cell->width == 0 && col > 0) {
-        TuiCell *leader = &screen->back[row * screen->cols + col - 1];
+        ZephioCell *leader = &screen->back[row * screen->cols + col - 1];
         if (leader->width == 2) {
             cell = leader;
         }
     }
 
-    TuiColor tmp = cell->fg;
+    ZephioColor tmp = cell->fg;
     cell->fg = cell->bg;
     cell->bg = tmp;
 }
 
-TuiSize tui_screen_size(TuiContext *ctx)
+ZephioSize zephio_screen_size(ZephioContext *ctx)
 {
-    TuiSize s = {ctx->screen.rows, ctx->screen.cols};
+    ZephioSize s = {ctx->screen.rows, ctx->screen.cols};
     return s;
 }
 
@@ -436,9 +436,9 @@ static size_t emit_bg_rgb(char *buf, size_t pos, uint8_t r, uint8_t g, uint8_t b
     return pos;
 }
 
-void tui_screen_render(TuiContext *ctx)
+void zephio_screen_render(ZephioContext *ctx)
 {
-    TuiScreen *screen = &ctx->screen;
+    ZephioScreen *screen = &ctx->screen;
     Terminal *terminal = &ctx->terminal;
 
     if (!screen->initialized) return;
@@ -448,26 +448,26 @@ void tui_screen_render(TuiContext *ctx)
     int total = screen->rows * screen->cols;
 
     int cur_row = -1, cur_col = -1;
-    TuiColor cur_fg;
-    TuiColor cur_bg;
+    ZephioColor cur_fg;
+    ZephioColor cur_bg;
     memset(&cur_fg, 0, sizeof(cur_fg));
-    cur_fg.type = TUI_COLOR_TYPE_NONE;
+    cur_fg.type = ZEPHIO_COLOR_TYPE_NONE;
     memset(&cur_bg, 0, sizeof(cur_bg));
-    cur_bg.type = TUI_COLOR_TYPE_NONE;
+    cur_bg.type = ZEPHIO_COLOR_TYPE_NONE;
     uint16_t cur_attr = 0xFFFF;
 
     int use_truecolor = terminal->truecolor;
 
     for (int i = 0; i < total; i++) {
-        TuiCell *b = &screen->back[i];
+        ZephioCell *b = &screen->back[i];
 
         if (b->width == 0) continue;
 
-        TuiCell *f = &screen->front[i];
+        ZephioCell *f = &screen->front[i];
 
         if (b->ch[0] == f->ch[0] && b->ch[1] == f->ch[1] &&
             b->ch[2] == f->ch[2] && b->ch[3] == f->ch[3] &&
-            tui_color_eq(b->fg, f->fg) && tui_color_eq(b->bg, f->bg) &&
+            zephio_color_eq(b->fg, f->fg) && zephio_color_eq(b->bg, f->bg) &&
             b->attr == f->attr && b->width == f->width) continue;
 
         int row = i / screen->cols;
@@ -486,9 +486,9 @@ void tui_screen_render(TuiContext *ctx)
         if (b->attr != cur_attr) {
             memcpy(rbuf + rpos, "\033[0m", 4); rpos += 4;
             memset(&cur_fg, 0, sizeof(cur_fg));
-            cur_fg.type = TUI_COLOR_TYPE_NONE;
+            cur_fg.type = ZEPHIO_COLOR_TYPE_NONE;
             memset(&cur_bg, 0, sizeof(cur_bg));
-            cur_bg.type = TUI_COLOR_TYPE_NONE;
+            cur_bg.type = ZEPHIO_COLOR_TYPE_NONE;
             if (b->attr & ZEPHIO_ATTR_BOLD)          { memcpy(rbuf + rpos, "\033[1m", 4); rpos += 4; }
             if (b->attr & ZEPHIO_ATTR_DIM)           { memcpy(rbuf + rpos, "\033[2m", 4); rpos += 4; }
             if (b->attr & ZEPHIO_ATTR_ITALIC)        { memcpy(rbuf + rpos, "\033[3m", 4); rpos += 4; }
@@ -499,19 +499,19 @@ void tui_screen_render(TuiContext *ctx)
             cur_attr = b->attr;
         }
 
-        if (!tui_color_eq(b->fg, cur_fg)) {
-            if (use_truecolor && b->fg.type == TUI_COLOR_TYPE_RGB) {
+        if (!zephio_color_eq(b->fg, cur_fg)) {
+            if (use_truecolor && b->fg.type == ZEPHIO_COLOR_TYPE_RGB) {
                 rpos = emit_fg_rgb(rbuf, rpos, b->fg.rgb.r, b->fg.rgb.g, b->fg.rgb.b);
             } else {
-                rpos = emit_fg_256(rbuf, rpos, b->fg.type == TUI_COLOR_TYPE_INDEX ? b->fg.index : 0);
+                rpos = emit_fg_256(rbuf, rpos, b->fg.type == ZEPHIO_COLOR_TYPE_INDEX ? b->fg.index : 0);
             }
             cur_fg = b->fg;
         }
-        if (!tui_color_eq(b->bg, cur_bg)) {
-            if (use_truecolor && b->bg.type == TUI_COLOR_TYPE_RGB) {
+        if (!zephio_color_eq(b->bg, cur_bg)) {
+            if (use_truecolor && b->bg.type == ZEPHIO_COLOR_TYPE_RGB) {
                 rpos = emit_bg_rgb(rbuf, rpos, b->bg.rgb.r, b->bg.rgb.g, b->bg.rgb.b);
             } else {
-                rpos = emit_bg_256(rbuf, rpos, b->bg.type == TUI_COLOR_TYPE_INDEX ? b->bg.index : 0);
+                rpos = emit_bg_256(rbuf, rpos, b->bg.type == ZEPHIO_COLOR_TYPE_INDEX ? b->bg.index : 0);
             }
             cur_bg = b->bg;
         }
@@ -527,5 +527,5 @@ void tui_screen_render(TuiContext *ctx)
         terminal_write_seq(terminal, rbuf, rpos);
     }
 
-    memcpy(screen->front, screen->back, (size_t)total * sizeof(TuiCell));
+    memcpy(screen->front, screen->back, (size_t)total * sizeof(ZephioCell));
 }

@@ -1,8 +1,8 @@
 #define _POSIX_C_SOURCE 200809L
 
-#include "tui_textarea.h"
-#include "tui_context.h"
-#include "tui_text.h"
+#include "zephio_textarea.h"
+#include "zephio_context.h"
+#include "zephio_text.h"
 
 #include <stdlib.h>
 #include <string.h>
@@ -10,7 +10,7 @@
 #define LINES_INITIAL_CAPACITY 16
 #define RENDER_BUF_SIZE 4096
 
-static void textarea_free_lines(TuiTextArea *ta)
+static void textarea_free_lines(ZephioTextArea *ta)
 {
     if (!ta->lines) return;
     for (int i = 0; i < ta->line_count; i++) {
@@ -22,7 +22,7 @@ static void textarea_free_lines(TuiTextArea *ta)
     ta->line_capacity = 0;
 }
 
-static int textarea_ensure_capacity(TuiTextArea *ta, int needed)
+static int textarea_ensure_capacity(ZephioTextArea *ta, int needed)
 {
     if (needed <= ta->line_capacity) return 0;
     int new_cap = ta->line_capacity > 0 ? ta->line_capacity * 2 : LINES_INITIAL_CAPACITY;
@@ -34,7 +34,7 @@ static int textarea_ensure_capacity(TuiTextArea *ta, int needed)
     return 0;
 }
 
-static void textarea_insert_line_at(TuiTextArea *ta, int index, const char *text)
+static void textarea_insert_line_at(ZephioTextArea *ta, int index, const char *text)
 {
     if (textarea_ensure_capacity(ta, ta->line_count + 1) != 0) return;
     memmove(&ta->lines[index + 1], &ta->lines[index],
@@ -43,7 +43,7 @@ static void textarea_insert_line_at(TuiTextArea *ta, int index, const char *text
     ta->line_count++;
 }
 
-static void textarea_delete_line_at(TuiTextArea *ta, int index)
+static void textarea_delete_line_at(ZephioTextArea *ta, int index)
 {
     if (index < 0 || index >= ta->line_count) return;
     free(ta->lines[index]);
@@ -52,13 +52,13 @@ static void textarea_delete_line_at(TuiTextArea *ta, int index)
     ta->line_count--;
 }
 
-static inline int line_len(TuiTextArea *ta, int row)
+static inline int line_len(ZephioTextArea *ta, int row)
 {
     const char *l = ta->lines[row];
     return l ? (int)strlen(l) : 0;
 }
 
-static void textarea_ensure_cursor_visible(TuiTextArea *ta)
+static void textarea_ensure_cursor_visible(ZephioTextArea *ta)
 {
     if (ta->cursor_row < ta->scroll_y) {
         ta->scroll_y = ta->cursor_row;
@@ -68,7 +68,7 @@ static void textarea_ensure_cursor_visible(TuiTextArea *ta)
     }
 
     int ll = line_len(ta, ta->cursor_row);
-    int cursor_display = tui_text_index_to_col(ta->lines[ta->cursor_row],
+    int cursor_display = zephio_text_index_to_col(ta->lines[ta->cursor_row],
                                                 (size_t)ll, (size_t)ta->cursor_col);
 
     if (cursor_display < ta->scroll_x) {
@@ -79,28 +79,28 @@ static void textarea_ensure_cursor_visible(TuiTextArea *ta)
     }
 }
 
-static inline void cursor_moved(TuiTextArea *ta)
+static inline void cursor_moved(ZephioTextArea *ta)
 {
     textarea_ensure_cursor_visible(ta);
     ta->base.dirty = 1;
 }
 
-static void textarea_render(TuiWidget *widget)
+static void textarea_render(ZephioWidget *widget)
 {
-    TuiTextArea *ta = (TuiTextArea *)widget;
+    ZephioTextArea *ta = (ZephioTextArea *)widget;
 
-    TuiColor fg = ta->fg;
-    TuiColor bg = ta->bg;
-    TuiAttr attr = ta->attr;
+    ZephioColor fg = ta->fg;
+    ZephioColor bg = ta->bg;
+    ZephioAttr attr = ta->attr;
 
     if (widget->theme) {
-        TuiStyle style = tui_widget_get_style(widget);
+        ZephioStyle style = zephio_widget_get_style(widget);
         fg = style.fg;
         bg = style.bg;
         attr = style.attr;
     }
 
-    tui_screen_fill(widget->ctx, widget->abs_y, widget->abs_x,
+    zephio_screen_fill(widget->ctx, widget->abs_y, widget->abs_x,
                     widget->width, widget->height, " ", fg, bg, attr);
 
     char buf[RENDER_BUF_SIZE];
@@ -116,12 +116,12 @@ static void textarea_render(TuiWidget *widget)
 
         const char *line = ta->lines[line_idx];
 
-        int skip_bytes = tui_text_col_to_index(line, (size_t)ll, ta->scroll_x);
+        int skip_bytes = zephio_text_col_to_index(line, (size_t)ll, ta->scroll_x);
         int remaining = ll - skip_bytes;
         if (remaining <= 0) continue;
 
         size_t visible_bytes;
-        tui_text_clip(line + skip_bytes, (size_t)remaining,
+        zephio_text_clip(line + skip_bytes, (size_t)remaining,
                       vp_width, &visible_bytes);
 
         if (visible_bytes > 0) {
@@ -129,7 +129,7 @@ static void textarea_render(TuiWidget *widget)
                           ? visible_bytes : sizeof(buf) - 1;
             memcpy(buf, line + skip_bytes, copy);
             buf[copy] = '\0';
-            tui_screen_write(widget->ctx, widget->abs_y + r, widget->abs_x,
+            zephio_screen_write(widget->ctx, widget->abs_y + r, widget->abs_x,
                              buf, fg, bg, attr);
         }
     }
@@ -138,32 +138,32 @@ static void textarea_render(TuiWidget *widget)
         int cursor_screen_row = ta->cursor_row - ta->scroll_y;
         if (cursor_screen_row >= 0 && cursor_screen_row < vp_height) {
             int ll = line_len(ta, ta->cursor_row);
-            int cursor_display = tui_text_index_to_col(ta->lines[ta->cursor_row],
+            int cursor_display = zephio_text_index_to_col(ta->lines[ta->cursor_row],
                                                         (size_t)ll, (size_t)ta->cursor_col);
             int screen_col = cursor_display - ta->scroll_x;
             if (screen_col >= 0 && screen_col < vp_width) {
-                tui_screen_invert_cell(widget->ctx, widget->abs_y + cursor_screen_row,
+                zephio_screen_invert_cell(widget->ctx, widget->abs_y + cursor_screen_row,
                                        widget->abs_x + screen_col);
             }
         }
     }
 }
 
-static int textarea_get_display_col(TuiTextArea *ta)
+static int textarea_get_display_col(ZephioTextArea *ta)
 {
     int ll = line_len(ta, ta->cursor_row);
-    return tui_text_index_to_col(ta->lines[ta->cursor_row],
+    return zephio_text_index_to_col(ta->lines[ta->cursor_row],
                                   (size_t)ll, (size_t)ta->cursor_col);
 }
 
-static void textarea_set_cursor_to_display_col(TuiTextArea *ta, int display_col)
+static void textarea_set_cursor_to_display_col(ZephioTextArea *ta, int display_col)
 {
     int ll = line_len(ta, ta->cursor_row);
-    ta->cursor_col = tui_text_col_to_index(ta->lines[ta->cursor_row],
+    ta->cursor_col = zephio_text_col_to_index(ta->lines[ta->cursor_row],
                                             (size_t)ll, display_col);
 }
 
-static void move_vertical(TuiTextArea *ta, int dir)
+static void move_vertical(ZephioTextArea *ta, int dir)
 {
     int target = ta->cursor_row + dir;
     if (target < 0 || target >= ta->line_count) return;
@@ -187,7 +187,7 @@ static int utf8_backward_bytes(const char *line, int cursor_col)
     return back;
 }
 
-static void merge_lines(TuiTextArea *ta, int upper_row, int lower_row, int upper_keep_len)
+static void merge_lines(ZephioTextArea *ta, int upper_row, int lower_row, int upper_keep_len)
 {
     char *upper = ta->lines[upper_row];
     char *lower = ta->lines[lower_row];
@@ -202,20 +202,20 @@ static void merge_lines(TuiTextArea *ta, int upper_row, int lower_row, int upper
     textarea_delete_line_at(ta, lower_row);
 }
 
-static int textarea_handle_input(TuiWidget *widget, const TuiEvent *event)
+static int textarea_handle_input(ZephioWidget *widget, const ZephioEvent *event)
 {
-    TuiTextArea *ta = (TuiTextArea *)widget;
+    ZephioTextArea *ta = (ZephioTextArea *)widget;
 
     switch (event->key) {
-    case TUI_KEY_UP:
+    case ZEPHIO_KEY_UP:
         move_vertical(ta, -1);
         return 1;
 
-    case TUI_KEY_DOWN:
+    case ZEPHIO_KEY_DOWN:
         move_vertical(ta, 1);
         return 1;
 
-    case TUI_KEY_LEFT:
+    case ZEPHIO_KEY_LEFT:
         ta->has_preferred_col = 0;
         if (ta->cursor_col > 0) {
             ta->cursor_col -= utf8_backward_bytes(ta->lines[ta->cursor_row], ta->cursor_col);
@@ -227,7 +227,7 @@ static int textarea_handle_input(TuiWidget *widget, const TuiEvent *event)
         }
         return 1;
 
-    case TUI_KEY_RIGHT:
+    case ZEPHIO_KEY_RIGHT:
         ta->has_preferred_col = 0;
         {
             int ll = line_len(ta, ta->cursor_row);
@@ -244,25 +244,25 @@ static int textarea_handle_input(TuiWidget *widget, const TuiEvent *event)
         }
         return 1;
 
-    case TUI_KEY_HOME:
+    case ZEPHIO_KEY_HOME:
         ta->has_preferred_col = 0;
         ta->cursor_col = 0;
         ta->scroll_x = 0;
         cursor_moved(ta);
         return 1;
 
-    case TUI_KEY_END:
+    case ZEPHIO_KEY_END:
         ta->has_preferred_col = 0;
         ta->cursor_col = line_len(ta, ta->cursor_row);
         cursor_moved(ta);
         return 1;
 
-    case TUI_KEY_PAGE_UP:
-    case TUI_KEY_PAGE_DOWN:
+    case ZEPHIO_KEY_PAGE_UP:
+    case ZEPHIO_KEY_PAGE_DOWN:
         ta->has_preferred_col = 0;
         {
             int jump = widget->height > 1 ? widget->height - 1 : 1;
-            if (event->key == TUI_KEY_PAGE_UP) {
+            if (event->key == ZEPHIO_KEY_PAGE_UP) {
                 ta->cursor_row -= jump;
                 if (ta->cursor_row < 0) ta->cursor_row = 0;
             } else {
@@ -276,7 +276,7 @@ static int textarea_handle_input(TuiWidget *widget, const TuiEvent *event)
         }
         return 1;
 
-    case TUI_KEY_BACKSPACE:
+    case ZEPHIO_KEY_BACKSPACE:
         ta->has_preferred_col = 0;
         if (ta->cursor_col > 0) {
             char *line = ta->lines[ta->cursor_row];
@@ -296,7 +296,7 @@ static int textarea_handle_input(TuiWidget *widget, const TuiEvent *event)
         }
         return 1;
 
-    case TUI_KEY_DELETE:
+    case ZEPHIO_KEY_DELETE:
         ta->has_preferred_col = 0;
         {
             int ll = line_len(ta, ta->cursor_row);
@@ -316,7 +316,7 @@ static int textarea_handle_input(TuiWidget *widget, const TuiEvent *event)
         textarea_ensure_cursor_visible(ta);
         return 1;
 
-    case TUI_KEY_ENTER:
+    case ZEPHIO_KEY_ENTER:
         ta->has_preferred_col = 0;
         {
             char *old_line = ta->lines[ta->cursor_row];
@@ -341,7 +341,7 @@ static int textarea_handle_input(TuiWidget *widget, const TuiEvent *event)
         break;
     }
 
-    if (event->codepoint >= 32 && event->key == TUI_KEY_UNKNOWN) {
+    if (event->codepoint >= 32 && event->key == ZEPHIO_KEY_UNKNOWN) {
         ta->has_preferred_col = 0;
         char enc[4];
         int char_len = tui_utf8_encode(event->codepoint, enc, sizeof(enc));
@@ -368,11 +368,11 @@ static int textarea_handle_input(TuiWidget *widget, const TuiEvent *event)
     return 0;
 }
 
-static int textarea_handle_mouse(TuiWidget *widget, const TuiMouseEvent *mouse)
+static int textarea_handle_mouse(ZephioWidget *widget, const ZephioMouseEvent *mouse)
 {
-    TuiTextArea *ta = (TuiTextArea *)widget;
+    ZephioTextArea *ta = (ZephioTextArea *)widget;
 
-    if (mouse->action == TUI_MOUSE_PRESS && mouse->button == TUI_MOUSE_BTN_LEFT) {
+    if (mouse->action == ZEPHIO_MOUSE_PRESS && mouse->button == ZEPHIO_MOUSE_BTN_LEFT) {
         int rel_row = mouse->row - widget->abs_y;
         int rel_col = mouse->col - widget->abs_x;
 
@@ -385,7 +385,7 @@ static int textarea_handle_mouse(TuiWidget *widget, const TuiMouseEvent *mouse)
             ta->cursor_row = target_row;
             int display_col = ta->scroll_x + rel_col;
             int ll = line_len(ta, ta->cursor_row);
-            ta->cursor_col = tui_text_col_to_index(ta->lines[ta->cursor_row],
+            ta->cursor_col = zephio_text_col_to_index(ta->lines[ta->cursor_row],
                                                     (size_t)ll, display_col);
 
             ta->has_preferred_col = 0;
@@ -394,7 +394,7 @@ static int textarea_handle_mouse(TuiWidget *widget, const TuiMouseEvent *mouse)
         return 1;
     }
 
-    if (mouse->action == TUI_MOUSE_WHEEL_UP) {
+    if (mouse->action == ZEPHIO_MOUSE_WHEEL_UP) {
         if (ta->scroll_y > 0) {
             ta->scroll_y -= 3;
             if (ta->scroll_y < 0) ta->scroll_y = 0;
@@ -403,7 +403,7 @@ static int textarea_handle_mouse(TuiWidget *widget, const TuiMouseEvent *mouse)
         return 1;
     }
 
-    if (mouse->action == TUI_MOUSE_WHEEL_DOWN) {
+    if (mouse->action == ZEPHIO_MOUSE_WHEEL_DOWN) {
         int max_scroll = ta->line_count - widget->height;
         if (max_scroll < 0) max_scroll = 0;
         if (ta->scroll_y < max_scroll) {
@@ -417,13 +417,13 @@ static int textarea_handle_mouse(TuiWidget *widget, const TuiMouseEvent *mouse)
     return 0;
 }
 
-static void textarea_destroy(TuiWidget *widget)
+static void textarea_destroy(ZephioWidget *widget)
 {
-    TuiTextArea *ta = (TuiTextArea *)widget;
+    ZephioTextArea *ta = (ZephioTextArea *)widget;
     textarea_free_lines(ta);
 }
 
-static TuiWidgetVTable textarea_vtable = {
+static ZephioWidgetVTable textarea_vtable = {
     .render       = textarea_render,
     .handle_input = textarea_handle_input,
     .handle_mouse = textarea_handle_mouse,
@@ -433,14 +433,14 @@ static TuiWidgetVTable textarea_vtable = {
     .on_blur      = NULL
 };
 
-TuiResult tui_textarea_init_ctx(TuiTextArea *ta, TuiContext *ctx, int x, int y,
+ZephioResult zephio_textarea_init_ctx(ZephioTextArea *ta, ZephioContext *ctx, int x, int y,
                                   int width, int height)
 {
     if (!ta) return TUI_ERR_MEMORY;
 
-    TuiResult res = tui_widget_init_ctx(&ta->base, x, y, width, height,
+    ZephioResult res = zephio_widget_init_ctx(&ta->base, x, y, width, height,
                                         &textarea_vtable, ctx, NULL);
-    if (res != TUI_OK) return res;
+    if (res != ZEPHIO_OK) return res;
 
     ta->base.focusable = 1;
 
@@ -465,10 +465,10 @@ TuiResult tui_textarea_init_ctx(TuiTextArea *ta, TuiContext *ctx, int x, int y,
     ta->bg   = ZEPHIO_COLOR_INDEX(234);
     ta->attr = ZEPHIO_ATTR_NONE;
 
-    return TUI_OK;
+    return ZEPHIO_OK;
 }
 
-void tui_textarea_set_text(TuiTextArea *ta, const char *text)
+void zephio_textarea_set_text(ZephioTextArea *ta, const char *text)
 {
     if (!ta) return;
     textarea_free_lines(ta);
@@ -526,7 +526,7 @@ void tui_textarea_set_text(TuiTextArea *ta, const char *text)
     ta->base.dirty = 1;
 }
 
-char *tui_textarea_get_text(TuiTextArea *ta)
+char *zephio_textarea_get_text(ZephioTextArea *ta)
 {
     if (!ta || !ta->lines) return strdup("");
 
@@ -551,8 +551,8 @@ char *tui_textarea_get_text(TuiTextArea *ta)
     return result;
 }
 
-void tui_textarea_set_colors(TuiTextArea *ta, TuiColor fg, TuiColor bg,
-                              TuiAttr attr)
+void zephio_textarea_set_colors(ZephioTextArea *ta, ZephioColor fg, ZephioColor bg,
+                              ZephioAttr attr)
 {
     if (!ta) return;
     ta->fg = fg;
@@ -561,25 +561,25 @@ void tui_textarea_set_colors(TuiTextArea *ta, TuiColor fg, TuiColor bg,
     ta->base.dirty = 1;
 }
 
-int tui_textarea_get_cursor_row(TuiTextArea *ta)
+int zephio_textarea_get_cursor_row(ZephioTextArea *ta)
 {
     if (!ta) return 0;
     return ta->cursor_row;
 }
 
-int tui_textarea_get_cursor_col(TuiTextArea *ta)
+int zephio_textarea_get_cursor_col(ZephioTextArea *ta)
 {
     if (!ta) return 0;
     return ta->cursor_col;
 }
 
-int tui_textarea_get_scroll_y(TuiTextArea *ta)
+int zephio_textarea_get_scroll_y(ZephioTextArea *ta)
 {
     if (!ta) return 0;
     return ta->scroll_y;
 }
 
-int tui_textarea_get_line_count(TuiTextArea *ta)
+int zephio_textarea_get_line_count(ZephioTextArea *ta)
 {
     if (!ta) return 0;
     return ta->line_count;

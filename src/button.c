@@ -1,21 +1,21 @@
 #define _POSIX_C_SOURCE 200809L
 
-#include "tui_button.h"
-#include "tui_context.h"
+#include "zephio_button.h"
+#include "zephio_context.h"
 
 #include <stdlib.h>
 #include <string.h>
 
-static void button_render(TuiWidget *widget)
+static void button_render(ZephioWidget *widget)
 {
-    TuiButton *button = (TuiButton *)widget;
+    ZephioButton *button = (ZephioButton *)widget;
 
-    TuiColor fg;
-    TuiColor bg;
-    TuiAttr attr;
+    ZephioColor fg;
+    ZephioColor bg;
+    ZephioAttr attr;
 
     if (widget->theme) {
-        TuiStyle style = tui_widget_get_style(widget);
+        ZephioStyle style = zephio_widget_get_style(widget);
         fg   = style.fg;
         bg   = style.bg;
         attr = style.attr;
@@ -31,7 +31,7 @@ static void button_render(TuiWidget *widget)
         }
     }
 
-    tui_screen_fill(widget->ctx, widget->abs_y, widget->abs_x,
+    zephio_screen_fill(widget->ctx, widget->abs_y, widget->abs_x,
                     widget->width, widget->height, " ", fg, bg, attr);
 
     if (button->text) {
@@ -46,16 +46,16 @@ static void button_render(TuiWidget *widget)
         memcpy(buf, button->text, (size_t)copy_len);
         buf[copy_len] = '\0';
 
-        tui_screen_write(widget->ctx, widget->abs_y + widget->height / 2, col,
+        zephio_screen_write(widget->ctx, widget->abs_y + widget->height / 2, col,
                          buf, fg, bg, attr);
     }
 }
 
-static int button_handle_input(TuiWidget *widget, const TuiEvent *event)
+static int button_handle_input(ZephioWidget *widget, const ZephioEvent *event)
 {
-    TuiButton *button = (TuiButton *)widget;
+    ZephioButton *button = (ZephioButton *)widget;
 
-    if (event->key == TUI_KEY_ENTER || event->codepoint == ' ') {
+    if (event->key == ZEPHIO_KEY_ENTER || event->codepoint == ' ') {
         if (button->on_click) {
             button->on_click(widget, button->user_data);
         }
@@ -65,11 +65,11 @@ static int button_handle_input(TuiWidget *widget, const TuiEvent *event)
     return 0;
 }
 
-static int button_handle_mouse(TuiWidget *widget, const TuiMouseEvent *mouse)
+static int button_handle_mouse(ZephioWidget *widget, const ZephioMouseEvent *mouse)
 {
-    TuiButton *button = (TuiButton *)widget;
+    ZephioButton *button = (ZephioButton *)widget;
 
-    if (mouse->action == TUI_MOUSE_PRESS && mouse->button == TUI_MOUSE_BTN_LEFT) {
+    if (mouse->action == ZEPHIO_MOUSE_PRESS && mouse->button == ZEPHIO_MOUSE_BTN_LEFT) {
         if (button->on_click) {
             button->on_click(widget, button->user_data);
         }
@@ -79,14 +79,14 @@ static int button_handle_mouse(TuiWidget *widget, const TuiMouseEvent *mouse)
     return 0;
 }
 
-static void button_destroy(TuiWidget *widget)
+static void button_destroy(ZephioWidget *widget)
 {
-    TuiButton *button = (TuiButton *)widget;
+    ZephioButton *button = (ZephioButton *)widget;
     free(button->text);
     button->text = NULL;
 }
 
-static TuiWidgetVTable button_vtable = {
+static ZephioWidgetVTable button_vtable = {
     .render       = button_render,
     .handle_input = button_handle_input,
     .handle_mouse = button_handle_mouse,
@@ -96,14 +96,14 @@ static TuiWidgetVTable button_vtable = {
     .on_blur      = NULL
 };
 
-TuiResult tui_button_init_ctx(TuiButton *button, TuiContext *ctx, int x, int y, int width, int height,
+ZephioResult zephio_button_init_ctx(ZephioButton *button, ZephioContext *ctx, int x, int y, int width, int height,
                               const char *text)
 {
     if (!button) return TUI_ERR_MEMORY;
 
-    TuiResult res = tui_widget_init_ctx(&button->base, x, y, width, height,
+    ZephioResult res = zephio_widget_init_ctx(&button->base, x, y, width, height,
                                         &button_vtable, ctx, NULL);
-    if (res != TUI_OK) return res;
+    if (res != ZEPHIO_OK) return res;
 
     button->base.focusable = 1;
 
@@ -122,10 +122,10 @@ TuiResult tui_button_init_ctx(TuiButton *button, TuiContext *ctx, int x, int y, 
         button->text = NULL;
     }
 
-    return TUI_OK;
+    return ZEPHIO_OK;
 }
 
-void tui_button_set_text(TuiButton *button, const char *text)
+void zephio_button_set_text(ZephioButton *button, const char *text)
 {
     if (!button) return;
     free(button->text);
@@ -133,8 +133,8 @@ void tui_button_set_text(TuiButton *button, const char *text)
     button->base.dirty = 1;
 }
 
-void tui_button_set_colors(TuiButton *button, TuiColor fg, TuiColor bg,
-                           TuiColor fg_focused, TuiColor bg_focused)
+void zephio_button_set_colors(ZephioButton *button, ZephioColor fg, ZephioColor bg,
+                           ZephioColor fg_focused, ZephioColor bg_focused)
 {
     if (!button) return;
     button->fg          = fg;
@@ -144,7 +144,7 @@ void tui_button_set_colors(TuiButton *button, TuiColor fg, TuiColor bg,
     button->base.dirty  = 1;
 }
 
-void tui_button_set_on_click(TuiButton *button, TuiButtonCallback callback,
+void zephio_button_set_on_click(ZephioButton *button, ZephioButtonCallback callback,
                              void *user_data)
 {
     if (!button) return;

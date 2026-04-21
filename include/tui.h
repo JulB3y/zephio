@@ -2,12 +2,12 @@
  * @file tui.h
  * @brief Core initialization and terminal lifecycle.
  *
- * This is the primary entry point for the TUI framework. Call tui_init()
- * before using any other API. Call tui_shutdown() when done to restore
+ * This is the primary entry point for the TUI framework. Call zephio_init()
+ * before using any other API. Call zephio_shutdown() when done to restore
  * the terminal to its original state.
  *
  * All other headers are self-contained and can be included independently,
- * but tui_init() must be called first.
+ * but zephio_init() must be called first.
  */
 
 #ifndef ZEPHIO_H
@@ -16,7 +16,7 @@
 #include <stddef.h>
 #include <stdint.h>
 
-typedef struct TuiContext TuiContext;
+typedef struct ZephioContext ZephioContext;
 
 /**
  * @brief Terminal dimensions (rows x cols).
@@ -24,22 +24,22 @@ typedef struct TuiContext TuiContext;
 typedef struct {
     int rows;
     int cols;
-} TuiSize;
+} ZephioSize;
 
 /**
  * @brief Framework return codes.
  *
- * All public API functions return TuiResult. TUI_OK (0) indicates success;
+ * All public API functions return ZephioResult. ZEPHIO_OK (0) indicates success;
  * any other value indicates an error.
  */
 typedef enum {
-    TUI_OK = 0,
+    ZEPHIO_OK = 0,
     TUI_ERR_IOCTL,
     TUI_ERR_TCGETATTR,
     TUI_ERR_TCSETATTR,
     TUI_ERR_WRITE,
     TUI_ERR_MEMORY
-} TuiResult;
+} ZephioResult;
 
 /**
  * @brief Initialize the TUI framework.
@@ -48,9 +48,9 @@ typedef enum {
  * the cursor, registers atexit() cleanup and signal handlers (SIGINT,
  * SIGTERM, SIGQUIT). Must be called before any other TUI function.
  *
- * @return TUI_OK on success, or TUI_ERR_* on failure.
+ * @return ZEPHIO_OK on success, or TUI_ERR_* on failure.
  */
-TuiResult tui_init(TuiContext *ctx);
+ZephioResult zephio_init(ZephioContext *ctx);
 
 /**
  * @brief Shut down the TUI framework.
@@ -59,14 +59,14 @@ TuiResult tui_init(TuiContext *ctx);
  * the cursor, disables raw mode, disables mouse tracking. Safe to call
  * multiple times.
  */
-void tui_shutdown(TuiContext *ctx);
+void zephio_shutdown(ZephioContext *ctx);
 
 /**
  * @brief Query the current terminal size.
  *
  * @param[out] size  Populated with rows and cols on success.
- * @return TUI_OK on success, or TUI_ERR_IOCTL on failure.
+ * @return ZEPHIO_OK on success, or TUI_ERR_IOCTL on failure.
  */
-TuiResult tui_get_size(TuiContext *ctx, TuiSize *size);
+ZephioResult zephio_get_size(ZephioContext *ctx, ZephioSize *size);
 
 #endif

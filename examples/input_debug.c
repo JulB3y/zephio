@@ -1,9 +1,9 @@
 #define _POSIX_C_SOURCE 200809L
 
 #include "tui.h"
-#include "tui_terminal.h"
-#include "tui_ansi.h"
-#include "tui_input.h"
+#include "zephio_terminal.h"
+#include "zephio_ansi.h"
+#include "zephio_input.h"
 
 #include <stdio.h>
 #include <string.h>
@@ -26,7 +26,7 @@ static void log_event(const char *msg)
     }
 }
 
-static void draw(TuiContext *ctx, int rows, int cols)
+static void draw(ZephioContext *ctx, int rows, int cols)
 {
     ansi_clear_screen(ctx);
 
@@ -60,24 +60,24 @@ static void draw(TuiContext *ctx, int rows, int cols)
     ansi_reset(ctx);
 }
 
-static int input_callback(const TuiEvent *event, void *user_data)
+static int input_callback(const ZephioEvent *event, void *user_data)
 {
-    TuiContext *ctx = (TuiContext *)user_data;
+    ZephioContext *ctx = (ZephioContext *)user_data;
     char buf[80];
 
-    if (event->key == TUI_EVENT_RESIZE) {
+    if (event->key == ZEPHIO_EVENT_RESIZE) {
         snprintf(buf, sizeof(buf), "[Resize] %dx%d", event->size.cols, event->size.rows);
         log_event(buf);
 
-        TuiSize size = tui_screen_size(ctx);
+        ZephioSize size = zephio_screen_size(ctx);
         draw(ctx, size.rows, size.cols);
         return 0;
     }
 
-    const char *mod = tui_modifier_name(event->modifiers);
-    const char *key_name = tui_key_name(event->key);
+    const char *mod = zephio_modifier_name(event->modifiers);
+    const char *key_name = zephio_key_name(event->key);
 
-    if (event->codepoint > 0 && event->key == TUI_KEY_UNKNOWN) {
+    if (event->codepoint > 0 && event->key == ZEPHIO_KEY_UNKNOWN) {
         if (event->codepoint >= 0x20 && event->codepoint < 0x7F) {
             snprintf(buf, sizeof(buf), "[%s'%c' U+%04X]", mod, (char)event->codepoint, event->codepoint);
         } else {
@@ -89,14 +89,14 @@ static int input_callback(const TuiEvent *event, void *user_data)
 
     log_event(buf);
 
-    if (event->key == TUI_KEY_CTRL_C || event->key == TUI_KEY_ESCAPE) {
+    if (event->key == ZEPHIO_KEY_CTRL_C || event->key == ZEPHIO_KEY_ESCAPE) {
         return 1;
     }
-    if (event->codepoint == 'q' && event->modifiers == TUI_MOD_NONE) {
+    if (event->codepoint == 'q' && event->modifiers == ZEPHIO_MOD_NONE) {
         return 1;
     }
 
-    TuiSize size = tui_screen_size(ctx);
+    ZephioSize size = zephio_screen_size(ctx);
     draw(ctx, size.rows, size.cols);
 
     return 0;
@@ -104,22 +104,22 @@ static int input_callback(const TuiEvent *event, void *user_data)
 
 int main(void)
 {
-    TuiContext ctx;
+    ZephioContext ctx;
 
-    TuiResult res = tui_init(&ctx);
-    if (res != TUI_OK) {
-        fprintf(stderr, "tui_init failed: %d\n", res);
+    ZephioResult res = zephio_init(&ctx);
+    if (res != ZEPHIO_OK) {
+        fprintf(stderr, "zephio_init failed: %d\n", res);
         return 1;
     }
 
-    tui_input_init(&ctx);
+    zephio_input_init(&ctx);
 
-    TuiSize size = tui_screen_size(&ctx);
+    ZephioSize size = zephio_screen_size(&ctx);
     draw(&ctx, size.rows, size.cols);
 
-    tui_input_loop(&ctx, input_callback, &ctx);
+    zephio_input_loop(&ctx, input_callback, &ctx);
 
-    tui_input_shutdown(&ctx);
-    tui_shutdown(&ctx);
+    zephio_input_shutdown(&ctx);
+    zephio_shutdown(&ctx);
     return 0;
 }
