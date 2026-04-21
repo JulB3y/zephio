@@ -19,6 +19,7 @@
 
 #include "zephio_context.h"
 #include "zephio_mouse.h"
+#include "zephio_export.h"
 
 /**
  * @brief Keyboard modifier flags (bitmask).
@@ -111,14 +112,14 @@ typedef int (*ZephioInputCallback)(const ZephioEvent *event, void *user_data);
  * @param ctx  TUI context.
  * @return ZEPHIO_OK on success.
  */
-ZephioResult zephio_input_init(ZephioContext *ctx);
+ZEPHIO_API ZephioResult zephio_input_init(ZephioContext *ctx);
 
 /**
  * @brief Shut down the input subsystem.
  *
  * @param ctx  TUI context.
  */
-void zephio_input_shutdown(ZephioContext *ctx);
+ZEPHIO_API void zephio_input_shutdown(ZephioContext *ctx);
 
 /**
  * @brief Block until an input event is available, then return it.
@@ -129,7 +130,7 @@ void zephio_input_shutdown(ZephioContext *ctx);
  * @param[out] event  Populated with the next input event.
  * @return ZEPHIO_OK on success.
  */
-ZephioResult zephio_input_poll(ZephioContext *ctx, ZephioEvent *event);
+ZEPHIO_API ZephioResult zephio_input_poll(ZephioContext *ctx, ZephioEvent *event);
 
 /**
  * @brief Run a blocking input loop with a callback.
@@ -141,7 +142,7 @@ ZephioResult zephio_input_poll(ZephioContext *ctx, ZephioEvent *event);
  * @param user_data  Passed through to the callback.
  * @return ZEPHIO_OK on success.
  */
-int zephio_input_loop(ZephioContext *ctx, ZephioInputCallback callback, void *user_data);
+ZEPHIO_API int zephio_input_loop(ZephioContext *ctx, ZephioInputCallback callback, void *user_data);
 
 /**
  * @brief Return a human-readable name for a key code.
@@ -152,7 +153,7 @@ int zephio_input_loop(ZephioContext *ctx, ZephioInputCallback callback, void *us
  * @param key  The key code.
  * @return Static string (do not free).
  */
-const char *zephio_key_name(ZephioKey key);
+ZEPHIO_API const char *zephio_key_name(ZephioKey key);
 
 /**
  * @brief Return a human-readable modifier description.
@@ -160,6 +161,6 @@ const char *zephio_key_name(ZephioKey key);
  * @param mod  Bitmask of ZEPHIO_MOD_* flags.
  * @return Static string (do not free).
  */
-const char *zephio_modifier_name(int mod);
+ZEPHIO_API const char *zephio_modifier_name(int mod);
 
 #endif

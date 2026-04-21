@@ -19,6 +19,7 @@
 #define ZEPHIO_SCREEN_H
 
 #include "zephio.h"
+#include "zephio_export.h"
 #include <stdint.h>
 
 typedef struct ZephioContext ZephioContext;
@@ -96,14 +97,14 @@ typedef struct {
  * @param cols  Number of terminal columns.
  * @return ZEPHIO_OK on success, TUI_ERR_MEMORY on allocation failure.
  */
-ZephioResult zephio_screen_init(ZephioContext *ctx, int rows, int cols);
+ZEPHIO_API ZephioResult zephio_screen_init(ZephioContext *ctx, int rows, int cols);
 
 /**
  * @brief Free both buffers.
  *
  * @param ctx  TUI context.
  */
-void zephio_screen_free(ZephioContext *ctx);
+ZEPHIO_API void zephio_screen_free(ZephioContext *ctx);
 
 /**
  * @brief Resize both buffers, preserving existing content where possible.
@@ -113,14 +114,14 @@ void zephio_screen_free(ZephioContext *ctx);
  * @param cols  New column count.
  * @return ZEPHIO_OK on success, TUI_ERR_MEMORY on allocation failure.
  */
-ZephioResult zephio_screen_resize(ZephioContext *ctx, int rows, int cols);
+ZEPHIO_API ZephioResult zephio_screen_resize(ZephioContext *ctx, int rows, int cols);
 
 /**
  * @brief Clear the back buffer (fill with spaces, default colors).
  *
  * @param ctx  TUI context.
  */
-void zephio_screen_clear(ZephioContext *ctx);
+ZEPHIO_API void zephio_screen_clear(ZephioContext *ctx);
 
 /**
  * @brief Diff front vs. back and write changed cells to the terminal.
@@ -129,7 +130,7 @@ void zephio_screen_clear(ZephioContext *ctx);
  *
  * @param ctx  TUI context.
  */
-void zephio_screen_render(ZephioContext *ctx);
+ZEPHIO_API void zephio_screen_render(ZephioContext *ctx);
 
 /**
  * @brief Set a single cell in the back buffer.
@@ -142,7 +143,7 @@ void zephio_screen_render(ZephioContext *ctx);
  * @param bg    Background 256-color index.
  * @param attr  Attribute bitmask.
  */
-void zephio_screen_set_cell(ZephioContext *ctx, int row, int col, const char *ch, ZephioColor fg, ZephioColor bg, ZephioAttr attr);
+ZEPHIO_API void zephio_screen_set_cell(ZephioContext *ctx, int row, int col, const char *ch, ZephioColor fg, ZephioColor bg, ZephioAttr attr);
 
 /**
  * @brief Write a UTF-8 string into the back buffer (one row).
@@ -158,7 +159,7 @@ void zephio_screen_set_cell(ZephioContext *ctx, int row, int col, const char *ch
  * @param bg    Background color.
  * @param attr  Attribute bitmask.
  */
-void zephio_screen_write(ZephioContext *ctx, int row, int col, const char *text, ZephioColor fg, ZephioColor bg, ZephioAttr attr);
+ZEPHIO_API void zephio_screen_write(ZephioContext *ctx, int row, int col, const char *text, ZephioColor fg, ZephioColor bg, ZephioAttr attr);
 
 /**
  * @brief Fill a rectangular region with a single character + style.
@@ -173,7 +174,7 @@ void zephio_screen_write(ZephioContext *ctx, int row, int col, const char *text,
  * @param bg      Background color.
  * @param attr    Attribute bitmask.
  */
-void zephio_screen_fill(ZephioContext *ctx, int row, int col, int width, int height, const char *ch, ZephioColor fg, ZephioColor bg, ZephioAttr attr);
+ZEPHIO_API void zephio_screen_fill(ZephioContext *ctx, int row, int col, int width, int height, const char *ch, ZephioColor fg, ZephioColor bg, ZephioAttr attr);
 
 /**
  * @brief Draw a single-line Unicode box border.
@@ -189,7 +190,7 @@ void zephio_screen_fill(ZephioContext *ctx, int row, int col, int width, int hei
  * @param bg      Background color.
  * @param attr    Attribute bitmask.
  */
-void zephio_screen_box_single(ZephioContext *ctx, int row, int col, int width, int height, ZephioColor fg, ZephioColor bg, ZephioAttr attr);
+ZEPHIO_API void zephio_screen_box_single(ZephioContext *ctx, int row, int col, int width, int height, ZephioColor fg, ZephioColor bg, ZephioAttr attr);
 
 /**
  * @brief Draw a double-line Unicode box border.
@@ -205,14 +206,14 @@ void zephio_screen_box_single(ZephioContext *ctx, int row, int col, int width, i
  * @param bg      Background color.
  * @param attr    Attribute bitmask.
  */
-void zephio_screen_box_double(ZephioContext *ctx, int row, int col, int width, int height, ZephioColor fg, ZephioColor bg, ZephioAttr attr);
+ZEPHIO_API void zephio_screen_box_double(ZephioContext *ctx, int row, int col, int width, int height, ZephioColor fg, ZephioColor bg, ZephioAttr attr);
 
 /**
  * @brief Return the current screen dimensions.
  *
  * @param ctx  TUI context.
  */
-ZephioSize zephio_screen_size(ZephioContext *ctx);
+ZEPHIO_API ZephioSize zephio_screen_size(ZephioContext *ctx);
 
 /**
  * @brief Invert a cell's foreground and background colors.
@@ -224,6 +225,6 @@ ZephioSize zephio_screen_size(ZephioContext *ctx);
  * @param row  0-based row.
  * @param col  0-based column.
  */
-void zephio_screen_invert_cell(ZephioContext *ctx, int row, int col);
+ZEPHIO_API void zephio_screen_invert_cell(ZephioContext *ctx, int row, int col);
 
 #endif

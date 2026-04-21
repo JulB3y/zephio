@@ -23,6 +23,7 @@
 #include "zephio.h"
 #include "zephio_input.h"
 #include "zephio_style.h"
+#include "zephio_export.h"
 #include <stdint.h>
 
 typedef struct ZephioWidget ZephioWidget;
@@ -90,8 +91,8 @@ struct ZephioWidget {
  * @param data     Opaque user-data pointer (may be NULL).
  * @return ZEPHIO_OK on success, TUI_ERR_MEMORY on allocation failure.
  */
-ZephioResult zephio_widget_init_ctx(ZephioWidget *widget, int x, int y, int width, int height,
-                               ZephioWidgetVTable *vtable, struct ZephioContext *ctx, void *data);
+ZEPHIO_API ZephioResult zephio_widget_init_ctx(ZephioWidget *widget, int x, int y, int width, int height,
+                                ZephioWidgetVTable *vtable, struct ZephioContext *ctx, void *data);
 
 /**
  * @brief Destroy a widget and all its children.
@@ -100,7 +101,7 @@ ZephioResult zephio_widget_init_ctx(ZephioWidget *widget, int x, int y, int widt
  * (if non-NULL), then frees the children array. Does NOT free the
  * widget struct itself (the caller manages the widget's storage).
  */
-void zephio_widget_destroy(ZephioWidget *widget);
+ZEPHIO_API void zephio_widget_destroy(ZephioWidget *widget);
 
 /**
  * @brief Add a child widget to a parent.
@@ -109,21 +110,21 @@ void zephio_widget_destroy(ZephioWidget *widget);
  * @param child   Child widget (its parent pointer is set).
  * @return ZEPHIO_OK on success, TUI_ERR_MEMORY on allocation failure.
  */
-ZephioResult zephio_widget_add_child(ZephioWidget *parent, ZephioWidget *child);
+ZEPHIO_API ZephioResult zephio_widget_add_child(ZephioWidget *parent, ZephioWidget *child);
 
 /**
  * @brief Remove a child widget from its parent.
  *
  * Does not destroy the child.
  */
-void zephio_widget_remove_child(ZephioWidget *parent, ZephioWidget *child);
+ZEPHIO_API void zephio_widget_remove_child(ZephioWidget *parent, ZephioWidget *child);
 
 /**
  * @brief Remove all children from a widget.
  *
  * Does not destroy the children.
  */
-void zephio_widget_remove_all_children(ZephioWidget *parent);
+ZEPHIO_API void zephio_widget_remove_all_children(ZephioWidget *parent);
 
 /**
  * @brief Render a widget and all its visible children (pre-order DFS).
@@ -131,67 +132,67 @@ void zephio_widget_remove_all_children(ZephioWidget *parent);
  * Calls vtable->render for each visible widget. Also recomputes
  * absolute positions from the parent chain.
  */
-void zephio_widget_render(ZephioWidget *widget);
+ZEPHIO_API void zephio_widget_render(ZephioWidget *widget);
 
 /**
  * @brief Dispatch an input event to the focused widget.
  *
  * @return 1 if the event was consumed, 0 otherwise.
  */
-int zephio_widget_handle_input(ZephioWidget *widget, const ZephioEvent *event);
+ZEPHIO_API int zephio_widget_handle_input(ZephioWidget *widget, const ZephioEvent *event);
 
 /**
  * @brief Set focus on a widget (and blur the previously focused widget).
  */
-void zephio_widget_focus(ZephioWidget *widget);
+ZEPHIO_API void zephio_widget_focus(ZephioWidget *widget);
 
 /**
  * @brief Remove focus from a widget.
  */
-void zephio_widget_blur(ZephioWidget *widget);
+ZEPHIO_API void zephio_widget_blur(ZephioWidget *widget);
 
 /**
  * @brief Advance focus to the next focusable widget (DFS order).
  */
-void zephio_widget_focus_next(ZephioWidget *root);
+ZEPHIO_API void zephio_widget_focus_next(ZephioWidget *root);
 
 /**
  * @brief Move focus to the previous focusable widget (DFS order).
  */
-void zephio_widget_focus_prev(ZephioWidget *root);
+ZEPHIO_API void zephio_widget_focus_prev(ZephioWidget *root);
 
 /**
  * @brief Return the currently focused widget in the tree, or NULL.
  */
-ZephioWidget *zephio_widget_get_focused(ZephioWidget *root);
+ZEPHIO_API ZephioWidget *zephio_widget_get_focused(ZephioWidget *root);
 
 /** @brief Show or hide a widget. Hidden widgets are skipped during render. */
-void zephio_widget_set_visible(ZephioWidget *widget, int visible);
+ZEPHIO_API void zephio_widget_set_visible(ZephioWidget *widget, int visible);
 
 /** @brief Mark a widget as needing re-render. */
-void zephio_widget_set_dirty(ZephioWidget *widget);
+ZEPHIO_API void zephio_widget_set_dirty(ZephioWidget *widget);
 
 /** @brief Mark the entire subtree as dirty. */
-void zephio_widget_mark_dirty_recursive(ZephioWidget *widget);
+ZEPHIO_API void zephio_widget_mark_dirty_recursive(ZephioWidget *widget);
 
 /** @brief Check if any widget in the tree is dirty. */
-int zephio_widget_is_dirty(ZephioWidget *root);
+ZEPHIO_API int zephio_widget_is_dirty(ZephioWidget *root);
 
 /** @brief Update the widget's position relative to its parent. */
-void zephio_widget_set_position(ZephioWidget *widget, int x, int y);
+ZEPHIO_API void zephio_widget_set_position(ZephioWidget *widget, int x, int y);
 
 /** @brief Update the widget's dimensions. */
-void zephio_widget_set_size(ZephioWidget *widget, int width, int height);
+ZEPHIO_API void zephio_widget_set_size(ZephioWidget *widget, int width, int height);
 
 /**
  * @brief Resize a widget and notify it via vtable->on_resize.
  *
  * Also marks the widget as dirty.
  */
-void zephio_widget_resize(ZephioWidget *widget, int width, int height);
+ZEPHIO_API void zephio_widget_resize(ZephioWidget *widget, int width, int height);
 
 /** @brief Test whether a (row, col) coordinate falls inside a widget. */
-int zephio_widget_contains(ZephioWidget *widget, int row, int col);
+ZEPHIO_API int zephio_widget_contains(ZephioWidget *widget, int row, int col);
 
 /**
  * @brief Find the deepest visible widget at (row, col).
@@ -201,25 +202,25 @@ int zephio_widget_contains(ZephioWidget *widget, int row, int col);
  * @param col   Absolute column.
  * @return The deepest widget at that position, or NULL.
  */
-ZephioWidget *zephio_widget_find_at(ZephioWidget *root, int row, int col);
+ZEPHIO_API ZephioWidget *zephio_widget_find_at(ZephioWidget *root, int row, int col);
 
 /**
  * @brief Dispatch a mouse event to the widget at the mouse position.
  *
  * @return 1 if any widget consumed the event, 0 otherwise.
  */
-int zephio_widget_handle_mouse(ZephioWidget *root, const ZephioMouseEvent *mouse);
+ZEPHIO_API int zephio_widget_handle_mouse(ZephioWidget *root, const ZephioMouseEvent *mouse);
 
 /** @brief Set the hovered widget in the tree. */
-void zephio_widget_set_hovered(ZephioWidget *root, ZephioWidget *widget);
+ZEPHIO_API void zephio_widget_set_hovered(ZephioWidget *root, ZephioWidget *widget);
 
 /** @brief Return the currently hovered widget, or NULL. */
-ZephioWidget *zephio_widget_get_hovered(ZephioWidget *root);
+ZEPHIO_API ZephioWidget *zephio_widget_get_hovered(ZephioWidget *root);
 
 /**
  * @brief Set the theme for a widget (propagates to all children).
  */
-void zephio_widget_set_theme(ZephioWidget *widget, const ZephioTheme *theme);
+ZEPHIO_API void zephio_widget_set_theme(ZephioWidget *widget, const ZephioTheme *theme);
 
 /**
  * @brief Get the effective style for a widget based on its current state.
@@ -227,9 +228,9 @@ void zephio_widget_set_theme(ZephioWidget *widget, const ZephioTheme *theme);
  * Considers: disabled, focused, hovered, and normal states.
  * Falls back to the widget's theme or the default theme.
  */
-ZephioStyle zephio_widget_get_style(ZephioWidget *widget);
+ZEPHIO_API ZephioStyle zephio_widget_get_style(ZephioWidget *widget);
 
 /** @brief Enable or disable a widget. */
-void zephio_widget_set_disabled(ZephioWidget *widget, int disabled);
+ZEPHIO_API void zephio_widget_set_disabled(ZephioWidget *widget, int disabled);
 
 #endif

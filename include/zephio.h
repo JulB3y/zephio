@@ -15,6 +15,7 @@
 
 #include <stddef.h>
 #include <stdint.h>
+#include "zephio_export.h"
 
 typedef struct ZephioContext ZephioContext;
 
@@ -50,7 +51,7 @@ typedef enum {
  *
  * @return ZEPHIO_OK on success, or TUI_ERR_* on failure.
  */
-ZephioResult zephio_init(ZephioContext *ctx);
+ZEPHIO_API ZephioResult zephio_init(ZephioContext *ctx);
 
 /**
  * @brief Shut down the TUI framework.
@@ -59,7 +60,7 @@ ZephioResult zephio_init(ZephioContext *ctx);
  * the cursor, disables raw mode, disables mouse tracking. Safe to call
  * multiple times.
  */
-void zephio_shutdown(ZephioContext *ctx);
+ZEPHIO_API void zephio_shutdown(ZephioContext *ctx);
 
 /**
  * @brief Query the current terminal size.
@@ -67,6 +68,6 @@ void zephio_shutdown(ZephioContext *ctx);
  * @param[out] size  Populated with rows and cols on success.
  * @return ZEPHIO_OK on success, or TUI_ERR_IOCTL on failure.
  */
-ZephioResult zephio_get_size(ZephioContext *ctx, ZephioSize *size);
+ZEPHIO_API ZephioResult zephio_get_size(ZephioContext *ctx, ZephioSize *size);
 
 #endif

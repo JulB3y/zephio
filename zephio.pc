@@ -1,0 +1,9 @@
+prefix=/usr/local
+libdir=${prefix}/lib
+includedir=${prefix}/include
+
+Name: zephio
+Description: Zephio TUI Framework
+Version: 1.0.0
+Libs: -L${libdir} -lzephio
+Cflags: -I${includedir}/zephio
