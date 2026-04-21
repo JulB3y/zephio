@@ -14,12 +14,12 @@
  *   5. Call tui_statusbar_tick() each frame to expire messages.
  */
 
-#ifndef TUI_STATUSBAR_H
-#define TUI_STATUSBAR_H
+#ifndef ZEPHIO_STATUSBAR_H
+#define ZEPHIO_STATUSBAR_H
 
 #include "tui_widget.h"
 
-#define TUI_STATUSBAR_MSG_TICKS 300
+#define ZEPHIO_STATUSBAR_MSG_TICKS 300
 
 typedef struct TuiStatusBar TuiStatusBar;
 

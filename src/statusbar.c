@@ -106,11 +106,11 @@ TuiResult tui_statusbar_init_ctx(TuiStatusBar *statusbar, TuiContext *ctx, int x
     statusbar->message     = NULL;
     statusbar->message_ticks = 0;
 
-    statusbar->fg          = TUI_COLOR_INDEX(15);
-    statusbar->bg          = TUI_COLOR_INDEX(4);
-    statusbar->fg_message  = TUI_COLOR_INDEX(0);
-    statusbar->bg_message  = TUI_COLOR_INDEX(11);
-    statusbar->attr        = TUI_ATTR_BOLD;
+    statusbar->fg          = ZEPHIO_COLOR_INDEX(15);
+    statusbar->bg          = ZEPHIO_COLOR_INDEX(4);
+    statusbar->fg_message  = ZEPHIO_COLOR_INDEX(0);
+    statusbar->bg_message  = ZEPHIO_COLOR_INDEX(11);
+    statusbar->attr        = ZEPHIO_ATTR_BOLD;
 
     return TUI_OK;
 }

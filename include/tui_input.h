@@ -14,8 +14,8 @@
  *   3. tui_input_shutdown(ctx)      — before tui_shutdown()
  */
 
-#ifndef TUI_INPUT_H
-#define TUI_INPUT_H
+#ifndef ZEPHIO_INPUT_H
+#define ZEPHIO_INPUT_H
 
 #include "tui_context.h"
 #include "tui_mouse.h"

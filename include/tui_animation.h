@@ -14,8 +14,8 @@
  *   4. Control playback with play/pause/stop.
  */
 
-#ifndef TUI_ANIMATION_H
-#define TUI_ANIMATION_H
+#ifndef ZEPHIO_ANIMATION_H
+#define ZEPHIO_ANIMATION_H
 
 #include <stdint.h>
 

@@ -6,8 +6,8 @@
  * optional label text, and percentage display. Not focusable.
  */
 
-#ifndef TUI_PROGRESS_H
-#define TUI_PROGRESS_H
+#ifndef ZEPHIO_PROGRESS_H
+#define ZEPHIO_PROGRESS_H
 
 #include "tui_widget.h"
 

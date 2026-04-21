@@ -55,9 +55,9 @@ TuiResult tui_separator_init_h_ctx(TuiSeparator *sep, TuiContext *ctx, int x, in
 
     sep->base.focusable = 0;
     sep->horizontal     = 1;
-    sep->fg             = TUI_COLOR_INDEX(8);
-    sep->bg             = TUI_COLOR_INDEX(0);
-    sep->attr           = TUI_ATTR_NONE;
+    sep->fg             = ZEPHIO_COLOR_INDEX(8);
+    sep->bg             = ZEPHIO_COLOR_INDEX(0);
+    sep->attr           = ZEPHIO_ATTR_NONE;
 
     return TUI_OK;
 }
@@ -72,9 +72,9 @@ TuiResult tui_separator_init_v_ctx(TuiSeparator *sep, TuiContext *ctx, int x, in
 
     sep->base.focusable = 0;
     sep->horizontal     = 0;
-    sep->fg             = TUI_COLOR_INDEX(8);
-    sep->bg             = TUI_COLOR_INDEX(0);
-    sep->attr           = TUI_ATTR_NONE;
+    sep->fg             = ZEPHIO_COLOR_INDEX(8);
+    sep->bg             = ZEPHIO_COLOR_INDEX(0);
+    sep->attr           = ZEPHIO_ATTR_NONE;
 
     return TUI_OK;
 }

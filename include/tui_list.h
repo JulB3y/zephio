@@ -9,8 +9,8 @@
  * Mouse support: click to select items.
  */
 
-#ifndef TUI_LIST_H
-#define TUI_LIST_H
+#ifndef ZEPHIO_LIST_H
+#define ZEPHIO_LIST_H
 
 #include "tui_widget.h"
 

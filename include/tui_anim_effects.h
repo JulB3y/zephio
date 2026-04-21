@@ -13,8 +13,8 @@
  *   tui_animator_play(anim, id);
  */
 
-#ifndef TUI_ANIM_EFFECTS_H
-#define TUI_ANIM_EFFECTS_H
+#ifndef ZEPHIO_ANIM_EFFECTS_H
+#define ZEPHIO_ANIM_EFFECTS_H
 
 #include "tui_animator.h"
 #include "tui_widget.h"

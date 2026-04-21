@@ -17,8 +17,8 @@
  * 4. Add the widget to a parent via tui_widget_add_child().
  */
 
-#ifndef TUI_WIDGET_H
-#define TUI_WIDGET_H
+#ifndef ZEPHIO_WIDGET_H
+#define ZEPHIO_WIDGET_H
 
 #include "tui.h"
 #include "tui_input.h"

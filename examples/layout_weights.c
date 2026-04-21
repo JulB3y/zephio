@@ -23,21 +23,21 @@ static void draw_panel(TuiContext *ctx, TuiWidget *w, const char *label, PanelCo
     if (!w->visible || w->width <= 0 || w->height <= 0) return;
 
     tui_screen_fill(ctx, w->abs_y, w->abs_x, w->width, w->height,
-                    " ", c.fg, c.bg, TUI_ATTR_NONE);
+                    " ", c.fg, c.bg, ZEPHIO_ATTR_NONE);
 
     if (w->width > 2) {
         tui_screen_write(ctx, w->abs_y, w->abs_x + 1, label,
-                         c.fg, c.bg, TUI_ATTR_BOLD);
+                         c.fg, c.bg, ZEPHIO_ATTR_BOLD);
     }
 
     char dim[32];
     int dim_len = snprintf(dim, sizeof(dim), "%dx%d", w->width, w->height);
     if (w->height >= 2 && w->width > 2) {
         tui_screen_write(ctx, w->abs_y + 1, w->abs_x + 1, dim,
-                         c.fg, c.bg, TUI_ATTR_DIM);
+                         c.fg, c.bg, ZEPHIO_ATTR_DIM);
     } else if (dim_len < w->width - 2) {
         tui_screen_write(ctx, w->abs_y, w->abs_x + w->width - dim_len - 1,
-                         dim, c.fg, c.bg, TUI_ATTR_DIM);
+                         dim, c.fg, c.bg, ZEPHIO_ATTR_DIM);
     }
 }
 
@@ -45,14 +45,14 @@ static void draw_frame(TuiContext *ctx, int rows, int cols)
 {
     tui_screen_clear(ctx);
 
-    tui_screen_fill(ctx, 0, 0, cols, 1, " ", TUI_COLOR_INDEX(15), TUI_COLOR_INDEX(4), TUI_ATTR_BOLD);
+    tui_screen_fill(ctx, 0, 0, cols, 1, " ", ZEPHIO_COLOR_INDEX(15), ZEPHIO_COLOR_INDEX(4), ZEPHIO_ATTR_BOLD);
     tui_screen_write(ctx, 0, 2, "Phase 6 - Weighted Fill Layouts (2:1, 1:1:1)",
-                     TUI_COLOR_INDEX(15), TUI_COLOR_INDEX(4), TUI_ATTR_BOLD);
+                     ZEPHIO_COLOR_INDEX(15), ZEPHIO_COLOR_INDEX(4), ZEPHIO_ATTR_BOLD);
 
     char info[64];
     int info_len = snprintf(info, sizeof(info), "%dx%d  |  Press 'q' to quit",
                             cols, rows);
-    tui_screen_write(ctx, 0, cols - info_len - 1, info, TUI_COLOR_INDEX(15), TUI_COLOR_INDEX(4), TUI_ATTR_BOLD);
+    tui_screen_write(ctx, 0, cols - info_len - 1, info, ZEPHIO_COLOR_INDEX(15), ZEPHIO_COLOR_INDEX(4), ZEPHIO_ATTR_BOLD);
 
     tui_widget_render(&root.base);
 
@@ -70,7 +70,7 @@ static void draw_frame(TuiContext *ctx, int rows, int cols)
 
     tui_screen_write(ctx, rows - 1, 1,
         "Resize terminal to see panels redistribute space proportionally",
-        TUI_COLOR_INDEX(8), TUI_COLOR_INDEX(0), TUI_ATTR_DIM);
+        ZEPHIO_COLOR_INDEX(8), ZEPHIO_COLOR_INDEX(0), ZEPHIO_ATTR_DIM);
 
     tui_screen_render(ctx);
 }
@@ -106,8 +106,8 @@ int main(void)
 
     static const int bg_vals[5] = {21, 54, 97, 132, 165};
     for (int i = 0; i < 5; i++) {
-        colors[i].fg = TUI_COLOR_INDEX(15);
-        colors[i].bg = TUI_COLOR_INDEX(bg_vals[i]);
+        colors[i].fg = ZEPHIO_COLOR_INDEX(15);
+        colors[i].bg = ZEPHIO_COLOR_INDEX(bg_vals[i]);
     }
 
     TuiSize size = tui_screen_size(&ctx);
@@ -119,23 +119,23 @@ int main(void)
     static TuiLayout top_row;
     tui_layout_init_ctx(&top_row, &ctx, TUI_LAYOUT_HORIZONTAL, 0, 0, 1, 1);
     tui_layout_set_padding(&top_row, 1);
-    tui_layout_add(&root, &top_row.base, TUI_LAYOUT_FILL_WEIGHT(2));
+    tui_layout_add(&root, &top_row.base, ZEPHIO_LAYOUT_FILL_WEIGHT(2));
 
     static TuiLayout bot_row;
     tui_layout_init_ctx(&bot_row, &ctx, TUI_LAYOUT_HORIZONTAL, 0, 0, 1, 1);
     tui_layout_set_padding(&bot_row, 1);
-    tui_layout_add(&root, &bot_row.base, TUI_LAYOUT_FILL_WEIGHT(3));
+    tui_layout_add(&root, &bot_row.base, ZEPHIO_LAYOUT_FILL_WEIGHT(3));
 
     for (int i = 0; i < 5; i++) {
         tui_widget_init_ctx(&panels[i], 0, 0, 1, 1, NULL, &ctx, NULL);
     }
 
-    tui_layout_add(&top_row, &panels[0], TUI_LAYOUT_FILL_WEIGHT(2));
-    tui_layout_add(&top_row, &panels[1], TUI_LAYOUT_FILL);
+    tui_layout_add(&top_row, &panels[0], ZEPHIO_LAYOUT_FILL_WEIGHT(2));
+    tui_layout_add(&top_row, &panels[1], ZEPHIO_LAYOUT_FILL);
 
-    tui_layout_add(&bot_row, &panels[2], TUI_LAYOUT_FILL);
-    tui_layout_add(&bot_row, &panels[3], TUI_LAYOUT_FILL);
-    tui_layout_add(&bot_row, &panels[4], TUI_LAYOUT_FILL);
+    tui_layout_add(&bot_row, &panels[2], ZEPHIO_LAYOUT_FILL);
+    tui_layout_add(&bot_row, &panels[3], ZEPHIO_LAYOUT_FILL);
+    tui_layout_add(&bot_row, &panels[4], ZEPHIO_LAYOUT_FILL);
 
     tui_widget_resize(&root.base, size.cols, size.rows);
 

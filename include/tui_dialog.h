@@ -14,13 +14,13 @@
  *   4. In the callback, call tui_app_pop_overlay(app) to close.
  */
 
-#ifndef TUI_DIALOG_H
-#define TUI_DIALOG_H
+#ifndef ZEPHIO_DIALOG_H
+#define ZEPHIO_DIALOG_H
 
 #include "tui_widget.h"
 
-#define TUI_DIALOG_MAX_BUTTONS 4
-#define TUI_DIALOG_MAX_BUTTON_LABEL 16
+#define ZEPHIO_DIALOG_MAX_BUTTONS 4
+#define ZEPHIO_DIALOG_MAX_BUTTON_LABEL 16
 
 typedef struct TuiDialog TuiDialog;
 
@@ -33,7 +33,7 @@ struct TuiDialog {
     char *title;
     char *message;
 
-    char   button_labels[TUI_DIALOG_MAX_BUTTONS][TUI_DIALOG_MAX_BUTTON_LABEL];
+    char   button_labels[ZEPHIO_DIALOG_MAX_BUTTONS][ZEPHIO_DIALOG_MAX_BUTTON_LABEL];
     int    button_count;
     int    selected_button;
 

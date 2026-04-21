@@ -9,8 +9,8 @@
  * The global Terminal instance g_terminal holds the current state.
  */
 
-#ifndef TUI_TERMINAL_H
-#define TUI_TERMINAL_H
+#ifndef ZEPHIO_TERMINAL_H
+#define ZEPHIO_TERMINAL_H
 
 #include "tui.h"
 

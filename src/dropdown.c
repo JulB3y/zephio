@@ -37,13 +37,13 @@ static void popup_render(TuiWidget *widget)
 
     TuiColor fg  = dd->fg_popup;
     TuiColor bg  = dd->bg_popup;
-    TuiColor bfg = TUI_COLOR_INDEX(14);
+    TuiColor bfg = ZEPHIO_COLOR_INDEX(14);
     TuiColor bbg = dd->bg_popup;
 
     tui_screen_fill(widget->ctx, widget->abs_y, widget->abs_x,
-                    widget->width, widget->height, " ", fg, bg, TUI_ATTR_NONE);
+                    widget->width, widget->height, " ", fg, bg, ZEPHIO_ATTR_NONE);
     tui_screen_box_single(widget->ctx, widget->abs_y, widget->abs_x,
-                          widget->width, widget->height, bfg, bbg, TUI_ATTR_BOLD);
+                          widget->width, widget->height, bfg, bbg, ZEPHIO_ATTR_BOLD);
 
     int visible = dd->item_count < dd->max_visible
                   ? dd->item_count : dd->max_visible;
@@ -53,12 +53,12 @@ static void popup_render(TuiWidget *widget)
 
         TuiColor ifg = fg;
         TuiColor ibg = bg;
-        TuiAttr  iat = TUI_ATTR_NONE;
+        TuiAttr  iat = ZEPHIO_ATTR_NONE;
 
         if (idx == popup->highlighted) {
             ifg = dd->fg_selected;
             ibg = dd->bg_selected;
-            iat = TUI_ATTR_REVERSE;
+            iat = ZEPHIO_ATTR_REVERSE;
         }
 
         tui_screen_fill(widget->ctx, widget->abs_y + 1 + i, widget->abs_x + 1,
@@ -196,7 +196,7 @@ static void dropdown_render(TuiWidget *widget)
     if (widget->focused || dd->is_open) {
         fg = dd->fg_selected;
         bg = dd->bg_selected;
-        attr |= TUI_ATTR_REVERSE;
+        attr |= ZEPHIO_ATTR_REVERSE;
     }
 
     tui_screen_fill(widget->ctx, widget->abs_y, widget->abs_x,
@@ -297,19 +297,19 @@ TuiResult tui_dropdown_init_ctx(TuiDropdown *dropdown, TuiContext *ctx, int x, i
     dropdown->item_count    = 0;
     dropdown->item_capacity = 0;
     dropdown->selected      = -1;
-    dropdown->max_visible   = TUI_DROPDOWN_MAX_VISIBLE;
+    dropdown->max_visible   = ZEPHIO_DROPDOWN_MAX_VISIBLE;
     dropdown->is_open       = 0;
     dropdown->app           = NULL;
 
     memset(&dropdown->popup, 0, sizeof(dropdown->popup));
 
-    dropdown->fg          = TUI_COLOR_INDEX(15);
-    dropdown->bg          = TUI_COLOR_INDEX(236);
-    dropdown->fg_popup    = TUI_COLOR_INDEX(15);
-    dropdown->bg_popup    = TUI_COLOR_INDEX(234);
-    dropdown->fg_selected = TUI_COLOR_INDEX(0);
-    dropdown->bg_selected = TUI_COLOR_INDEX(12);
-    dropdown->attr        = TUI_ATTR_NONE;
+    dropdown->fg          = ZEPHIO_COLOR_INDEX(15);
+    dropdown->bg          = ZEPHIO_COLOR_INDEX(236);
+    dropdown->fg_popup    = ZEPHIO_COLOR_INDEX(15);
+    dropdown->bg_popup    = ZEPHIO_COLOR_INDEX(234);
+    dropdown->fg_selected = ZEPHIO_COLOR_INDEX(0);
+    dropdown->bg_selected = ZEPHIO_COLOR_INDEX(12);
+    dropdown->attr        = ZEPHIO_ATTR_NONE;
 
     dropdown->on_change = NULL;
     dropdown->user_data = NULL;
@@ -323,7 +323,7 @@ TuiResult tui_dropdown_add_item(TuiDropdown *dropdown, const char *item)
 
     if (dropdown->item_count >= dropdown->item_capacity) {
         int newcap = dropdown->item_capacity == 0
-                     ? TUI_DROPDOWN_ITEMS_INIT_CAP
+                     ? ZEPHIO_DROPDOWN_ITEMS_INIT_CAP
                      : dropdown->item_capacity * 2;
         char **ni = (char **)realloc(dropdown->items,
                                      (size_t)newcap * sizeof(char *));
@@ -405,7 +405,7 @@ void tui_dropdown_set_on_change(TuiDropdown *dropdown,
 void tui_dropdown_set_max_visible(TuiDropdown *dropdown, int max_visible)
 {
     if (!dropdown) return;
-    dropdown->max_visible = max_visible > 0 ? max_visible : TUI_DROPDOWN_MAX_VISIBLE;
+    dropdown->max_visible = max_visible > 0 ? max_visible : ZEPHIO_DROPDOWN_MAX_VISIBLE;
 }
 
 void tui_dropdown_open(TuiDropdown *dropdown, void *app)

@@ -9,8 +9,8 @@
  * The field allocates a text buffer lazily on first character input.
  */
 
-#ifndef TUI_INPUT_FIELD_H
-#define TUI_INPUT_FIELD_H
+#ifndef ZEPHIO_INPUT_FIELD_H
+#define ZEPHIO_INPUT_FIELD_H
 
 #include "tui_widget.h"
 

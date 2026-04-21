@@ -99,7 +99,7 @@ static void input_field_render(TuiWidget *widget)
             }
             tui_screen_set_cell(widget->ctx, widget->abs_y, widget->abs_x + cursor_col,
                                 cursor_ch, cursor_fg, cursor_bg,
-                                TUI_ATTR_NONE);
+                                ZEPHIO_ATTR_NONE);
         }
     }
 }
@@ -253,11 +253,11 @@ TuiResult tui_input_field_init_ctx(TuiInputField *field, TuiContext *ctx, int x,
     field->text_capacity  = capacity;
     field->cursor_pos     = 0;
     field->scroll_offset  = 0;
-    field->fg             = TUI_COLOR_INDEX(15);
-    field->bg             = TUI_COLOR_INDEX(234);
-    field->cursor_fg      = TUI_COLOR_INDEX(0);
-    field->cursor_bg      = TUI_COLOR_INDEX(15);
-    field->attr           = TUI_ATTR_NONE;
+    field->fg             = ZEPHIO_COLOR_INDEX(15);
+    field->bg             = ZEPHIO_COLOR_INDEX(234);
+    field->cursor_fg      = ZEPHIO_COLOR_INDEX(0);
+    field->cursor_bg      = ZEPHIO_COLOR_INDEX(15);
+    field->attr           = ZEPHIO_ATTR_NONE;
     field->on_change      = NULL;
     field->on_submit      = NULL;
     field->user_data      = NULL;

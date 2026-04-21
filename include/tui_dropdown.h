@@ -14,13 +14,13 @@
  *   5. On activation the popup auto-pushes via tui_app_push_overlay().
  */
 
-#ifndef TUI_DROPDOWN_H
-#define TUI_DROPDOWN_H
+#ifndef ZEPHIO_DROPDOWN_H
+#define ZEPHIO_DROPDOWN_H
 
 #include "tui_widget.h"
 
-#define TUI_DROPDOWN_MAX_VISIBLE 10
-#define TUI_DROPDOWN_ITEMS_INIT_CAP 8
+#define ZEPHIO_DROPDOWN_MAX_VISIBLE 10
+#define ZEPHIO_DROPDOWN_ITEMS_INIT_CAP 8
 
 typedef struct TuiDropdown TuiDropdown;
 

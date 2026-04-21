@@ -15,7 +15,7 @@ static void container_render(TuiWidget *widget)
     } else {
         tui_screen_fill(widget->ctx, widget->abs_y, widget->abs_x,
                         widget->width, widget->height,
-                        " ", TUI_COLOR_INDEX(0), container->bg, TUI_ATTR_NONE);
+                        " ", ZEPHIO_COLOR_INDEX(0), container->bg, ZEPHIO_ATTR_NONE);
     }
 }
 
@@ -39,7 +39,7 @@ TuiResult tui_container_init_ctx(TuiContainer *container, TuiContext *ctx, int x
     if (res != TUI_OK) return res;
 
     container->base.focusable = 0;
-    container->bg             = TUI_COLOR_INDEX(0);
+    container->bg             = ZEPHIO_COLOR_INDEX(0);
 
     return TUI_OK;
 }

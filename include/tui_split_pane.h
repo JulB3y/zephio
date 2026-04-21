@@ -15,12 +15,12 @@
  * and rendering.
  */
 
-#ifndef TUI_SPLIT_PANE_H
-#define TUI_SPLIT_PANE_H
+#ifndef ZEPHIO_SPLIT_PANE_H
+#define ZEPHIO_SPLIT_PANE_H
 
 #include "tui_widget.h"
 
-#define TUI_SPLIT_MIN_PANE 5
+#define ZEPHIO_SPLIT_MIN_PANE 5
 
 /**
  * @brief Split orientation.

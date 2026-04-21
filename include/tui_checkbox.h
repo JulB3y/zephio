@@ -7,8 +7,8 @@
  * Optional tristate mode for indeterminate ([-]) state.
  */
 
-#ifndef TUI_CHECKBOX_H
-#define TUI_CHECKBOX_H
+#ifndef ZEPHIO_CHECKBOX_H
+#define ZEPHIO_CHECKBOX_H
 
 #include "tui_widget.h"
 

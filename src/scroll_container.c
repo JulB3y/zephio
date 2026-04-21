@@ -32,13 +32,13 @@ void tui_scroll_container_render_scrollbars(TuiWidget *widget, TuiScrollContaine
     int vx = widget->abs_x;
     int vy = widget->abs_y;
 
-    TuiColor track_fg = TUI_COLOR_INDEX(TUI_COLOR_GRAY_DARK);
+    TuiColor track_fg = ZEPHIO_COLOR_INDEX(TUI_COLOR_GRAY_DARK);
     TuiStyle style = tui_widget_get_style(widget);
     TuiColor track_bg = style.bg;
-    TuiAttr track_attr = TUI_ATTR_DIM;
+    TuiAttr track_attr = ZEPHIO_ATTR_DIM;
 
-    TuiColor thumb_fg = TUI_COLOR_INDEX(TUI_COLOR_BRIGHT_WHITE);
-    TuiColor thumb_bg = TUI_COLOR_INDEX(TUI_COLOR_GRAY_MID);
+    TuiColor thumb_fg = ZEPHIO_COLOR_INDEX(TUI_COLOR_BRIGHT_WHITE);
+    TuiColor thumb_bg = ZEPHIO_COLOR_INDEX(TUI_COLOR_GRAY_MID);
 
     if (has_vscroll) {
         int scroll_col = vx + widget->width - 1;
@@ -56,7 +56,7 @@ void tui_scroll_container_render_scrollbars(TuiWidget *widget, TuiScrollContaine
             for (int r = 0; r < thumb_h; r++) {
                 tui_screen_set_cell(widget->ctx, vy + thumb_y + r, scroll_col,
                                     "\xe2\x96\x88", thumb_fg, thumb_bg,
-                                    TUI_ATTR_NONE);
+                                    ZEPHIO_ATTR_NONE);
             }
         }
     }
@@ -77,7 +77,7 @@ void tui_scroll_container_render_scrollbars(TuiWidget *widget, TuiScrollContaine
             for (int c = 0; c < thumb_w; c++) {
                 tui_screen_set_cell(widget->ctx, scroll_row, vx + thumb_x + c,
                                     "\xe2\x96\x88", thumb_fg, thumb_bg,
-                                    TUI_ATTR_NONE);
+                                    ZEPHIO_ATTR_NONE);
             }
         }
     }

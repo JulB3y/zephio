@@ -38,12 +38,12 @@ static void popup_render(TuiWidget *widget)
 
     TuiColor fg  = mb->fg_popup;
     TuiColor bg  = mb->bg_popup;
-    TuiColor bfg = TUI_COLOR_INDEX(14);
+    TuiColor bfg = ZEPHIO_COLOR_INDEX(14);
 
     tui_screen_fill(widget->ctx, widget->abs_y, widget->abs_x,
-                    widget->width, widget->height, " ", fg, bg, TUI_ATTR_NONE);
+                    widget->width, widget->height, " ", fg, bg, ZEPHIO_ATTR_NONE);
     tui_screen_box_single(widget->ctx, widget->abs_y, widget->abs_x,
-                          widget->width, widget->height, bfg, bg, TUI_ATTR_BOLD);
+                          widget->width, widget->height, bfg, bg, ZEPHIO_ATTR_BOLD);
 
     for (int i = 0; i < menu->item_count; i++) {
         TuiMenuItem *item = &menu->items[i];
@@ -52,18 +52,18 @@ static void popup_render(TuiWidget *widget)
         if (item->is_separator) {
             for (int c = 1; c < widget->width - 1; c++)
                 tui_screen_set_cell(widget->ctx, row, widget->abs_x + c,
-                                    "\xe2\x94\x80", bfg, bg, TUI_ATTR_DIM);
+                                    "\xe2\x94\x80", bfg, bg, ZEPHIO_ATTR_DIM);
             continue;
         }
 
         TuiColor ifg = fg;
         TuiColor ibg = bg;
-        TuiAttr  iat = TUI_ATTR_NONE;
+        TuiAttr  iat = ZEPHIO_ATTR_NONE;
 
         if (i == popup->highlighted) {
             ifg = mb->fg_popup_hl;
             ibg = mb->bg_popup_hl;
-            iat = TUI_ATTR_REVERSE;
+            iat = ZEPHIO_ATTR_REVERSE;
         }
 
         tui_screen_fill(widget->ctx, row, widget->abs_x + 1,
@@ -225,7 +225,7 @@ static void menubar_render(TuiWidget *widget)
         if (i == mb->active_menu && (widget->focused || mb->is_open)) {
             fg = mb->fg_active;
             bg = mb->bg_active;
-            at |= TUI_ATTR_REVERSE;
+            at |= ZEPHIO_ATTR_REVERSE;
         }
 
         char buf[128];
@@ -253,7 +253,7 @@ static void menubar_render(TuiWidget *widget)
                     tui_screen_set_cell(widget->ctx, widget->abs_y,
                                         widget->abs_x + m->start_x + 1 + j,
                                         &m->label[j], fg, bg,
-                                        at | TUI_ATTR_UNDERLINE);
+                                        at | ZEPHIO_ATTR_UNDERLINE);
                     break;
                 }
             }
@@ -383,15 +383,15 @@ TuiResult tui_menubar_init_ctx(TuiMenuBar *menubar, TuiContext *ctx, int x, int 
 
     memset(&menubar->popup, 0, sizeof(menubar->popup));
 
-    menubar->fg          = TUI_COLOR_INDEX(15);
-    menubar->bg          = TUI_COLOR_INDEX(4);
-    menubar->fg_active   = TUI_COLOR_INDEX(0);
-    menubar->bg_active   = TUI_COLOR_INDEX(14);
-    menubar->fg_popup    = TUI_COLOR_INDEX(15);
-    menubar->bg_popup    = TUI_COLOR_INDEX(234);
-    menubar->fg_popup_hl = TUI_COLOR_INDEX(0);
-    menubar->bg_popup_hl = TUI_COLOR_INDEX(12);
-    menubar->attr        = TUI_ATTR_BOLD;
+    menubar->fg          = ZEPHIO_COLOR_INDEX(15);
+    menubar->bg          = ZEPHIO_COLOR_INDEX(4);
+    menubar->fg_active   = ZEPHIO_COLOR_INDEX(0);
+    menubar->bg_active   = ZEPHIO_COLOR_INDEX(14);
+    menubar->fg_popup    = ZEPHIO_COLOR_INDEX(15);
+    menubar->bg_popup    = ZEPHIO_COLOR_INDEX(234);
+    menubar->fg_popup_hl = ZEPHIO_COLOR_INDEX(0);
+    menubar->bg_popup_hl = ZEPHIO_COLOR_INDEX(12);
+    menubar->attr        = ZEPHIO_ATTR_BOLD;
 
     menubar->on_select = NULL;
     menubar->user_data = NULL;
@@ -405,7 +405,7 @@ int tui_menubar_add_menu(TuiMenuBar *menubar, const char *label, char mnemonic)
 
     if (menubar->menu_count >= menubar->menu_capacity) {
         int newcap = menubar->menu_capacity == 0
-                     ? TUI_MENUS_INIT_CAP
+                     ? ZEPHIO_MENUS_INIT_CAP
                      : menubar->menu_capacity * 2;
         TuiMenu *nm = (TuiMenu *)realloc(menubar->menus,
                                          (size_t)newcap * sizeof(TuiMenu));
@@ -431,7 +431,7 @@ static int ensure_item_capacity(TuiMenu *m)
 {
     if (m->item_count >= m->item_capacity) {
         int newcap = m->item_capacity == 0
-                     ? TUI_MENU_ITEMS_INIT_CAP
+                     ? ZEPHIO_MENU_ITEMS_INIT_CAP
                      : m->item_capacity * 2;
         TuiMenuItem *ni = (TuiMenuItem *)realloc(m->items,
                             (size_t)newcap * sizeof(TuiMenuItem));

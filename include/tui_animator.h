@@ -14,22 +14,22 @@
  *   4. The app loop calls tui_animator_update() automatically.
  */
 
-#ifndef TUI_ANIMATOR_H
-#define TUI_ANIMATOR_H
+#ifndef ZEPHIO_ANIMATOR_H
+#define ZEPHIO_ANIMATOR_H
 
 #include "tui_animation.h"
 
-#define TUI_ANIMATOR_MAX_ANIMATIONS 64
-#define TUI_ANIMATOR_INVALID_ID     (-1)
+#define ZEPHIO_ANIMATOR_MAX_ANIMATIONS 64
+#define ZEPHIO_ANIMATOR_INVALID_ID     (-1)
 
 /**
  * @brief Animation pool manager.
  *
- * Stores up to TUI_ANIMATOR_MAX_ANIMATIONS active animations.
+ * Stores up to ZEPHIO_ANIMATOR_MAX_ANIMATIONS active animations.
  * Create with tui_animator_new(), destroy with tui_animator_free().
  */
 typedef struct TuiAnimator {
-    TuiAnimation animations[TUI_ANIMATOR_MAX_ANIMATIONS];
+    TuiAnimation animations[ZEPHIO_ANIMATOR_MAX_ANIMATIONS];
     int          count;
     int          next_id;
     int          active_count;

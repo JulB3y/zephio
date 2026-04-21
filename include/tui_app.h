@@ -13,8 +13,8 @@
  *   4. tui_app_free(app)          — after run returns.
  */
 
-#ifndef TUI_APP_H
-#define TUI_APP_H
+#ifndef ZEPHIO_APP_H
+#define ZEPHIO_APP_H
 
 #include "tui_context.h"
 #include "tui_input.h"
@@ -22,7 +22,7 @@
 #include "tui_toast.h"
 #include "tui_widget.h"
 
-#define TUI_APP_MAX_OVERLAYS 16
+#define ZEPHIO_APP_MAX_OVERLAYS 16
 
 typedef struct TuiAnimator TuiAnimator;
 typedef struct TuiApp TuiApp;
@@ -60,7 +60,7 @@ struct TuiApp {
     int          running;
     int          exit_code;
 
-    TuiWidget *overlays[TUI_APP_MAX_OVERLAYS];
+    TuiWidget *overlays[ZEPHIO_APP_MAX_OVERLAYS];
     int        overlay_count;
 
     TuiAnimator *animator;

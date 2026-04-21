@@ -8,8 +8,8 @@
  * Renders proportional scrollbar thumbs when content exceeds the viewport.
  */
 
-#ifndef TUI_SCROLL_CONTAINER_H
-#define TUI_SCROLL_CONTAINER_H
+#ifndef ZEPHIO_SCROLL_CONTAINER_H
+#define ZEPHIO_SCROLL_CONTAINER_H
 
 #include "tui_widget.h"
 

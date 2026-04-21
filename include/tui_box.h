@@ -10,13 +10,13 @@
  * are positioned within the padded interior.
  */
 
-#ifndef TUI_BOX_H
-#define TUI_BOX_H
+#ifndef ZEPHIO_BOX_H
+#define ZEPHIO_BOX_H
 
 #include "tui_widget.h"
 
-#define TUI_BOX_SINGLE 0
-#define TUI_BOX_DOUBLE 1
+#define ZEPHIO_BOX_SINGLE 0
+#define ZEPHIO_BOX_DOUBLE 1
 
 /**
  * @brief Box widget data.

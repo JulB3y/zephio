@@ -10,8 +10,8 @@
  * terminal_write_seq(). They require tui_init() to have been called.
  */
 
-#ifndef TUI_ANSI_H
-#define TUI_ANSI_H
+#ifndef ZEPHIO_ANSI_H
+#define ZEPHIO_ANSI_H
 
 #include "tui_context.h"
 #include <stddef.h>

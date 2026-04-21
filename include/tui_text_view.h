@@ -7,8 +7,8 @@
  * Home/End) and mouse-wheel scrolling via the embedded TuiScrollContainer.
  */
 
-#ifndef TUI_TEXT_VIEW_H
-#define TUI_TEXT_VIEW_H
+#ifndef ZEPHIO_TEXT_VIEW_H
+#define ZEPHIO_TEXT_VIEW_H
 
 #include "tui_scroll_container.h"
 

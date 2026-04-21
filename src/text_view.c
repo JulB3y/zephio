@@ -236,9 +236,9 @@ TuiResult tui_text_view_init_ctx(TuiTextView *tv, TuiContext *ctx, int x, int y,
     tv->line_count     = 0;
     tv->line_capacity  = 0;
     tv->max_line_width = 0;
-    tv->fg      = TUI_COLOR_INDEX(15);
-    tv->bg      = TUI_COLOR_INDEX(0);
-    tv->attr    = TUI_ATTR_NONE;
+    tv->fg      = ZEPHIO_COLOR_INDEX(15);
+    tv->bg      = ZEPHIO_COLOR_INDEX(0);
+    tv->attr    = ZEPHIO_ATTR_NONE;
     tv->word_wrap = 1;
 
     return TUI_OK;

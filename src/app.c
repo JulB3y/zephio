@@ -204,7 +204,7 @@ cleanup:
 TuiResult tui_app_push_overlay(TuiApp *app, TuiWidget *widget)
 {
     if (!app || !widget) return TUI_ERR_MEMORY;
-    if (app->overlay_count >= TUI_APP_MAX_OVERLAYS) return TUI_ERR_MEMORY;
+    if (app->overlay_count >= ZEPHIO_APP_MAX_OVERLAYS) return TUI_ERR_MEMORY;
 
     app->overlays[app->overlay_count++] = widget;
     widget->dirty = 1;

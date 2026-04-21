@@ -6,8 +6,8 @@
  * across the widget's full width or height.
  */
 
-#ifndef TUI_SEPARATOR_H
-#define TUI_SEPARATOR_H
+#ifndef ZEPHIO_SEPARATOR_H
+#define ZEPHIO_SEPARATOR_H
 
 #include "tui_widget.h"
 

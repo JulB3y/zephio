@@ -15,8 +15,8 @@
  * changing the layout size.
  */
 
-#ifndef TUI_LAYOUT_H
-#define TUI_LAYOUT_H
+#ifndef ZEPHIO_LAYOUT_H
+#define ZEPHIO_LAYOUT_H
 
 #include "tui_widget.h"
 
@@ -42,10 +42,10 @@ typedef struct {
     int max_size;
 } TuiLayoutConstraints;
 
-#define TUI_LAYOUT_FIXED(sz)       ((TuiLayoutConstraints){ TUI_LAYOUT_SIZE_FIXED, (sz), 0.0f, 0, 0 })
-#define TUI_LAYOUT_FILL            ((TuiLayoutConstraints){ TUI_LAYOUT_SIZE_FILL,   0,  1.0f, 0, 0 })
-#define TUI_LAYOUT_FILL_WEIGHT(w)  ((TuiLayoutConstraints){ TUI_LAYOUT_SIZE_FILL,   0,  (w),  0, 0 })
-#define TUI_LAYOUT_AUTO            ((TuiLayoutConstraints){ TUI_LAYOUT_SIZE_AUTO,    0,  0.0f, 0, 0 })
+#define ZEPHIO_LAYOUT_FIXED(sz)       ((TuiLayoutConstraints){ TUI_LAYOUT_SIZE_FIXED, (sz), 0.0f, 0, 0 })
+#define ZEPHIO_LAYOUT_FILL            ((TuiLayoutConstraints){ TUI_LAYOUT_SIZE_FILL,   0,  1.0f, 0, 0 })
+#define ZEPHIO_LAYOUT_FILL_WEIGHT(w)  ((TuiLayoutConstraints){ TUI_LAYOUT_SIZE_FILL,   0,  (w),  0, 0 })
+#define ZEPHIO_LAYOUT_AUTO            ((TuiLayoutConstraints){ TUI_LAYOUT_SIZE_AUTO,    0,  0.0f, 0, 0 })
 
 typedef struct {
     TuiWidget           *widget;

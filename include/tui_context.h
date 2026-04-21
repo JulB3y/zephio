@@ -1,5 +1,5 @@
-#ifndef TUI_CONTEXT_H
-#define TUI_CONTEXT_H
+#ifndef ZEPHIO_CONTEXT_H
+#define ZEPHIO_CONTEXT_H
 
 #include "tui_terminal.h"
 #include "tui_screen.h"

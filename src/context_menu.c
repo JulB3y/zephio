@@ -32,12 +32,12 @@ static void ctx_render(TuiWidget *widget)
 
     TuiColor fg  = menu->fg;
     TuiColor bg  = menu->bg;
-    TuiColor bfg = TUI_COLOR_INDEX(14);
+    TuiColor bfg = ZEPHIO_COLOR_INDEX(14);
 
     tui_screen_fill(widget->ctx, widget->abs_y, widget->abs_x,
-                    widget->width, widget->height, " ", fg, bg, TUI_ATTR_NONE);
+                    widget->width, widget->height, " ", fg, bg, ZEPHIO_ATTR_NONE);
     tui_screen_box_single(widget->ctx, widget->abs_y, widget->abs_x,
-                          widget->width, widget->height, bfg, bg, TUI_ATTR_BOLD);
+                          widget->width, widget->height, bfg, bg, ZEPHIO_ATTR_BOLD);
 
     for (int i = 0; i < menu->item_count; i++) {
         TuiContextMenuItem *item = &menu->items[i];
@@ -46,18 +46,18 @@ static void ctx_render(TuiWidget *widget)
         if (item->is_separator) {
             for (int c = 1; c < widget->width - 1; c++)
                 tui_screen_set_cell(widget->ctx, row, widget->abs_x + c,
-                                    "\xe2\x94\x80", bfg, bg, TUI_ATTR_DIM);
+                                    "\xe2\x94\x80", bfg, bg, ZEPHIO_ATTR_DIM);
             continue;
         }
 
         TuiColor ifg = fg;
         TuiColor ibg = bg;
-        TuiAttr  iat = TUI_ATTR_NONE;
+        TuiAttr  iat = ZEPHIO_ATTR_NONE;
 
         if (i == menu->highlighted) {
             ifg = menu->fg_highlight;
             ibg = menu->bg_highlight;
-            iat = TUI_ATTR_REVERSE;
+            iat = ZEPHIO_ATTR_REVERSE;
         }
 
         tui_screen_fill(widget->ctx, row, widget->abs_x + 1,
@@ -195,11 +195,11 @@ TuiResult tui_context_menu_init_ctx(TuiContextMenu *menu, TuiContext *ctx)
     menu->is_visible   = 0;
     menu->app          = NULL;
 
-    menu->fg           = TUI_COLOR_INDEX(15);
-    menu->bg           = TUI_COLOR_INDEX(234);
-    menu->fg_highlight = TUI_COLOR_INDEX(0);
-    menu->bg_highlight = TUI_COLOR_INDEX(12);
-    menu->attr         = TUI_ATTR_NONE;
+    menu->fg           = ZEPHIO_COLOR_INDEX(15);
+    menu->bg           = ZEPHIO_COLOR_INDEX(234);
+    menu->fg_highlight = ZEPHIO_COLOR_INDEX(0);
+    menu->bg_highlight = ZEPHIO_COLOR_INDEX(12);
+    menu->attr         = ZEPHIO_ATTR_NONE;
 
     menu->on_select  = NULL;
     menu->user_data  = NULL;
@@ -213,7 +213,7 @@ TuiResult tui_context_menu_add_item(TuiContextMenu *menu, const char *label)
 
     if (menu->item_count >= menu->item_capacity) {
         int newcap = menu->item_capacity == 0
-                     ? TUI_CTX_ITEMS_INIT_CAP
+                     ? ZEPHIO_CTX_ITEMS_INIT_CAP
                      : menu->item_capacity * 2;
         TuiContextMenuItem *ni = (TuiContextMenuItem *)realloc(
             menu->items, (size_t)newcap * sizeof(TuiContextMenuItem));
@@ -234,7 +234,7 @@ void tui_context_menu_add_separator(TuiContextMenu *menu)
 
     if (menu->item_count >= menu->item_capacity) {
         int newcap = menu->item_capacity == 0
-                     ? TUI_CTX_ITEMS_INIT_CAP
+                     ? ZEPHIO_CTX_ITEMS_INIT_CAP
                      : menu->item_capacity * 2;
         TuiContextMenuItem *ni = (TuiContextMenuItem *)realloc(
             menu->items, (size_t)newcap * sizeof(TuiContextMenuItem));

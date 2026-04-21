@@ -39,7 +39,7 @@ static void list_render(TuiWidget *widget)
             if (idx == list->selected && widget->focused) {
                 fg   = list->fg_selected;
                 bg   = list->bg_selected;
-                attr |= TUI_ATTR_REVERSE;
+                attr |= ZEPHIO_ATTR_REVERSE;
             }
         }
 
@@ -174,11 +174,11 @@ TuiResult tui_list_init_ctx(TuiList *list, TuiContext *ctx, int x, int y, int wi
     list->item_capacity = 0;
     list->selected      = 0;
     list->scroll_offset = 0;
-    list->fg            = TUI_COLOR_INDEX(15);
-    list->bg            = TUI_COLOR_INDEX(0);
-    list->fg_selected   = TUI_COLOR_INDEX(0);
-    list->bg_selected   = TUI_COLOR_INDEX(12);
-    list->attr          = TUI_ATTR_NONE;
+    list->fg            = ZEPHIO_COLOR_INDEX(15);
+    list->bg            = ZEPHIO_COLOR_INDEX(0);
+    list->fg_selected   = ZEPHIO_COLOR_INDEX(0);
+    list->bg_selected   = ZEPHIO_COLOR_INDEX(12);
+    list->attr          = ZEPHIO_ATTR_NONE;
     list->on_select     = NULL;
     list->user_data     = NULL;
 

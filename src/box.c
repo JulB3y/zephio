@@ -31,7 +31,7 @@ static void box_render(TuiWidget *widget)
                     widget->width - 2, widget->height - 2,
                     " ", fg, bg, attr);
 
-    if (box->border_style == TUI_BOX_DOUBLE) {
+    if (box->border_style == ZEPHIO_BOX_DOUBLE) {
         tui_screen_box_double(widget->ctx, widget->abs_y, widget->abs_x,
                                widget->width, widget->height,
                                fg, bg, attr);
@@ -54,7 +54,7 @@ static void box_render(TuiWidget *widget)
             buf[copy_len] = '\0';
 
             tui_screen_write(widget->ctx, widget->abs_y, widget->abs_x + 2,
-                             buf, fg, bg, attr | TUI_ATTR_BOLD);
+                             buf, fg, bg, attr | ZEPHIO_ATTR_BOLD);
         }
     }
 }
@@ -106,9 +106,9 @@ TuiResult tui_box_init_ctx(TuiBox *box, TuiContext *ctx, int x, int y, int width
     box->base.focusable = 0;
 
     box->title         = NULL;
-    box->fg            = TUI_COLOR_INDEX(15);
-    box->bg            = TUI_COLOR_INDEX(0);
-    box->attr          = TUI_ATTR_NONE;
+    box->fg            = ZEPHIO_COLOR_INDEX(15);
+    box->bg            = ZEPHIO_COLOR_INDEX(0);
+    box->attr          = ZEPHIO_ATTR_NONE;
     box->border_style  = border_style;
     box->padding       = 0;
 

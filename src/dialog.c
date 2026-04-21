@@ -37,15 +37,15 @@ static void dialog_render(TuiWidget *widget)
 {
     TuiDialog *dialog = (TuiDialog *)widget;
 
-    TuiColor border_fg = TUI_COLOR_INDEX(TUI_COLOR_BRIGHT_CYAN);
-    TuiColor border_bg = TUI_COLOR_INDEX(TUI_COLOR_BG_DARK);
-    TuiColor title_fg  = TUI_COLOR_INDEX(TUI_COLOR_BRIGHT_YELLOW);
-    TuiColor text_fg   = TUI_COLOR_INDEX(TUI_COLOR_BRIGHT_WHITE);
-    TuiColor text_bg   = TUI_COLOR_INDEX(TUI_COLOR_BG_DARK);
-    TuiAttr  border_attr = TUI_ATTR_BOLD;
+    TuiColor border_fg = ZEPHIO_COLOR_INDEX(TUI_COLOR_BRIGHT_CYAN);
+    TuiColor border_bg = ZEPHIO_COLOR_INDEX(TUI_COLOR_BG_DARK);
+    TuiColor title_fg  = ZEPHIO_COLOR_INDEX(TUI_COLOR_BRIGHT_YELLOW);
+    TuiColor text_fg   = ZEPHIO_COLOR_INDEX(TUI_COLOR_BRIGHT_WHITE);
+    TuiColor text_bg   = ZEPHIO_COLOR_INDEX(TUI_COLOR_BG_DARK);
+    TuiAttr  border_attr = ZEPHIO_ATTR_BOLD;
 
     tui_screen_fill(widget->ctx, widget->abs_y, widget->abs_x,
-                    widget->width, widget->height, " ", text_fg, text_bg, TUI_ATTR_NONE);
+                    widget->width, widget->height, " ", text_fg, text_bg, ZEPHIO_ATTR_NONE);
 
     tui_screen_box_double(widget->ctx, widget->abs_y, widget->abs_x,
                           widget->width, widget->height,
@@ -63,7 +63,7 @@ static void dialog_render(TuiWidget *widget)
         memcpy(buf, dialog->title, (size_t)copy_len);
         buf[copy_len] = '\0';
         tui_screen_write(widget->ctx, widget->abs_y, col, buf, title_fg, border_bg,
-                         border_attr | TUI_ATTR_BOLD);
+                         border_attr | ZEPHIO_ATTR_BOLD);
     }
 
     if (dialog->message) {
@@ -84,7 +84,7 @@ static void dialog_render(TuiWidget *widget)
             buf[copy_len] = '\0';
 
             tui_screen_write(widget->ctx, row, widget->abs_x + 2, buf, text_fg, text_bg,
-                             TUI_ATTR_NONE);
+                             ZEPHIO_ATTR_NONE);
             row++;
 
             if (eol)
@@ -111,19 +111,19 @@ static void dialog_render(TuiWidget *widget)
             int label_len = (int)strlen(dialog->button_labels[i]);
             int btn_width = label_len + 4;
 
-            TuiColor btn_fg = TUI_COLOR_INDEX(TUI_COLOR_BRIGHT_WHITE);
-            TuiColor btn_bg = TUI_COLOR_INDEX(TUI_COLOR_BLUE);
-            TuiAttr  btn_attr = TUI_ATTR_NONE;
+            TuiColor btn_fg = ZEPHIO_COLOR_INDEX(TUI_COLOR_BRIGHT_WHITE);
+            TuiColor btn_bg = ZEPHIO_COLOR_INDEX(TUI_COLOR_BLUE);
+            TuiAttr  btn_attr = ZEPHIO_ATTR_NONE;
 
             if (i == dialog->selected_button) {
                 if (widget->focused) {
-                    btn_fg = TUI_COLOR_INDEX(TUI_COLOR_BLACK);
-                    btn_bg = TUI_COLOR_INDEX(TUI_COLOR_BRIGHT_CYAN);
-                    btn_attr = TUI_ATTR_BOLD | TUI_ATTR_REVERSE;
+                    btn_fg = ZEPHIO_COLOR_INDEX(TUI_COLOR_BLACK);
+                    btn_bg = ZEPHIO_COLOR_INDEX(TUI_COLOR_BRIGHT_CYAN);
+                    btn_attr = ZEPHIO_ATTR_BOLD | ZEPHIO_ATTR_REVERSE;
                 } else {
-                    btn_fg = TUI_COLOR_INDEX(TUI_COLOR_BRIGHT_CYAN);
-                    btn_bg = TUI_COLOR_INDEX(TUI_COLOR_BG_MID);
-                    btn_attr = TUI_ATTR_BOLD;
+                    btn_fg = ZEPHIO_COLOR_INDEX(TUI_COLOR_BRIGHT_CYAN);
+                    btn_bg = ZEPHIO_COLOR_INDEX(TUI_COLOR_BG_MID);
+                    btn_attr = ZEPHIO_ATTR_BOLD;
                 }
             }
 
@@ -287,11 +287,11 @@ TuiResult tui_dialog_init_ctx(TuiDialog *dialog, TuiContext *ctx, const char *ti
 int tui_dialog_add_button(TuiDialog *dialog, const char *label)
 {
     if (!dialog || !label) return -1;
-    if (dialog->button_count >= TUI_DIALOG_MAX_BUTTONS) return -1;
+    if (dialog->button_count >= ZEPHIO_DIALOG_MAX_BUTTONS) return -1;
 
     int idx = dialog->button_count++;
-    strncpy(dialog->button_labels[idx], label, TUI_DIALOG_MAX_BUTTON_LABEL - 1);
-    dialog->button_labels[idx][TUI_DIALOG_MAX_BUTTON_LABEL - 1] = '\0';
+    strncpy(dialog->button_labels[idx], label, ZEPHIO_DIALOG_MAX_BUTTON_LABEL - 1);
+    dialog->button_labels[idx][ZEPHIO_DIALOG_MAX_BUTTON_LABEL - 1] = '\0';
     dialog->base.dirty = 1;
 
     return idx;

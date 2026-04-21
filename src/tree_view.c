@@ -101,11 +101,11 @@ static void render_scrollbar(TuiWidget *widget, int total, int offset)
 {
     int wh = widget->height;
     int scroll_col = widget->abs_x + widget->width - 1;
-    TuiColor track_fg = TUI_COLOR_INDEX(TUI_COLOR_GRAY_DARK);
-    TuiColor track_bg = TUI_COLOR_INDEX(0);
+    TuiColor track_fg = ZEPHIO_COLOR_INDEX(TUI_COLOR_GRAY_DARK);
+    TuiColor track_bg = ZEPHIO_COLOR_INDEX(0);
 
     tui_screen_fill(widget->ctx, widget->abs_y, scroll_col, 1, wh, " ",
-                    track_fg, track_bg, TUI_ATTR_DIM);
+                    track_fg, track_bg, ZEPHIO_ATTR_DIM);
 
     int max_scroll = total - wh;
     if (max_scroll > 0) {
@@ -115,9 +115,9 @@ static void render_scrollbar(TuiWidget *widget, int total, int offset)
         for (int t = 0; t < thumb_h; t++) {
             tui_screen_set_cell(widget->ctx, widget->abs_y + thumb_y + t, scroll_col,
                                 "\xe2\x96\x88",
-                                TUI_COLOR_INDEX(TUI_COLOR_BRIGHT_WHITE),
-                                TUI_COLOR_INDEX(TUI_COLOR_GRAY_MID),
-                                TUI_ATTR_NONE);
+                                ZEPHIO_COLOR_INDEX(TUI_COLOR_BRIGHT_WHITE),
+                                ZEPHIO_COLOR_INDEX(TUI_COLOR_GRAY_MID),
+                                ZEPHIO_ATTR_NONE);
         }
     }
 }
@@ -146,7 +146,7 @@ static void tree_render(TuiWidget *widget)
             TuiStyle s = widget->theme->styles[state];
             fg = s.fg; bg = s.bg; attr = s.attr;
         } else {
-            fg = tv->fg; bg = tv->bg; attr = TUI_ATTR_NONE;
+            fg = tv->fg; bg = tv->bg; attr = ZEPHIO_ATTR_NONE;
             if (idx == tv->selected && widget->focused) {
                 fg = tv->fg_selected; bg = tv->bg_selected;
             }
@@ -186,7 +186,7 @@ static void tree_render(TuiWidget *widget)
         if (entry->node->child_count > 0) {
             if (col >= wx + widget->width) continue;
             const char *exp = entry->node->expanded ? UTF8_COLLAPSE : UTF8_EXPAND;
-            tui_screen_write(widget->ctx, wy + i, col, exp, fg, bg, attr | TUI_ATTR_BOLD);
+            tui_screen_write(widget->ctx, wy + i, col, exp, fg, bg, attr | ZEPHIO_ATTR_BOLD);
             col += 1;
         } else {
             col += 1;
@@ -214,7 +214,7 @@ static void tree_render(TuiWidget *widget)
 
         if (empty_rows > 0 && tv->bg_empty.type != TUI_COLOR_TYPE_NONE) {
             tui_screen_fill(widget->ctx, empty_start, wx, widget->width, empty_rows,
-                            " ", tv->fg, tv->bg_empty, TUI_ATTR_NONE);
+                            " ", tv->fg, tv->bg_empty, ZEPHIO_ATTR_NONE);
         }
     }
 
@@ -410,12 +410,12 @@ TuiResult tui_tree_view_init_ctx(TuiTreeView *tv, TuiContext *ctx, int x, int y,
     tv->on_select       = NULL;
     tv->user_data       = NULL;
 
-    tv->fg              = TUI_COLOR_INDEX(15);
-    tv->bg              = TUI_COLOR_INDEX(0);
-    tv->fg_selected     = TUI_COLOR_INDEX(0);
-    tv->bg_selected     = TUI_COLOR_INDEX(12);
-    tv->fg_connector    = TUI_COLOR_INDEX(TUI_COLOR_BRIGHT_BLACK);
-    tv->bg_empty        = TUI_COLOR_NONE;
+    tv->fg              = ZEPHIO_COLOR_INDEX(15);
+    tv->bg              = ZEPHIO_COLOR_INDEX(0);
+    tv->fg_selected     = ZEPHIO_COLOR_INDEX(0);
+    tv->bg_selected     = ZEPHIO_COLOR_INDEX(12);
+    tv->fg_connector    = ZEPHIO_COLOR_INDEX(TUI_COLOR_BRIGHT_BLACK);
+    tv->bg_empty        = ZEPHIO_COLOR_NONE;
 
     return TUI_OK;
 }

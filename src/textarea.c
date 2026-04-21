@@ -461,9 +461,9 @@ TuiResult tui_textarea_init_ctx(TuiTextArea *ta, TuiContext *ctx, int x, int y,
     ta->preferred_col = 0;
     ta->has_preferred_col = 0;
 
-    ta->fg   = TUI_COLOR_INDEX(15);
-    ta->bg   = TUI_COLOR_INDEX(234);
-    ta->attr = TUI_ATTR_NONE;
+    ta->fg   = ZEPHIO_COLOR_INDEX(15);
+    ta->bg   = ZEPHIO_COLOR_INDEX(234);
+    ta->attr = ZEPHIO_ATTR_NONE;
 
     return TUI_OK;
 }

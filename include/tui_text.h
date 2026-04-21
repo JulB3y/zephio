@@ -9,13 +9,13 @@
  * All functions are pure (no global state, no I/O).
  */
 
-#ifndef TUI_TEXT_H
-#define TUI_TEXT_H
+#ifndef ZEPHIO_TEXT_H
+#define ZEPHIO_TEXT_H
 
 #include <stddef.h>
 #include <stdint.h>
 
-#define TUI_TAB_SIZE 8
+#define ZEPHIO_TAB_SIZE 8
 
 /**
  * @brief Validate a UTF-8 byte sequence.

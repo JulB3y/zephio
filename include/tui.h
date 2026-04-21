@@ -10,8 +10,8 @@
  * but tui_init() must be called first.
  */
 
-#ifndef TUI_H
-#define TUI_H
+#ifndef ZEPHIO_H
+#define ZEPHIO_H
 
 #include <stddef.h>
 #include <stdint.h>

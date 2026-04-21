@@ -122,7 +122,7 @@ static void resolve_style(TuiWidget *widget, int logical, int selected,
         TuiStyle s = widget->theme->styles[state];
         *fg = s.fg; *bg = s.bg; *attr = s.attr;
     } else {
-        *fg = fg_def; *bg = bg_def; *attr = TUI_ATTR_NONE;
+        *fg = fg_def; *bg = bg_def; *attr = ZEPHIO_ATTR_NONE;
         if (logical == selected && widget->focused) {
             *fg = fg_sel; *bg = bg_sel;
         }
@@ -142,12 +142,12 @@ static void table_render(TuiWidget *widget)
     {
         TuiColor hfg = table->fg_header;
         TuiColor hbg = table->bg_header;
-        TuiAttr  hat = TUI_ATTR_BOLD;
+        TuiAttr  hat = ZEPHIO_ATTR_BOLD;
 
         if (widget->theme) {
             hfg = header_style.fg;
             hbg = header_style.bg;
-            hat = header_style.attr | TUI_ATTR_BOLD;
+            hat = header_style.attr | ZEPHIO_ATTR_BOLD;
         }
 
         tui_screen_fill(widget->ctx, wy, wx, widget->width, 1, " ", hfg, hbg, hat);
@@ -203,10 +203,10 @@ static void table_render(TuiWidget *widget)
 
     if (table->row_count > body_height && body_height > 0) {
         int scroll_col = wx + widget->width - 1;
-        TuiColor track_fg = TUI_COLOR_INDEX(TUI_COLOR_GRAY_DARK);
+        TuiColor track_fg = ZEPHIO_COLOR_INDEX(TUI_COLOR_GRAY_DARK);
         TuiColor track_bg = table->bg;
         tui_screen_fill(widget->ctx, wy + 1, scroll_col, 1, body_height, " ",
-                        track_fg, track_bg, TUI_ATTR_DIM);
+                        track_fg, track_bg, ZEPHIO_ATTR_DIM);
 
         int max_scroll = table->row_count - body_height;
         if (max_scroll > 0) {
@@ -216,9 +216,9 @@ static void table_render(TuiWidget *widget)
             for (int t = 0; t < thumb_h; t++) {
                 tui_screen_set_cell(widget->ctx, wy + 1 + thumb_y + t, scroll_col,
                                     "\xe2\x96\x88",
-                                    TUI_COLOR_INDEX(TUI_COLOR_BRIGHT_WHITE),
-                                    TUI_COLOR_INDEX(TUI_COLOR_GRAY_MID),
-                                    TUI_ATTR_NONE);
+                                    ZEPHIO_COLOR_INDEX(TUI_COLOR_BRIGHT_WHITE),
+                                    ZEPHIO_COLOR_INDEX(TUI_COLOR_GRAY_MID),
+                                    ZEPHIO_ATTR_NONE);
             }
         }
     }
@@ -455,12 +455,12 @@ TuiResult tui_table_init_ctx(TuiTable *table, TuiContext *ctx, int x, int y, int
     table->on_select     = NULL;
     table->user_data     = NULL;
 
-    table->fg            = TUI_COLOR_INDEX(15);
-    table->bg            = TUI_COLOR_INDEX(0);
-    table->fg_header     = TUI_COLOR_INDEX(15);
-    table->bg_header     = TUI_COLOR_INDEX(240);
-    table->fg_selected   = TUI_COLOR_INDEX(0);
-    table->bg_selected   = TUI_COLOR_INDEX(12);
+    table->fg            = ZEPHIO_COLOR_INDEX(15);
+    table->bg            = ZEPHIO_COLOR_INDEX(0);
+    table->fg_header     = ZEPHIO_COLOR_INDEX(15);
+    table->bg_header     = ZEPHIO_COLOR_INDEX(240);
+    table->fg_selected   = ZEPHIO_COLOR_INDEX(0);
+    table->bg_selected   = ZEPHIO_COLOR_INDEX(12);
 
     return TUI_OK;
 }

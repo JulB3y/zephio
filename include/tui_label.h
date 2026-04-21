@@ -6,8 +6,8 @@
  * The label is not focusable and does not handle input.
  */
 
-#ifndef TUI_LABEL_H
-#define TUI_LABEL_H
+#ifndef ZEPHIO_LABEL_H
+#define ZEPHIO_LABEL_H
 
 #include "tui_widget.h"
 

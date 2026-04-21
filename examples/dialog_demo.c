@@ -57,8 +57,8 @@ static void update_status(AppWidgets *w, const char *msg)
 {
     snprintf(w->status_text, sizeof(w->status_text), " %s", msg);
     tui_label_set_text(&w->status, w->status_text);
-    tui_label_set_colors(&w->status, TUI_COLOR_INDEX(15),
-                         TUI_COLOR_INDEX(236));
+    tui_label_set_colors(&w->status, ZEPHIO_COLOR_INDEX(15),
+                         ZEPHIO_COLOR_INDEX(236));
 }
 
 static void on_confirm_response(TuiDialog *dialog, int button_index,
@@ -152,8 +152,8 @@ static void on_list_select(TuiWidget *widget, int index, const char *item,
     AppWidgets *w = (AppWidgets *)user_data;
     snprintf(w->status_text, sizeof(w->status_text), " Selected: %s", item);
     tui_label_set_text(&w->status, w->status_text);
-    tui_label_set_colors(&w->status, TUI_COLOR_INDEX(14),
-                         TUI_COLOR_INDEX(236));
+    tui_label_set_colors(&w->status, ZEPHIO_COLOR_INDEX(14),
+                         ZEPHIO_COLOR_INDEX(236));
 }
 
 static void build_widgets(AppWidgets *w, int rows, int cols, TuiContext *ctx)
@@ -167,19 +167,19 @@ static void build_widgets(AppWidgets *w, int rows, int cols, TuiContext *ctx)
 
     tui_label_init_ctx(&w->title, ctx, ux, y, uw, 1,
                    "Dialog / Modal Demo  |  d: confirm  a: alert  c: clipboard");
-    tui_label_set_colors(&w->title, TUI_COLOR_INDEX(14), TUI_COLOR_INDEX(0));
-    tui_label_set_attr(&w->title, TUI_ATTR_BOLD);
+    tui_label_set_colors(&w->title, ZEPHIO_COLOR_INDEX(14), ZEPHIO_COLOR_INDEX(0));
+    tui_label_set_attr(&w->title, ZEPHIO_ATTR_BOLD);
     tui_widget_add_child(&w->root, &w->title.base);
     y += 2;
 
     tui_label_init_ctx(&w->hint, ctx, ux, y, uw, 1,
                    "Click buttons or press d/a/c keys. Tab cycles focus.");
-    tui_label_set_colors(&w->hint, TUI_COLOR_INDEX(8), TUI_COLOR_INDEX(0));
+    tui_label_set_colors(&w->hint, ZEPHIO_COLOR_INDEX(8), ZEPHIO_COLOR_INDEX(0));
     tui_widget_add_child(&w->root, &w->hint.base);
     y += 2;
 
     tui_separator_init_h_ctx(&w->sep, ctx, ux, y, uw);
-    tui_separator_set_colors(&w->sep, TUI_COLOR_INDEX(8), TUI_COLOR_INDEX(0));
+    tui_separator_set_colors(&w->sep, ZEPHIO_COLOR_INDEX(8), ZEPHIO_COLOR_INDEX(0));
     tui_widget_add_child(&w->root, &w->sep.base);
     y += 1;
 
@@ -189,16 +189,16 @@ static void build_widgets(AppWidgets *w, int rows, int cols, TuiContext *ctx)
 
         tui_button_init_ctx(&w->btn_dialog, ctx, ux, y, bw, 1, "Confirm");
         tui_button_set_colors(&w->btn_dialog,
-                              TUI_COLOR_INDEX(0), TUI_COLOR_INDEX(2),
-                              TUI_COLOR_INDEX(15), TUI_COLOR_INDEX(10));
+                              ZEPHIO_COLOR_INDEX(0), ZEPHIO_COLOR_INDEX(2),
+                              ZEPHIO_COLOR_INDEX(15), ZEPHIO_COLOR_INDEX(10));
         tui_button_set_on_click(&w->btn_dialog, on_dialog_click, w);
         w->btn_dialog.base.focusable = 1;
         tui_widget_add_child(&w->root, &w->btn_dialog.base);
 
         tui_button_init_ctx(&w->btn_alert, ctx, ux + bw + 2, y, bw, 1, "Alert");
         tui_button_set_colors(&w->btn_alert,
-                              TUI_COLOR_INDEX(0), TUI_COLOR_INDEX(4),
-                              TUI_COLOR_INDEX(15), TUI_COLOR_INDEX(12));
+                              ZEPHIO_COLOR_INDEX(0), ZEPHIO_COLOR_INDEX(4),
+                              ZEPHIO_COLOR_INDEX(15), ZEPHIO_COLOR_INDEX(12));
         tui_button_set_on_click(&w->btn_alert, on_alert_click, w);
         w->btn_alert.base.focusable = 1;
         tui_widget_add_child(&w->root, &w->btn_alert.base);
@@ -206,8 +206,8 @@ static void build_widgets(AppWidgets *w, int rows, int cols, TuiContext *ctx)
         tui_button_init_ctx(&w->btn_clipboard, ctx, ux + 2 * (bw + 2), y, bw, 1,
                              "Clipboard");
         tui_button_set_colors(&w->btn_clipboard,
-                              TUI_COLOR_INDEX(0), TUI_COLOR_INDEX(5),
-                              TUI_COLOR_INDEX(15), TUI_COLOR_INDEX(13));
+                              ZEPHIO_COLOR_INDEX(0), ZEPHIO_COLOR_INDEX(5),
+                              ZEPHIO_COLOR_INDEX(15), ZEPHIO_COLOR_INDEX(13));
         tui_button_set_on_click(&w->btn_clipboard, on_clipboard_click, w);
         w->btn_clipboard.base.focusable = 1;
         tui_widget_add_child(&w->root, &w->btn_clipboard.base);
@@ -215,8 +215,8 @@ static void build_widgets(AppWidgets *w, int rows, int cols, TuiContext *ctx)
     y += 2;
 
     tui_separator_init_h_ctx(&w->sep2, ctx, ux, y, uw);
-    tui_separator_set_colors(&w->sep2, TUI_COLOR_INDEX(8),
-                             TUI_COLOR_INDEX(0));
+    tui_separator_set_colors(&w->sep2, ZEPHIO_COLOR_INDEX(8),
+                             ZEPHIO_COLOR_INDEX(0));
     tui_widget_add_child(&w->root, &w->sep2.base);
     y += 1;
 
@@ -226,9 +226,9 @@ static void build_widgets(AppWidgets *w, int rows, int cols, TuiContext *ctx)
         if (list_h > 8) list_h = 8;
 
         tui_list_init_ctx(&w->menu, ctx, ux, y, uw, list_h);
-        tui_list_set_colors(&w->menu, TUI_COLOR_INDEX(15),
-                            TUI_COLOR_INDEX(234), TUI_COLOR_INDEX(0),
-                            TUI_COLOR_INDEX(12));
+        tui_list_set_colors(&w->menu, ZEPHIO_COLOR_INDEX(15),
+                            ZEPHIO_COLOR_INDEX(234), ZEPHIO_COLOR_INDEX(0),
+                            ZEPHIO_COLOR_INDEX(12));
         tui_list_set_on_select(&w->menu, on_list_select, w);
         w->menu.base.focusable = 1;
         tui_list_add_item(&w->menu, "Open confirm dialog (d)");
@@ -240,8 +240,8 @@ static void build_widgets(AppWidgets *w, int rows, int cols, TuiContext *ctx)
 
     tui_label_init_ctx(&w->status, ctx, 1, rows - 1, cols - 2, 1,
                    " Press d/a/c or click buttons  |  q/Esc to quit");
-    tui_label_set_colors(&w->status, TUI_COLOR_INDEX(15),
-                         TUI_COLOR_INDEX(236));
+    tui_label_set_colors(&w->status, ZEPHIO_COLOR_INDEX(15),
+                         ZEPHIO_COLOR_INDEX(236));
     tui_widget_add_child(&w->root, &w->status.base);
 }
 
@@ -280,12 +280,12 @@ static int on_render(TuiApp *app, void *user_data)
 
     tui_screen_clear(g_app->ctx);
     tui_screen_fill(g_app->ctx, 0, 0, size.cols, 1, " ",
-                    TUI_COLOR_INDEX(15), TUI_COLOR_INDEX(4), TUI_ATTR_BOLD);
+                    ZEPHIO_COLOR_INDEX(15), ZEPHIO_COLOR_INDEX(4), ZEPHIO_ATTR_BOLD);
     tui_screen_write(g_app->ctx, 0, 2,
                      "Dialog Demo  |  Modal overlays + Clipboard",
-                     TUI_COLOR_INDEX(15), TUI_COLOR_INDEX(4), TUI_ATTR_BOLD);
+                     ZEPHIO_COLOR_INDEX(15), ZEPHIO_COLOR_INDEX(4), ZEPHIO_ATTR_BOLD);
     tui_screen_fill(g_app->ctx, size.rows - 1, 0, size.cols, 1, " ",
-                    TUI_COLOR_INDEX(15), TUI_COLOR_INDEX(236), TUI_ATTR_NONE);
+                    ZEPHIO_COLOR_INDEX(15), ZEPHIO_COLOR_INDEX(236), ZEPHIO_ATTR_NONE);
 
     tui_widget_render(&w->root);
     tui_app_render_overlays(app);

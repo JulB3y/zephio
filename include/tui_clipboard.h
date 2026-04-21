@@ -9,8 +9,8 @@
  * Base64 encoding is implemented internally (no external deps).
  */
 
-#ifndef TUI_CLIPBOARD_H
-#define TUI_CLIPBOARD_H
+#ifndef ZEPHIO_CLIPBOARD_H
+#define ZEPHIO_CLIPBOARD_H
 
 #include "tui_context.h"
 #include <stddef.h>

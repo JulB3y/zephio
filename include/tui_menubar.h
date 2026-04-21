@@ -14,13 +14,13 @@
  *   5. Add to widget tree via tui_widget_add_child().
  */
 
-#ifndef TUI_MENUBAR_H
-#define TUI_MENUBAR_H
+#ifndef ZEPHIO_MENUBAR_H
+#define ZEPHIO_MENUBAR_H
 
 #include "tui_widget.h"
 
-#define TUI_MENU_ITEMS_INIT_CAP 8
-#define TUI_MENUS_INIT_CAP 8
+#define ZEPHIO_MENU_ITEMS_INIT_CAP 8
+#define ZEPHIO_MENUS_INIT_CAP 8
 
 typedef struct TuiMenuBar      TuiMenuBar;
 typedef struct TuiMenu         TuiMenu;

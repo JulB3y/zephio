@@ -688,7 +688,7 @@ int tui_text_width(const char *text, size_t len)
         if (clen == 0) break;
 
         if (cp == '\t') {
-            width += TUI_TAB_SIZE - (width % TUI_TAB_SIZE);
+            width += ZEPHIO_TAB_SIZE - (width % ZEPHIO_TAB_SIZE);
         } else if (cp == '\n' || cp == '\r') {
             break;
         } else {
@@ -728,7 +728,7 @@ int tui_text_clip(const char *text, size_t len, int max_width, size_t *out_len)
 
         int cw;
         if (cp == '\t') {
-            cw = TUI_TAB_SIZE - (width % TUI_TAB_SIZE);
+            cw = ZEPHIO_TAB_SIZE - (width % ZEPHIO_TAB_SIZE);
         } else {
             cw = tui_utf8_char_width(cp);
         }
@@ -809,7 +809,7 @@ int tui_text_word_wrap(const char *text, size_t len, int max_width,
 
         int cw;
         if (cp == '\t') {
-            cw = TUI_TAB_SIZE - (line_width % TUI_TAB_SIZE);
+            cw = ZEPHIO_TAB_SIZE - (line_width % ZEPHIO_TAB_SIZE);
         } else {
             cw = tui_utf8_char_width(cp);
         }
@@ -861,7 +861,7 @@ int tui_text_index_to_col(const char *text, size_t len, size_t index)
         if (clen == 0) break;
 
         if (cp == '\t') {
-            col += TUI_TAB_SIZE - (col % TUI_TAB_SIZE);
+            col += ZEPHIO_TAB_SIZE - (col % ZEPHIO_TAB_SIZE);
         } else if (cp == '\n' || cp == '\r') {
             col = 0;
         } else {
@@ -890,7 +890,7 @@ int tui_text_col_to_index(const char *text, size_t len, int col)
 
         int cw;
         if (cp == '\t') {
-            cw = TUI_TAB_SIZE - (cur_col % TUI_TAB_SIZE);
+            cw = ZEPHIO_TAB_SIZE - (cur_col % ZEPHIO_TAB_SIZE);
         } else {
             cw = tui_utf8_char_width(cp);
         }
@@ -906,7 +906,7 @@ int tui_text_col_to_index(const char *text, size_t len, int col)
 
 int tui_text_expand_tab(int col, int tab_size)
 {
-    if (tab_size <= 0) tab_size = TUI_TAB_SIZE;
+    if (tab_size <= 0) tab_size = ZEPHIO_TAB_SIZE;
     return tab_size - (col % tab_size);
 }
 
@@ -915,7 +915,7 @@ int tui_text_expand_tabs(const char *text, size_t len, int tab_size,
 {
     if (!text || !out || out_size == 0) return -1;
 
-    if (tab_size <= 0) tab_size = TUI_TAB_SIZE;
+    if (tab_size <= 0) tab_size = ZEPHIO_TAB_SIZE;
 
     int col = 0;
     size_t oi = 0;

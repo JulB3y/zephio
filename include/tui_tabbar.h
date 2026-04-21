@@ -17,12 +17,12 @@
  *   4. Add to widget tree via tui_widget_add_child().
  */
 
-#ifndef TUI_TABBAR_H
-#define TUI_TABBAR_H
+#ifndef ZEPHIO_TABBAR_H
+#define ZEPHIO_TABBAR_H
 
 #include "tui_widget.h"
 
-#define TUI_TABBAR_INIT_CAP 8
+#define ZEPHIO_TABBAR_INIT_CAP 8
 
 typedef struct TuiTabBar TuiTabBar;
 typedef struct TuiTab    TuiTab;

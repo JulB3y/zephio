@@ -250,8 +250,8 @@ TuiResult tui_split_pane_init_ctx(TuiSplitPane *pane, TuiContext *ctx, int x, in
 
     pane->orientation     = orientation;
     pane->separator_size  = 1;
-    pane->min_pane1       = TUI_SPLIT_MIN_PANE;
-    pane->min_pane2       = TUI_SPLIT_MIN_PANE;
+    pane->min_pane1       = ZEPHIO_SPLIT_MIN_PANE;
+    pane->min_pane2       = ZEPHIO_SPLIT_MIN_PANE;
     pane->dragging        = 0;
     pane->drag_origin     = 0;
     pane->drag_split_origin = 0;
@@ -262,9 +262,9 @@ TuiResult tui_split_pane_init_ctx(TuiSplitPane *pane, TuiContext *ctx, int x, in
         pane->split_pos = height / 2;
     }
 
-    pane->sep_fg   = TUI_COLOR_INDEX(TUI_COLOR_BRIGHT_CYAN);
-    pane->sep_bg   = TUI_COLOR_INDEX(TUI_COLOR_BG_DARK);
-    pane->sep_attr = TUI_ATTR_DIM;
+    pane->sep_fg   = ZEPHIO_COLOR_INDEX(TUI_COLOR_BRIGHT_CYAN);
+    pane->sep_bg   = ZEPHIO_COLOR_INDEX(TUI_COLOR_BG_DARK);
+    pane->sep_attr = ZEPHIO_ATTR_DIM;
 
     clamp_split_pos(pane);
 

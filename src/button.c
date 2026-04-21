@@ -27,7 +27,7 @@ static void button_render(TuiWidget *widget)
         if (widget->focused) {
             fg   = button->fg_focused;
             bg   = button->bg_focused;
-            attr |= TUI_ATTR_BOLD;
+            attr |= ZEPHIO_ATTR_BOLD;
         }
     }
 
@@ -107,11 +107,11 @@ TuiResult tui_button_init_ctx(TuiButton *button, TuiContext *ctx, int x, int y, 
 
     button->base.focusable = 1;
 
-    button->fg          = TUI_COLOR_INDEX(15);
-    button->bg          = TUI_COLOR_INDEX(0);
-    button->fg_focused  = TUI_COLOR_INDEX(0);
-    button->bg_focused  = TUI_COLOR_INDEX(12);
-    button->attr        = TUI_ATTR_NONE;
+    button->fg          = ZEPHIO_COLOR_INDEX(15);
+    button->bg          = ZEPHIO_COLOR_INDEX(0);
+    button->fg_focused  = ZEPHIO_COLOR_INDEX(0);
+    button->bg_focused  = ZEPHIO_COLOR_INDEX(12);
+    button->attr        = ZEPHIO_ATTR_NONE;
     button->on_click    = NULL;
     button->user_data   = NULL;
 

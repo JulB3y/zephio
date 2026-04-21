@@ -24,7 +24,7 @@ TuiColor tui_color_lerp(TuiColor from, TuiColor to, double t)
     if (t >= 1.0) return to;
 
     if (from.type == TUI_COLOR_TYPE_RGB && to.type == TUI_COLOR_TYPE_RGB) {
-        return TUI_COLOR_RGB(
+        return ZEPHIO_COLOR_RGB(
             lerp_u8(from.rgb.r, to.rgb.r, t),
             lerp_u8(from.rgb.g, to.rgb.g, t),
             lerp_u8(from.rgb.b, to.rgb.b, t)
@@ -35,7 +35,7 @@ TuiColor tui_color_lerp(TuiColor from, TuiColor to, double t)
         double idx = from.index + (to.index - from.index) * t;
         if (idx < 0.0) idx = 0.0;
         if (idx > 255.0) idx = 255.0;
-        return TUI_COLOR_INDEX((uint8_t)(idx + 0.5));
+        return ZEPHIO_COLOR_INDEX((uint8_t)(idx + 0.5));
     }
 
     return to;
@@ -67,11 +67,11 @@ static void slide_free_complete(void *user_data)
 int tui_effect_slide_in(TuiAnimator *animator, TuiWidget *widget,
                         TuiSlideDirection dir, double duration_ms)
 {
-    if (!animator || !widget) return TUI_ANIMATOR_INVALID_ID;
+    if (!animator || !widget) return ZEPHIO_ANIMATOR_INVALID_ID;
     if (duration_ms <= 0.0) duration_ms = 300.0;
 
     SlideData *sd = (SlideData *)calloc(1, sizeof(SlideData));
-    if (!sd) return TUI_ANIMATOR_INVALID_ID;
+    if (!sd) return ZEPHIO_ANIMATOR_INVALID_ID;
 
     sd->widget  = widget;
     sd->orig_x  = widget->x;
@@ -100,9 +100,9 @@ int tui_effect_slide_in(TuiAnimator *animator, TuiWidget *widget,
 
     int id = tui_animator_create(animator, duration_ms, TUI_EASE_OUT_QUAD,
                                  slide_in_update, slide_free_complete, sd);
-    if (id == TUI_ANIMATOR_INVALID_ID) {
+    if (id == ZEPHIO_ANIMATOR_INVALID_ID) {
         free(sd);
-        return TUI_ANIMATOR_INVALID_ID;
+        return ZEPHIO_ANIMATOR_INVALID_ID;
     }
 
     tui_animator_play(animator, id);
@@ -144,11 +144,11 @@ int tui_effect_slide_out(TuiAnimator *animator, TuiWidget *widget,
                          TuiSlideDirection dir, double duration_ms,
                          TuiEffectDoneFn on_done, void *user_data)
 {
-    if (!animator || !widget) return TUI_ANIMATOR_INVALID_ID;
+    if (!animator || !widget) return ZEPHIO_ANIMATOR_INVALID_ID;
     if (duration_ms <= 0.0) duration_ms = 300.0;
 
     SlideOutData *sd = (SlideOutData *)calloc(1, sizeof(SlideOutData));
-    if (!sd) return TUI_ANIMATOR_INVALID_ID;
+    if (!sd) return ZEPHIO_ANIMATOR_INVALID_ID;
 
     sd->widget       = widget;
     sd->orig_x       = widget->x;
@@ -177,9 +177,9 @@ int tui_effect_slide_out(TuiAnimator *animator, TuiWidget *widget,
 
     int id = tui_animator_create(animator, duration_ms, TUI_EASE_IN_QUAD,
                                  slide_out_update, slide_out_complete, sd);
-    if (id == TUI_ANIMATOR_INVALID_ID) {
+    if (id == ZEPHIO_ANIMATOR_INVALID_ID) {
         free(sd);
-        return TUI_ANIMATOR_INVALID_ID;
+        return ZEPHIO_ANIMATOR_INVALID_ID;
     }
 
     tui_animator_play(animator, id);
@@ -209,22 +209,22 @@ static void fade_in_update(double progress, void *user_data)
 int tui_effect_fade_in(TuiAnimator *animator, TuiWidget *widget,
                        double duration_ms)
 {
-    if (!animator || !widget) return TUI_ANIMATOR_INVALID_ID;
+    if (!animator || !widget) return ZEPHIO_ANIMATOR_INVALID_ID;
     if (duration_ms <= 0.0) duration_ms = 250.0;
 
     FadeData *fd = (FadeData *)calloc(1, sizeof(FadeData));
-    if (!fd) return TUI_ANIMATOR_INVALID_ID;
+    if (!fd) return ZEPHIO_ANIMATOR_INVALID_ID;
 
     fd->widget    = widget;
-    fd->target_bg = TUI_COLOR_RGB(30, 30, 46);
-    fd->black     = TUI_COLOR_RGB(0, 0, 0);
+    fd->target_bg = ZEPHIO_COLOR_RGB(30, 30, 46);
+    fd->black     = ZEPHIO_COLOR_RGB(0, 0, 0);
 
     int id = tui_animator_create(animator, duration_ms, TUI_EASE_OUT_SINE,
                                  fade_in_update,
                                  fade_free_complete, fd);
-    if (id == TUI_ANIMATOR_INVALID_ID) {
+    if (id == ZEPHIO_ANIMATOR_INVALID_ID) {
         free(fd);
-        return TUI_ANIMATOR_INVALID_ID;
+        return ZEPHIO_ANIMATOR_INVALID_ID;
     }
 
     tui_animator_play(animator, id);
@@ -262,23 +262,23 @@ int tui_effect_fade_out(TuiAnimator *animator, TuiWidget *widget,
                         double duration_ms,
                         TuiEffectDoneFn on_done, void *user_data)
 {
-    if (!animator || !widget) return TUI_ANIMATOR_INVALID_ID;
+    if (!animator || !widget) return ZEPHIO_ANIMATOR_INVALID_ID;
     if (duration_ms <= 0.0) duration_ms = 250.0;
 
     FadeOutData *fd = (FadeOutData *)calloc(1, sizeof(FadeOutData));
-    if (!fd) return TUI_ANIMATOR_INVALID_ID;
+    if (!fd) return ZEPHIO_ANIMATOR_INVALID_ID;
 
     fd->widget       = widget;
-    fd->from_bg      = TUI_COLOR_RGB(30, 30, 46);
-    fd->black        = TUI_COLOR_RGB(0, 0, 0);
+    fd->from_bg      = ZEPHIO_COLOR_RGB(30, 30, 46);
+    fd->black        = ZEPHIO_COLOR_RGB(0, 0, 0);
     fd->on_done      = on_done;
     fd->on_done_data = user_data;
 
     int id = tui_animator_create(animator, duration_ms, TUI_EASE_IN_SINE,
                                  fade_out_update, fade_out_complete, fd);
-    if (id == TUI_ANIMATOR_INVALID_ID) {
+    if (id == ZEPHIO_ANIMATOR_INVALID_ID) {
         free(fd);
-        return TUI_ANIMATOR_INVALID_ID;
+        return ZEPHIO_ANIMATOR_INVALID_ID;
     }
 
     tui_animator_play(animator, id);
@@ -306,7 +306,7 @@ void tui_spinner_init(TuiSpinner *spinner, TuiWidget *widget,
 {
     if (!spinner) return;
     spinner->widget  = widget;
-    spinner->anim_id = TUI_ANIMATOR_INVALID_ID;
+    spinner->anim_id = ZEPHIO_ANIMATOR_INVALID_ID;
     spinner->frame   = 0;
     spinner->fg      = fg;
     spinner->bg      = bg;
@@ -320,14 +320,14 @@ void tui_spinner_start(TuiAnimator *animator, TuiSpinner *spinner,
     if (!animator || !spinner) return;
     if (interval_ms <= 0.0) interval_ms = 120.0;
 
-    if (spinner->anim_id != TUI_ANIMATOR_INVALID_ID) {
+    if (spinner->anim_id != ZEPHIO_ANIMATOR_INVALID_ID) {
         tui_animator_remove(animator, spinner->anim_id);
     }
 
     spinner->anim_id = tui_animator_create(animator, interval_ms,
                                            TUI_EASE_LINEAR,
                                            spinner_update, NULL, spinner);
-    if (spinner->anim_id != TUI_ANIMATOR_INVALID_ID) {
+    if (spinner->anim_id != ZEPHIO_ANIMATOR_INVALID_ID) {
         TuiAnimation *anim = tui_animator_get(animator, spinner->anim_id);
         if (anim) tui_animation_set_loops(anim, -1);
         tui_animator_play(animator, spinner->anim_id);
@@ -337,9 +337,9 @@ void tui_spinner_start(TuiAnimator *animator, TuiSpinner *spinner,
 void tui_spinner_stop(TuiAnimator *animator, TuiSpinner *spinner)
 {
     if (!animator || !spinner) return;
-    if (spinner->anim_id != TUI_ANIMATOR_INVALID_ID) {
+    if (spinner->anim_id != ZEPHIO_ANIMATOR_INVALID_ID) {
         tui_animator_remove(animator, spinner->anim_id);
-        spinner->anim_id = TUI_ANIMATOR_INVALID_ID;
+        spinner->anim_id = ZEPHIO_ANIMATOR_INVALID_ID;
     }
 }
 
@@ -377,7 +377,7 @@ void tui_pulse_render(TuiPulse *pulse)
             fg = pulse->empty_fg;
             bg = pulse->empty_bg;
         }
-        tui_screen_set_cell(pulse->widget->ctx, abs_y, abs_x + i, " ", fg, bg, TUI_ATTR_NONE);
+        tui_screen_set_cell(pulse->widget->ctx, abs_y, abs_x + i, " ", fg, bg, ZEPHIO_ATTR_NONE);
     }
 }
 
@@ -387,7 +387,7 @@ void tui_pulse_init(TuiPulse *pulse, TuiWidget *widget, int width,
 {
     if (!pulse) return;
     pulse->widget   = widget;
-    pulse->anim_id  = TUI_ANIMATOR_INVALID_ID;
+    pulse->anim_id  = ZEPHIO_ANIMATOR_INVALID_ID;
     pulse->position = 0.0;
     pulse->speed    = 1.0;
     pulse->fill_fg  = fill_fg;
@@ -404,14 +404,14 @@ void tui_pulse_start(TuiAnimator *animator, TuiPulse *pulse, double speed)
 
     pulse->speed = speed;
 
-    if (pulse->anim_id != TUI_ANIMATOR_INVALID_ID) {
+    if (pulse->anim_id != ZEPHIO_ANIMATOR_INVALID_ID) {
         tui_animator_remove(animator, pulse->anim_id);
     }
 
     pulse->anim_id = tui_animator_create(animator, 30.0,
                                          TUI_EASE_LINEAR,
                                          pulse_update, NULL, pulse);
-    if (pulse->anim_id != TUI_ANIMATOR_INVALID_ID) {
+    if (pulse->anim_id != ZEPHIO_ANIMATOR_INVALID_ID) {
         TuiAnimation *anim = tui_animator_get(animator, pulse->anim_id);
         if (anim) tui_animation_set_loops(anim, -1);
         tui_animator_play(animator, pulse->anim_id);
@@ -421,9 +421,9 @@ void tui_pulse_start(TuiAnimator *animator, TuiPulse *pulse, double speed)
 void tui_pulse_stop(TuiAnimator *animator, TuiPulse *pulse)
 {
     if (!animator || !pulse) return;
-    if (pulse->anim_id != TUI_ANIMATOR_INVALID_ID) {
+    if (pulse->anim_id != ZEPHIO_ANIMATOR_INVALID_ID) {
         tui_animator_remove(animator, pulse->anim_id);
-        pulse->anim_id = TUI_ANIMATOR_INVALID_ID;
+        pulse->anim_id = ZEPHIO_ANIMATOR_INVALID_ID;
     }
 }
 
@@ -456,7 +456,7 @@ int tui_effect_color_fade(TuiAnimator *animator, TuiColorFade *fade,
                           TuiColor to_fg, TuiColor to_bg,
                           double duration_ms)
 {
-    if (!animator || !fade || !widget) return TUI_ANIMATOR_INVALID_ID;
+    if (!animator || !fade || !widget) return ZEPHIO_ANIMATOR_INVALID_ID;
     if (duration_ms <= 0.0) duration_ms = 400.0;
 
     fade->widget  = widget;
@@ -466,16 +466,16 @@ int tui_effect_color_fade(TuiAnimator *animator, TuiColorFade *fade,
     fade->to_bg   = to_bg;
 
     ColorFadeData *cd = (ColorFadeData *)calloc(1, sizeof(ColorFadeData));
-    if (!cd) return TUI_ANIMATOR_INVALID_ID;
+    if (!cd) return ZEPHIO_ANIMATOR_INVALID_ID;
     cd->widget = widget;
     cd->fade   = fade;
 
     int id = tui_animator_create(animator, duration_ms, TUI_EASE_IN_OUT_SINE,
                                  color_fade_update, color_fade_complete, cd);
-    if (id == TUI_ANIMATOR_INVALID_ID) {
+    if (id == ZEPHIO_ANIMATOR_INVALID_ID) {
         free(cd);
-        fade->anim_id = TUI_ANIMATOR_INVALID_ID;
-        return TUI_ANIMATOR_INVALID_ID;
+        fade->anim_id = ZEPHIO_ANIMATOR_INVALID_ID;
+        return ZEPHIO_ANIMATOR_INVALID_ID;
     }
 
     tui_label_set_colors((TuiLabel *)widget, from_fg, from_bg);

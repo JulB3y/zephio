@@ -56,7 +56,7 @@ static void tabbar_render(TuiWidget *widget)
         if (i == tb->active_tab) {
             fg = tb->fg_active;
             bg = tb->bg_active;
-            at |= TUI_ATTR_BOLD;
+            at |= ZEPHIO_ATTR_BOLD;
         } else if (widget->hovered && i == tb->active_tab) {
             fg = tb->fg_hover;
             bg = tb->bg_hover;
@@ -92,7 +92,7 @@ static void tabbar_render(TuiWidget *widget)
             screen_x + tab->tab_width - 1 < widget->width) {
             tui_screen_set_cell(widget->ctx, widget->abs_y,
                                 widget->abs_x + screen_x + tab->tab_width - 1,
-                                "\xe2\x94\x82", tb->fg, tb->bg, TUI_ATTR_DIM);
+                                "\xe2\x94\x82", tb->fg, tb->bg, ZEPHIO_ATTR_DIM);
         }
     }
 }
@@ -236,13 +236,13 @@ TuiResult tui_tabbar_init_ctx(TuiTabBar *tabbar, TuiContext *ctx, int x, int y, 
     tabbar->active_tab   = 0;
     tabbar->scroll_offset = 0;
 
-    tabbar->fg         = TUI_COLOR_INDEX(15);
-    tabbar->bg         = TUI_COLOR_INDEX(236);
-    tabbar->fg_active  = TUI_COLOR_INDEX(0);
-    tabbar->bg_active  = TUI_COLOR_INDEX(12);
-    tabbar->fg_hover   = TUI_COLOR_INDEX(15);
-    tabbar->bg_hover   = TUI_COLOR_INDEX(238);
-    tabbar->attr       = TUI_ATTR_NONE;
+    tabbar->fg         = ZEPHIO_COLOR_INDEX(15);
+    tabbar->bg         = ZEPHIO_COLOR_INDEX(236);
+    tabbar->fg_active  = ZEPHIO_COLOR_INDEX(0);
+    tabbar->bg_active  = ZEPHIO_COLOR_INDEX(12);
+    tabbar->fg_hover   = ZEPHIO_COLOR_INDEX(15);
+    tabbar->bg_hover   = ZEPHIO_COLOR_INDEX(238);
+    tabbar->attr       = ZEPHIO_ATTR_NONE;
 
     tabbar->on_change = NULL;
     tabbar->user_data = NULL;
@@ -257,7 +257,7 @@ int tui_tabbar_add_tab(TuiTabBar *tabbar, const char *label,
 
     if (tabbar->tab_count >= tabbar->tab_capacity) {
         int newcap = tabbar->tab_capacity == 0
-                     ? TUI_TABBAR_INIT_CAP
+                     ? ZEPHIO_TABBAR_INIT_CAP
                      : tabbar->tab_capacity * 2;
         TuiTab *nt = (TuiTab *)realloc(tabbar->tabs,
                                        (size_t)newcap * sizeof(TuiTab));

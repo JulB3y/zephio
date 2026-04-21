@@ -7,8 +7,8 @@
  * wrappers that combine screen drawing with style application.
  */
 
-#ifndef TUI_STYLE_H
-#define TUI_STYLE_H
+#ifndef ZEPHIO_STYLE_H
+#define ZEPHIO_STYLE_H
 
 #include "tui_context.h"
 #include <stdint.h>
@@ -55,15 +55,15 @@ typedef struct {
     TuiAttr  attr;
 } TuiStyle;
 
-#define TUI_STYLE(fg_color, bg_color, attrs) \
-    ((TuiStyle){ TUI_COLOR_INDEX(fg_color), TUI_COLOR_INDEX(bg_color), (attrs) })
+#define ZEPHIO_STYLE(fg_color, bg_color, attrs) \
+    ((TuiStyle){ ZEPHIO_COLOR_INDEX(fg_color), ZEPHIO_COLOR_INDEX(bg_color), (attrs) })
 
-#define TUI_STYLE_RGB(fg_r,fg_g,fg_b, bg_r,bg_g,bg_b, attrs) \
-    ((TuiStyle){ TUI_COLOR_RGB(fg_r,fg_g,fg_b), TUI_COLOR_RGB(bg_r,bg_g,bg_b), (attrs) })
+#define ZEPHIO_STYLE_RGB(fg_r,fg_g,fg_b, bg_r,bg_g,bg_b, attrs) \
+    ((TuiStyle){ ZEPHIO_COLOR_RGB(fg_r,fg_g,fg_b), ZEPHIO_COLOR_RGB(bg_r,bg_g,bg_b), (attrs) })
 
 TuiStyle tui_style_make(TuiColor fg, TuiColor bg, TuiAttr attr);
 
-#define TUI_STYLE_NONE TUI_STYLE(0, 0, TUI_ATTR_NONE)
+#define ZEPHIO_STYLE_NONE ZEPHIO_STYLE(0, 0, ZEPHIO_ATTR_NONE)
 
 /**
  * @brief Widget visual states (used to index into a TuiTheme).

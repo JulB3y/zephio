@@ -12,8 +12,8 @@
  *   3. tui_mouse_disable(ctx)  — before tui_shutdown()
  */
 
-#ifndef TUI_MOUSE_H
-#define TUI_MOUSE_H
+#ifndef ZEPHIO_MOUSE_H
+#define ZEPHIO_MOUSE_H
 
 #include "tui_context.h"
 

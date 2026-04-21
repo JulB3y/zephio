@@ -49,9 +49,9 @@ TuiResult tui_label_init_ctx(TuiLabel *label, TuiContext *ctx, int x, int y, int
 
     label->base.focusable = 0;
 
-    label->fg   = TUI_COLOR_INDEX(15);
-    label->bg   = TUI_COLOR_INDEX(0);
-    label->attr = TUI_ATTR_NONE;
+    label->fg   = ZEPHIO_COLOR_INDEX(15);
+    label->bg   = ZEPHIO_COLOR_INDEX(0);
+    label->attr = ZEPHIO_ATTR_NONE;
 
     if (text) {
         label->text = strdup(text);

@@ -432,7 +432,7 @@ void tui_widget_set_theme(TuiWidget *widget, const TuiTheme *theme)
 TuiStyle tui_widget_get_style(TuiWidget *widget)
 {
     if (!widget || !widget->theme) {
-        return TUI_STYLE_NONE;
+        return ZEPHIO_STYLE_NONE;
     }
 
     TuiWidgetState state = TUI_STATE_NORMAL;

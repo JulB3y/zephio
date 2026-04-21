@@ -42,7 +42,7 @@ static void radio_render(TuiWidget *widget)
             if (idx == radio->selected && widget->focused) {
                 fg   = radio->fg_selected;
                 bg   = radio->bg_selected;
-                attr |= TUI_ATTR_REVERSE;
+                attr |= ZEPHIO_ATTR_REVERSE;
             }
         }
 
@@ -178,11 +178,11 @@ TuiResult tui_radio_init_ctx(TuiRadio *radio, TuiContext *ctx, int x, int y, int
     radio->option_count    = 0;
     radio->option_capacity = 0;
     radio->selected        = 0;
-    radio->fg              = TUI_COLOR_INDEX(15);
-    radio->bg              = TUI_COLOR_INDEX(0);
-    radio->fg_selected     = TUI_COLOR_INDEX(0);
-    radio->bg_selected     = TUI_COLOR_INDEX(12);
-    radio->attr            = TUI_ATTR_NONE;
+    radio->fg              = ZEPHIO_COLOR_INDEX(15);
+    radio->bg              = ZEPHIO_COLOR_INDEX(0);
+    radio->fg_selected     = ZEPHIO_COLOR_INDEX(0);
+    radio->bg_selected     = ZEPHIO_COLOR_INDEX(12);
+    radio->attr            = ZEPHIO_ATTR_NONE;
     radio->on_change       = NULL;
     radio->user_data       = NULL;
 
@@ -195,7 +195,7 @@ TuiResult tui_radio_add_option(TuiRadio *radio, const char *option)
 
     if (radio->option_count >= radio->option_capacity) {
         int new_cap = radio->option_capacity == 0
-                      ? TUI_RADIO_OPTIONS_INITIAL
+                      ? ZEPHIO_RADIO_OPTIONS_INITIAL
                       : radio->option_capacity * 2;
 
         char **new_options = (char **)realloc(

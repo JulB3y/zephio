@@ -35,9 +35,9 @@ int tui_animator_create(TuiAnimator *animator, double duration_ms,
                         TuiEasing easing, TuiAnimUpdateFn on_update,
                         TuiAnimCompleteFn on_complete, void *user_data)
 {
-    if (!animator) return TUI_ANIMATOR_INVALID_ID;
-    if (animator->count >= TUI_ANIMATOR_MAX_ANIMATIONS)
-        return TUI_ANIMATOR_INVALID_ID;
+    if (!animator) return ZEPHIO_ANIMATOR_INVALID_ID;
+    if (animator->count >= ZEPHIO_ANIMATOR_MAX_ANIMATIONS)
+        return ZEPHIO_ANIMATOR_INVALID_ID;
 
     int slot = animator->count;
     int id   = animator->next_id++;

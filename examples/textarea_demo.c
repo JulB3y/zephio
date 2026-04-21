@@ -81,8 +81,8 @@ static void build_ui(int rows, int cols, TuiContext *ctx)
     tui_label_init_ctx(&g_demo.header, ctx, 0, 0, cols, 1,
                    " TextArea Demo  |  Phase 14  |  Multi-line text editor");
     tui_label_set_colors(&g_demo.header,
-                           TUI_COLOR_INDEX(15), TUI_COLOR_INDEX(4));
-    tui_label_set_attr(&g_demo.header, TUI_ATTR_BOLD);
+                           ZEPHIO_COLOR_INDEX(15), ZEPHIO_COLOR_INDEX(4));
+    tui_label_set_attr(&g_demo.header, ZEPHIO_ATTR_BOLD);
     tui_widget_add_child(&g_demo.root, &g_demo.header.base);
 
     int editor_h = rows - 2;
@@ -90,15 +90,15 @@ static void build_ui(int rows, int cols, TuiContext *ctx)
 
     tui_textarea_init_ctx(&g_demo.editor, ctx, 1, 1, cols - 2, editor_h);
     tui_textarea_set_colors(&g_demo.editor,
-                             TUI_COLOR_INDEX(15), TUI_COLOR_INDEX(234),
-                             TUI_ATTR_NONE);
+                             ZEPHIO_COLOR_INDEX(15), ZEPHIO_COLOR_INDEX(234),
+                             ZEPHIO_ATTR_NONE);
     g_demo.editor.base.focusable = 1;
     tui_textarea_set_text(&g_demo.editor, g_initial_text);
     tui_widget_add_child(&g_demo.root, &g_demo.editor.base);
 
     tui_label_init_ctx(&g_demo.status, ctx, 0, rows - 1, cols, 1, "");
     tui_label_set_colors(&g_demo.status,
-                           TUI_COLOR_INDEX(15), TUI_COLOR_INDEX(236));
+                           ZEPHIO_COLOR_INDEX(15), ZEPHIO_COLOR_INDEX(236));
     tui_widget_add_child(&g_demo.root, &g_demo.status.base);
 
     update_status();

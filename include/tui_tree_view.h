@@ -10,8 +10,8 @@
  * Mouse: click to select, double-click to toggle expand/collapse.
  */
 
-#ifndef TUI_TREE_VIEW_H
-#define TUI_TREE_VIEW_H
+#ifndef ZEPHIO_TREE_VIEW_H
+#define ZEPHIO_TREE_VIEW_H
 
 #include "tui_widget.h"
 

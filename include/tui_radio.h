@@ -7,12 +7,12 @@
  * mouse click selection.
  */
 
-#ifndef TUI_RADIO_H
-#define TUI_RADIO_H
+#ifndef ZEPHIO_RADIO_H
+#define ZEPHIO_RADIO_H
 
 #include "tui_widget.h"
 
-#define TUI_RADIO_OPTIONS_INITIAL 8
+#define ZEPHIO_RADIO_OPTIONS_INITIAL 8
 
 /** @brief Callback invoked when the selected option changes. */
 typedef void (*TuiRadioCallback)(TuiWidget *widget, int index,

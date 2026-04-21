@@ -15,8 +15,8 @@
  * On resize, call tui_screen_resize(ctx, new_rows, new_cols).
  */
 
-#ifndef TUI_SCREEN_H
-#define TUI_SCREEN_H
+#ifndef ZEPHIO_SCREEN_H
+#define ZEPHIO_SCREEN_H
 
 #include "tui.h"
 #include <stdint.h>
@@ -30,14 +30,14 @@ typedef struct TuiContext TuiContext;
  */
 typedef uint8_t TuiAttr;
 
-#define TUI_ATTR_NONE          0x00
-#define TUI_ATTR_BOLD          0x01
-#define TUI_ATTR_DIM           0x02
-#define TUI_ATTR_ITALIC        0x04
-#define TUI_ATTR_UNDERLINE     0x08
-#define TUI_ATTR_BLINK         0x10
-#define TUI_ATTR_REVERSE       0x20
-#define TUI_ATTR_STRIKETHROUGH 0x40
+#define ZEPHIO_ATTR_NONE          0x00
+#define ZEPHIO_ATTR_BOLD          0x01
+#define ZEPHIO_ATTR_DIM           0x02
+#define ZEPHIO_ATTR_ITALIC        0x04
+#define ZEPHIO_ATTR_UNDERLINE     0x08
+#define ZEPHIO_ATTR_BLINK         0x10
+#define ZEPHIO_ATTR_REVERSE       0x20
+#define ZEPHIO_ATTR_STRIKETHROUGH 0x40
 
 enum {
     TUI_COLOR_TYPE_INDEX = 0,
@@ -53,9 +53,9 @@ typedef struct TuiColor {
     };
 } TuiColor;
 
-#define TUI_COLOR_INDEX(i)   ((TuiColor){ .type = TUI_COLOR_TYPE_INDEX, .index = (uint8_t)(i) })
-#define TUI_COLOR_RGB(r,g,b) ((TuiColor){ .type = TUI_COLOR_TYPE_RGB, .rgb = { (uint8_t)(r), (uint8_t)(g), (uint8_t)(b) } })
-#define TUI_COLOR_NONE       ((TuiColor){ .type = TUI_COLOR_TYPE_NONE, .index = 0 })
+#define ZEPHIO_COLOR_INDEX(i)   ((TuiColor){ .type = TUI_COLOR_TYPE_INDEX, .index = (uint8_t)(i) })
+#define ZEPHIO_COLOR_RGB(r,g,b) ((TuiColor){ .type = TUI_COLOR_TYPE_RGB, .rgb = { (uint8_t)(r), (uint8_t)(g), (uint8_t)(b) } })
+#define ZEPHIO_COLOR_NONE       ((TuiColor){ .type = TUI_COLOR_TYPE_NONE, .index = 0 })
 
 static inline int tui_color_eq(TuiColor a, TuiColor b) {
     if (a.type != b.type) return 0;

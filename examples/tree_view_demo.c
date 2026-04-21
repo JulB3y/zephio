@@ -126,19 +126,19 @@ static void build_widgets(AppWidgets *w, int rows, int cols, TuiContext *ctx)
 
     tui_label_init_ctx(&w->title, ctx, ux, y, uw, 1,
                    "TreeView Demo  |  Navigate with arrow keys");
-    tui_label_set_colors(&w->title, TUI_COLOR_INDEX(14), TUI_COLOR_INDEX(0));
-    tui_label_set_attr(&w->title, TUI_ATTR_BOLD);
+    tui_label_set_colors(&w->title, ZEPHIO_COLOR_INDEX(14), ZEPHIO_COLOR_INDEX(0));
+    tui_label_set_attr(&w->title, ZEPHIO_ATTR_BOLD);
     tui_widget_add_child(&w->root, &w->title.base);
     y += 2;
 
     tui_label_init_ctx(&w->hint, ctx, ux, y, uw, 1,
                    "Enter/Right: expand  Left: collapse  e: all  c: none");
-    tui_label_set_colors(&w->hint, TUI_COLOR_INDEX(8), TUI_COLOR_INDEX(0));
+    tui_label_set_colors(&w->hint, ZEPHIO_COLOR_INDEX(8), ZEPHIO_COLOR_INDEX(0));
     tui_widget_add_child(&w->root, &w->hint.base);
     y += 1;
 
     tui_separator_init_h_ctx(&w->sep, ctx, ux, y, uw);
-    tui_separator_set_colors(&w->sep, TUI_COLOR_INDEX(8), TUI_COLOR_INDEX(0));
+    tui_separator_set_colors(&w->sep, ZEPHIO_COLOR_INDEX(8), ZEPHIO_COLOR_INDEX(0));
     tui_widget_add_child(&w->root, &w->sep.base);
     y += 1;
 
@@ -149,10 +149,10 @@ static void build_widgets(AppWidgets *w, int rows, int cols, TuiContext *ctx)
 
         tui_tree_view_init_ctx(&w->tree, ctx, ux, y, uw, tree_h);
         tui_tree_view_set_colors(&w->tree,
-                                 TUI_COLOR_INDEX(15), TUI_COLOR_INDEX(234),
-                                 TUI_COLOR_INDEX(0), TUI_COLOR_INDEX(12),
-                                 TUI_COLOR_INDEX(TUI_COLOR_BRIGHT_BLACK));
-        tui_tree_view_set_bg_empty(&w->tree, TUI_COLOR_INDEX(236));
+                                 ZEPHIO_COLOR_INDEX(15), ZEPHIO_COLOR_INDEX(234),
+                                 ZEPHIO_COLOR_INDEX(0), ZEPHIO_COLOR_INDEX(12),
+                                 ZEPHIO_COLOR_INDEX(TUI_COLOR_BRIGHT_BLACK));
+        tui_tree_view_set_bg_empty(&w->tree, ZEPHIO_COLOR_INDEX(236));
         tui_tree_view_set_on_select(&w->tree, on_node_select, w);
 
         tui_tree_view_set_root(&w->tree, build_tree());
@@ -161,13 +161,13 @@ static void build_widgets(AppWidgets *w, int rows, int cols, TuiContext *ctx)
     }
 
     tui_separator_init_h_ctx(&w->sep2, ctx, ux, y, uw);
-    tui_separator_set_colors(&w->sep2, TUI_COLOR_INDEX(8), TUI_COLOR_INDEX(0));
+    tui_separator_set_colors(&w->sep2, ZEPHIO_COLOR_INDEX(8), ZEPHIO_COLOR_INDEX(0));
     tui_widget_add_child(&w->root, &w->sep2.base);
     y += 1;
 
     tui_label_init_ctx(&w->status, ctx, 1, rows - 1, cols - 2, 1,
                    " Click nodes or use keyboard  |  e: expand all  c: collapse all  |  q/Esc: quit");
-    tui_label_set_colors(&w->status, TUI_COLOR_INDEX(15), TUI_COLOR_INDEX(236));
+    tui_label_set_colors(&w->status, ZEPHIO_COLOR_INDEX(15), ZEPHIO_COLOR_INDEX(236));
     tui_widget_add_child(&w->root, &w->status.base);
 }
 
@@ -206,12 +206,12 @@ static int on_render(TuiApp *app, void *user_data)
 
     tui_screen_clear(app->ctx);
     tui_screen_fill(app->ctx, 0, 0, size.cols, 1, " ",
-                    TUI_COLOR_INDEX(15), TUI_COLOR_INDEX(4), TUI_ATTR_BOLD);
+                    ZEPHIO_COLOR_INDEX(15), ZEPHIO_COLOR_INDEX(4), ZEPHIO_ATTR_BOLD);
     tui_screen_write(app->ctx, 0, 2,
                      "TreeView Demo  |  Expand/collapse hierarchical data",
-                     TUI_COLOR_INDEX(15), TUI_COLOR_INDEX(4), TUI_ATTR_BOLD);
+                     ZEPHIO_COLOR_INDEX(15), ZEPHIO_COLOR_INDEX(4), ZEPHIO_ATTR_BOLD);
     tui_screen_fill(app->ctx, size.rows - 1, 0, size.cols, 1, " ",
-                    TUI_COLOR_INDEX(15), TUI_COLOR_INDEX(236), TUI_ATTR_NONE);
+                    ZEPHIO_COLOR_INDEX(15), ZEPHIO_COLOR_INDEX(236), ZEPHIO_ATTR_NONE);
 
     tui_widget_render(&w->root);
     tui_screen_render(app->ctx);

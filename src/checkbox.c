@@ -48,7 +48,7 @@ static void checkbox_render(TuiWidget *widget)
         if (widget->focused) {
             fg   = cb->fg_focused;
             bg   = cb->bg_focused;
-            attr |= TUI_ATTR_BOLD;
+            attr |= ZEPHIO_ATTR_BOLD;
         }
     }
 
@@ -144,11 +144,11 @@ TuiResult tui_checkbox_init_ctx(TuiCheckbox *checkbox, TuiContext *ctx, int x, i
 
     checkbox->state     = TUI_CHECK_UNCHECKED;
     checkbox->tristate  = 0;
-    checkbox->fg          = TUI_COLOR_INDEX(15);
-    checkbox->bg          = TUI_COLOR_INDEX(0);
-    checkbox->fg_focused  = TUI_COLOR_INDEX(0);
-    checkbox->bg_focused  = TUI_COLOR_INDEX(12);
-    checkbox->attr        = TUI_ATTR_NONE;
+    checkbox->fg          = ZEPHIO_COLOR_INDEX(15);
+    checkbox->bg          = ZEPHIO_COLOR_INDEX(0);
+    checkbox->fg_focused  = ZEPHIO_COLOR_INDEX(0);
+    checkbox->bg_focused  = ZEPHIO_COLOR_INDEX(12);
+    checkbox->attr        = ZEPHIO_ATTR_NONE;
     checkbox->on_change   = NULL;
     checkbox->user_data   = NULL;
 

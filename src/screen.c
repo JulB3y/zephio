@@ -489,13 +489,13 @@ void tui_screen_render(TuiContext *ctx)
             cur_fg.type = TUI_COLOR_TYPE_NONE;
             memset(&cur_bg, 0, sizeof(cur_bg));
             cur_bg.type = TUI_COLOR_TYPE_NONE;
-            if (b->attr & TUI_ATTR_BOLD)          { memcpy(rbuf + rpos, "\033[1m", 4); rpos += 4; }
-            if (b->attr & TUI_ATTR_DIM)           { memcpy(rbuf + rpos, "\033[2m", 4); rpos += 4; }
-            if (b->attr & TUI_ATTR_ITALIC)        { memcpy(rbuf + rpos, "\033[3m", 4); rpos += 4; }
-            if (b->attr & TUI_ATTR_UNDERLINE)     { memcpy(rbuf + rpos, "\033[4m", 4); rpos += 4; }
-            if (b->attr & TUI_ATTR_BLINK)         { memcpy(rbuf + rpos, "\033[5m", 4); rpos += 4; }
-            if (b->attr & TUI_ATTR_REVERSE)       { memcpy(rbuf + rpos, "\033[7m", 4); rpos += 4; }
-            if (b->attr & TUI_ATTR_STRIKETHROUGH) { memcpy(rbuf + rpos, "\033[9m", 4); rpos += 4; }
+            if (b->attr & ZEPHIO_ATTR_BOLD)          { memcpy(rbuf + rpos, "\033[1m", 4); rpos += 4; }
+            if (b->attr & ZEPHIO_ATTR_DIM)           { memcpy(rbuf + rpos, "\033[2m", 4); rpos += 4; }
+            if (b->attr & ZEPHIO_ATTR_ITALIC)        { memcpy(rbuf + rpos, "\033[3m", 4); rpos += 4; }
+            if (b->attr & ZEPHIO_ATTR_UNDERLINE)     { memcpy(rbuf + rpos, "\033[4m", 4); rpos += 4; }
+            if (b->attr & ZEPHIO_ATTR_BLINK)         { memcpy(rbuf + rpos, "\033[5m", 4); rpos += 4; }
+            if (b->attr & ZEPHIO_ATTR_REVERSE)       { memcpy(rbuf + rpos, "\033[7m", 4); rpos += 4; }
+            if (b->attr & ZEPHIO_ATTR_STRIKETHROUGH) { memcpy(rbuf + rpos, "\033[9m", 4); rpos += 4; }
             cur_attr = b->attr;
         }
 

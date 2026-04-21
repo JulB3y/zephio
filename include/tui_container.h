@@ -7,8 +7,8 @@
  * interaction. Useful as a grouping/visual-separation widget.
  */
 
-#ifndef TUI_CONTAINER_H
-#define TUI_CONTAINER_H
+#ifndef ZEPHIO_CONTAINER_H
+#define ZEPHIO_CONTAINER_H
 
 #include "tui_widget.h"
 

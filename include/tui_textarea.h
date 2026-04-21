@@ -14,8 +14,8 @@
  *   - Mouse click to position cursor, mouse wheel to scroll
  */
 
-#ifndef TUI_TEXTAREA_H
-#define TUI_TEXTAREA_H
+#ifndef ZEPHIO_TEXTAREA_H
+#define ZEPHIO_TEXTAREA_H
 
 #include "tui_widget.h"
 

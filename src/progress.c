@@ -109,13 +109,13 @@ TuiResult tui_progress_init_ctx(TuiProgress *progress, TuiContext *ctx, int x, i
     progress->label = NULL;
     progress->show_percent = 1;
 
-    progress->fg_fill  = TUI_COLOR_INDEX(10);
-    progress->bg_fill  = TUI_COLOR_INDEX(10);
-    progress->fg_empty = TUI_COLOR_INDEX(8);
-    progress->bg_empty = TUI_COLOR_INDEX(8);
-    progress->fg_label = TUI_COLOR_INDEX(15);
-    progress->bg_label = TUI_COLOR_INDEX(0);
-    progress->attr     = TUI_ATTR_NONE;
+    progress->fg_fill  = ZEPHIO_COLOR_INDEX(10);
+    progress->bg_fill  = ZEPHIO_COLOR_INDEX(10);
+    progress->fg_empty = ZEPHIO_COLOR_INDEX(8);
+    progress->bg_empty = ZEPHIO_COLOR_INDEX(8);
+    progress->fg_label = ZEPHIO_COLOR_INDEX(15);
+    progress->bg_label = ZEPHIO_COLOR_INDEX(0);
+    progress->attr     = ZEPHIO_ATTR_NONE;
 
     return TUI_OK;
 }

@@ -14,12 +14,12 @@
  *   5. In the callback call tui_context_menu_hide() (or it auto-hides).
  */
 
-#ifndef TUI_CONTEXT_MENU_H
-#define TUI_CONTEXT_MENU_H
+#ifndef ZEPHIO_CONTEXT_MENU_H
+#define ZEPHIO_CONTEXT_MENU_H
 
 #include "tui_widget.h"
 
-#define TUI_CTX_ITEMS_INIT_CAP 8
+#define ZEPHIO_CTX_ITEMS_INIT_CAP 8
 
 typedef struct TuiContextMenu TuiContextMenu;
 

@@ -7,8 +7,8 @@
  * Supports focused/unfocused color states.
  */
 
-#ifndef TUI_BUTTON_H
-#define TUI_BUTTON_H
+#ifndef ZEPHIO_BUTTON_H
+#define ZEPHIO_BUTTON_H
 
 #include "tui_widget.h"
 

@@ -10,8 +10,8 @@
  * and horizontally when columns exceed the widget width.
  */
 
-#ifndef TUI_TABLE_H
-#define TUI_TABLE_H
+#ifndef ZEPHIO_TABLE_H
+#define ZEPHIO_TABLE_H
 
 #include "tui_widget.h"
 

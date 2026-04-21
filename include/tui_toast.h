@@ -16,20 +16,20 @@
  *   5. tui_toast_manager_free() on shutdown.
  */
 
-#ifndef TUI_TOAST_H
-#define TUI_TOAST_H
+#ifndef ZEPHIO_TOAST_H
+#define ZEPHIO_TOAST_H
 
 #include "tui.h"
 #include "tui_screen.h"
 
-#define TUI_TOAST_MAX_COUNT    8
-#define TUI_TOAST_MAX_MESSAGE  128
-#define TUI_TOAST_DEFAULT_MS   3000
-#define TUI_TOAST_FADE_MS      300
-#define TUI_TOAST_MIN_WIDTH    24
-#define TUI_TOAST_MAX_WIDTH    52
-#define TUI_TOAST_HEIGHT       3
-#define TUI_TOAST_MARGIN       1
+#define ZEPHIO_TOAST_MAX_COUNT    8
+#define ZEPHIO_TOAST_MAX_MESSAGE  128
+#define ZEPHIO_TOAST_DEFAULT_MS   3000
+#define ZEPHIO_TOAST_FADE_MS      300
+#define ZEPHIO_TOAST_MIN_WIDTH    24
+#define ZEPHIO_TOAST_MAX_WIDTH    52
+#define ZEPHIO_TOAST_HEIGHT       3
+#define ZEPHIO_TOAST_MARGIN       1
 
 typedef struct TuiToastManager TuiToastManager;
 
@@ -61,7 +61,7 @@ typedef void (*TuiToastDismissFn)(int toast_id, void *user_data);
 typedef struct {
     int              id;
     TuiToastSeverity severity;
-    char             message[TUI_TOAST_MAX_MESSAGE];
+    char             message[ZEPHIO_TOAST_MAX_MESSAGE];
     double           duration_ms;
     double           elapsed_ms;
     double           anim_ms;
@@ -74,7 +74,7 @@ typedef struct {
 } TuiToast;
 
 struct TuiToastManager {
-    TuiToast toasts[TUI_TOAST_MAX_COUNT];
+    TuiToast toasts[ZEPHIO_TOAST_MAX_COUNT];
     int       count;
     int       next_id;
 };
