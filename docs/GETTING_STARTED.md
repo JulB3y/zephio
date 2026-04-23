@@ -12,15 +12,18 @@ This guide walks through building Zephio, running your first TUI application, an
 
 ```sh
 git clone <repo-url> && cd zephio
-make                # Release build: lib/libzephio.a + examples
+make                # Release build: lib/libzephio.so + examples
 make DEBUG=1        # Debug build with AddressSanitizer + UBSan
 make examples       # Build examples only
 make clean          # Remove build/ and lib/
 ```
 
 Output:
-- `lib/libzephio.a` — static library
+- `lib/libzephio.so` — shared library
+- `lib/libzephio-widgets.so` — shared widget library
 - `build/*` — compiled example binaries
+
+The static library `lib/libzephio.a` is also built for compatibility.
 
 ### Running the Examples
 
@@ -53,14 +56,15 @@ zephio-framework/
 The simplest Zephio program uses the ANSI helpers directly. This is useful for scripts, demos, or when you need fine-grained terminal control.
 
 ```c
-#include "tui.h"
+#include "zephio.h"
 #include "zephio_ansi.h"
 
 int main(void) {
-    if (tui_init() != ZEPHIO_OK) return 1;
+    ZephioContext ctx;
+    if (zephio_init(&ctx) != ZEPHIO_OK) return 1;
 
-    TuiSize size;
-    tui_get_size(&size);
+    ZephioSize size;
+    zephio_get_size(&ctx, &size);
 
     ansi_set_bold();
     ansi_set_fg(2);
@@ -69,18 +73,18 @@ int main(void) {
     ansi_reset();
 
     getchar();
-    tui_shutdown();
+    zephio_shutdown(&ctx);
     return 0;
 }
 ```
 
 **What happens here:**
 
-1. `tui_init()` enables raw mode, enters the alternate screen buffer, hides the cursor, and registers cleanup handlers.
-2. `tui_get_size()` queries the terminal dimensions.
+1. `zephio_init()` enables raw mode, enters the alternate screen buffer, hides the cursor, and registers cleanup handlers.
+2. `zephio_get_size()` queries the terminal dimensions.
 3. `ansi_write_at()` positions the cursor and writes text.
 4. `getchar()` blocks until any key is pressed.
-5. `tui_shutdown()` restores the terminal to its original state.
+5. `zephio_shutdown()` restores the terminal to its original state.
 
 Compile and run:
 
@@ -95,23 +99,23 @@ For more complex applications, use the double-buffered screen. It eliminates fli
 
 ```c
 #define _POSIX_C_SOURCE 200809L
-#include "tui.h"
+#include "zephio.h"
 #include "zephio_input.h"
 #include "zephio_screen.h"
 
-static void draw_frame(int rows, int cols) {
-    tui_screen_clear();
-    tui_screen_fill(0, 0, cols, 1, " ",
+static void draw_frame(ZephioContext *ctx, int rows, int cols) {
+    zephio_screen_clear(ctx);
+    zephio_screen_fill(ctx, 0, 0, cols, 1, " ",
         ZEPHIO_COLOR_INDEX(15), ZEPHIO_COLOR_INDEX(4), ZEPHIO_ATTR_BOLD);
-    tui_screen_write(0, 2, "My First Screen App",
+    zephio_screen_write(ctx, 0, 2, "My First Screen App",
         ZEPHIO_COLOR_INDEX(15), ZEPHIO_COLOR_INDEX(4), ZEPHIO_ATTR_BOLD);
-    tui_screen_render();
+    zephio_screen_render(ctx);
 }
 
-static int on_input(const TuiEvent *ev, void *ud) {
+static int on_input(const ZephioEvent *ev, void *ud) {
     if (ev->key == ZEPHIO_EVENT_RESIZE) {
-        tui_screen_resize(ev->size.rows, ev->size.cols);
-        draw_frame(ev->size.rows, ev->size.cols);
+        zephio_screen_resize(&ctx, ev->size.rows, ev->size.cols);
+        draw_frame(&ctx, ev->size.rows, ev->size.cols);
         return 0;
     }
     if (ev->key == ZEPHIO_KEY_ESCAPE || ev->codepoint == 'q') return 1;
@@ -119,105 +123,112 @@ static int on_input(const TuiEvent *ev, void *ud) {
 }
 
 int main(void) {
-    if (tui_init() != ZEPHIO_OK) return 1;
-    tui_input_init();
-    TuiSize size = tui_screen_size();
-    draw_frame(size.rows, size.cols);
-    tui_input_loop(on_input, NULL);
-    tui_input_shutdown();
-    tui_shutdown();
+    ZephioContext ctx;
+    if (zephio_init(&ctx) != ZEPHIO_OK) return 1;
+    zephio_input_init(&ctx);
+    ZephioSize size = zephio_screen_size(&ctx);
+    draw_frame(&ctx, size.rows, size.cols);
+    zephio_input_loop(&ctx, on_input, NULL);
+    zephio_input_shutdown(&ctx);
+    zephio_shutdown(&ctx);
     return 0;
 }
 ```
 
 **Key concepts:**
 
-- `tui_screen_clear()` fills the back buffer with spaces.
-- `tui_screen_write()` / `tui_screen_fill()` draw into the back buffer.
-- `tui_screen_render()` diffs front vs. back and writes only changed cells.
-- `tui_input_loop()` blocks and calls your callback for each event.
+- `zephio_screen_clear()` fills the back buffer with spaces.
+- `zephio_screen_write()` / `zephio_screen_fill()` draw into the back buffer.
+- `zephio_screen_render()` diffs front vs. back and writes only changed cells.
+- `zephio_input_loop()` blocks and calls your callback for each event.
 
-## First Program: High-Level API (TuiApp)
+## First Program: High-Level API (ZephioApp)
 
-For real applications with widgets, use `TuiApp`. It manages init, the event loop, and shutdown for you.
+For real applications with widgets, use `ZephioApp`. It manages init, the event loop, and shutdown for you.
 
 ```c
-#include "tui.h"
+#include "zephio.h"
 #include "zephio_app.h"
 #include "zephio_label.h"
 #include "zephio_button.h"
 #include "zephio_widget.h"
 
 typedef struct {
-    TuiWidget root;
-    TuiLabel  msg;
-    TuiButton btn;
+    ZephioWidget root;
+    ZephioLabel  msg;
+    ZephioButton btn;
 } App;
 
-static int on_init(TuiApp *app, void *ud) {
+static int on_init(ZephioApp *app, void *ud) {
     App *a = (App *)ud;
-    TuiSize sz = tui_screen_size();
-    tui_widget_init(&a->root, 0, 0, sz.cols, sz.rows, NULL, NULL);
-    tui_label_init(&a->msg, 2, 2, 30, 1, "Press the button below");
-    tui_button_init(&a->btn, 2, 4, 12, 1, "Click Me");
+    ZephioSize sz = zephio_screen_size(&app->ctx);
+    zephio_widget_init(&a->root, 0, 0, sz.cols, sz.rows, NULL, NULL);
+    zephio_label_init(&a->msg, 2, 2, 30, 1, "Press the button below");
+    zephio_button_init(&a->btn, 2, 4, 12, 1, "Click Me");
     a->btn.base.focusable = 1;
-    tui_widget_add_child(&a->root, &a->msg.base);
-    tui_widget_add_child(&a->root, &a->btn.base);
+    zephio_widget_add_child(&a->root, &a->msg.base);
+    zephio_widget_add_child(&a->root, &a->btn.base);
     return 0;
 }
 
-static int on_render(TuiApp *app, void *ud) {
+static int on_render(ZephioApp *app, void *ud) {
     App *a = (App *)ud;
-    tui_screen_clear();
-    tui_widget_render(&a->root);
-    tui_screen_render();
+    zephio_screen_clear(&app->ctx);
+    zephio_widget_render(&a->root);
+    zephio_screen_render(&app->ctx);
     return 0;
 }
 
-static int on_input(TuiApp *app, const TuiEvent *ev, void *ud) {
+static int on_input(ZephioApp *app, const ZephioEvent *ev, void *ud) {
     if (ev->key == ZEPHIO_KEY_ESCAPE) return 1;
-    TuiWidget *f = tui_widget_get_focused(&((App *)ud)->root);
-    if (f) tui_widget_handle_input(f, ev);
+    ZephioWidget *f = zephio_widget_get_focused(&((App*)ud)->root);
+    if (f) zephio_widget_handle_input(f, ev);
     return 0;
 }
 
 int main(void) {
     App app = {0};
-    TuiAppConfig cfg = {
+    ZephioAppConfig cfg = {
         .on_init      = on_init,
         .on_render    = on_render,
         .on_input     = on_input,
         .user_data    = &app,
         .tick_rate_ms = 50
     };
-    TuiApp *a = tui_app_new(&cfg);
-    tui_app_run(a);
-    tui_app_free(a);
+    ZephioApp *a = zephio_app_new(&cfg);
+    zephio_app_run(a);
+    zephio_app_free(a);
     return 0;
 }
 ```
 
 **Key concepts:**
 
-- `TuiAppConfig` holds lifecycle callbacks: `on_init`, `on_render`, `on_input`, `on_resize`, `on_shutdown`, `on_mouse`.
-- `tui_app_new()` calls `tui_init()` and your `on_init` callback.
-- `tui_app_run()` enters the event loop. It handles resize, keyboard, and mouse events automatically.
+- `ZephioAppConfig` holds lifecycle callbacks: `on_init`, `on_render`, `on_input`, `on_resize`, `on_shutdown`, `on_mouse`.
+- `zephio_app_new()` calls `zephio_init()` and your `on_init` callback.
+- `zephio_app_run()` enters the event loop. It handles resize, keyboard, and mouse events automatically.
 - Return `1` from `on_input` to stop the loop.
-- Widgets are created on the stack and added to a widget tree via `tui_widget_add_child()`.
+- Widgets are created on the stack and added to a widget tree via `zephio_widget_add_child()`.
 
 ## Linking Against Zephio
 
-After building:
+After building, you can link against the shared libraries using `pkg-config`:
+
+```sh
+gcc -std=c11 $(pkg-config --cflags --libs zephio) myapp.c -o myapp
+```
+
+Or manually:
 
 ```sh
 gcc -std=c11 -I/path/to/zephio/include -o myapp myapp.c \
-    -L/path/to/zephio/lib -lzephio -lm
+    -L/path/to/zephio/lib -lzephio -lzephio-widgets -lm
 ```
 
 Or from within the project:
 
 ```sh
-gcc -std=c11 -Iinclude -o myapp myapp.c -Llib -lzephio -lm
+gcc -std=c11 -Iinclude -o myapp myapp.c -Llib -lzephio -lzephio-widgets -lm
 ```
 
 ## Troubleshooting
@@ -238,7 +249,7 @@ The framework cannot set raw mode. This can occur in some SSH sessions or contai
 
 ### Screen not restored after crash
 
-`tui_init()` registers `atexit()` and signal handlers (SIGINT, SIGTERM, SIGQUIT) to ensure `tui_shutdown()` runs. If the terminal is still broken:
+`zephio_init()` registers `atexit()` and signal handlers (SIGINT, SIGTERM, SIGQUIT) to ensure `zephio_shutdown()` runs. If the terminal is still broken:
 
 ```sh
 reset
@@ -247,6 +258,16 @@ reset
 ### Build errors: unknown type names
 
 Make sure `-Iinclude` is in your compiler flags. All public headers are in `include/`.
+
+### Shared library not found
+
+If you encounter issues with shared libraries not being found after installation, run:
+
+```sh
+sudo ldconfig
+```
+
+This updates the dynamic linker cache to include the newly installed libraries in `/usr/local/lib/`.
 
 ### Mouse not working
 

@@ -5,5 +5,5 @@ includedir=${prefix}/include
 Name: zephio
 Description: Zephio TUI Framework
 Version: 1.0.0
-Libs: -L${libdir} -lzephio
+Libs: -L${libdir} -lzephio -lzephio-widgets
 Cflags: -I${includedir}/zephio

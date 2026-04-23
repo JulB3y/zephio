@@ -28,29 +28,33 @@ A lightweight, portable terminal UI framework in C with **zero external dependen
 Requires `gcc` and `make`.
 
 ```sh
-make              # Release build (lib/libzephio.a + examples)
+make              # Release build (lib/libzephio.so + examples)
 make DEBUG=1      # Debug build with -g -O0 -fsanitize=address,undefined
 make examples     # Build examples only
 make clean        # Remove build/ and lib/
 ```
 
 Output:
-- `lib/libzephio.a` — static library
+- `lib/libzephio.so` — shared library
+- `lib/libzephio-widgets.so` — shared widget library
 - `build/*` — compiled example binaries
+
+The static library `lib/libzephio.a` is also built for compatibility.
 
 ## Quick Start
 
 ### Minimal example (low-level API)
 
 ```c
-#include "tui.h"
+#include "zephio.h"
 #include "zephio_ansi.h"
 
 int main(void) {
-    tui_init();
+    ZephioContext ctx;
+    zephio_init(&ctx);
 
-    TuiSize size;
-    tui_get_size(&size);
+    ZephioSize size;
+    zephio_get_size(&ctx, &size);
 
     ansi_set_fg(2);
     ansi_write_at(size.rows / 2, (size.cols - 12) / 2,
@@ -58,7 +62,7 @@ int main(void) {
     ansi_reset();
 
     getchar();      /* wait for any key */
-    tui_shutdown();
+    zephio_shutdown(&ctx);
     return 0;
 }
 ```
@@ -66,57 +70,57 @@ int main(void) {
 ### App-based example (high-level API)
 
 ```c
-#include "tui.h"
+#include "zephio.h"
 #include "zephio_app.h"
 #include "zephio_label.h"
 #include "zephio_button.h"
 #include "zephio_widget.h"
 
 typedef struct {
-    TuiWidget root;
-    TuiLabel  msg;
-    TuiButton btn;
+    ZephioWidget root;
+    ZephioLabel  msg;
+    ZephioButton btn;
 } App;
 
-static int on_init(TuiApp *app, void *ud) {
+static int on_init(ZephioApp *app, void *ud) {
     App *a = (App *)ud;
-    TuiSize sz = tui_screen_size();
-    tui_widget_init(&a->root, 0, 0, sz.cols, sz.rows, NULL, NULL);
-    tui_label_init(&a->msg, 2, 2, 30, 1, "Press the button below");
-    tui_button_init(&a->btn, 2, 4, 12, 1, "Click Me");
+    ZephioSize sz = zephio_screen_size(&app->ctx);
+    zephio_widget_init(&a->root, 0, 0, sz.cols, sz.rows, NULL, NULL);
+    zephio_label_init(&a->msg, 2, 2, 30, 1, "Press the button below");
+    zephio_button_init(&a->btn, 2, 4, 12, 1, "Click Me");
     a->btn.base.focusable = 1;
-    tui_widget_add_child(&a->root, &a->msg.base);
-    tui_widget_add_child(&a->root, &a->btn.base);
+    zephio_widget_add_child(&a->root, &a->msg.base);
+    zephio_widget_add_child(&a->root, &a->btn.base);
     return 0;
 }
 
-static int on_render(TuiApp *app, void *ud) {
+static int on_render(ZephioApp *app, void *ud) {
     App *a = (App *)ud;
-    tui_screen_clear();
-    tui_widget_render(&a->root);
-    tui_screen_render();
+    zephio_screen_clear(&app->ctx);
+    zephio_widget_render(&a->root);
+    zephio_screen_render(&app->ctx);
     return 0;
 }
 
-static int on_input(TuiApp *app, const TuiEvent *ev, void *ud) {
-    if (ev->key == TUI_KEY_ESCAPE) return 1;
-    TuiWidget *f = tui_widget_get_focused(&((App*)ud)->root);
-    if (f) tui_widget_handle_input(f, ev);
+static int on_input(ZephioApp *app, const ZephioEvent *ev, void *ud) {
+    if (ev->key == ZEPHIO_KEY_ESCAPE) return 1;
+    ZephioWidget *f = zephio_widget_get_focused(&((App*)ud)->root);
+    if (f) zephio_widget_handle_input(f, ev);
     return 0;
 }
 
 int main(void) {
     App app = {0};
-    TuiAppConfig cfg = {
+    ZephioAppConfig cfg = {
         .on_init   = on_init,
         .on_render = on_render,
         .on_input  = on_input,
         .user_data = &app,
         .tick_rate_ms = 50
     };
-    TuiApp *a = tui_app_new(&cfg);
-    tui_app_run(a);
-    tui_app_free(a);
+    ZephioApp *a = zephio_app_new(&cfg);
+    zephio_app_run(a);
+    zephio_app_free(a);
     return 0;
 }
 ```
@@ -125,25 +129,25 @@ int main(void) {
 
 ```
 ├── include/          Public headers (API, 36 files)
-│   ├── tui.h              Core init/shutdown
-│   ├── tui_app.h          High-level app runtime (event loop, lifecycle)
-│   ├── tui_widget.h       Base widget type and tree operations
-│   ├── tui_screen.h       Double-buffered screen
-│   ├── tui_input.h        Keyboard input and event loop
-│   ├── tui_mouse.h        Mouse event types
-│   ├── tui_ansi.h         ANSI escape sequence helpers
-│   ├── tui_style.h        Themes and styles
-│   ├── tui_layout.h       Layout engine
-│   ├── tui_animation.h    Animation system
-│   ├── tui_label.h        tui_button.h   tui_input_field.h  tui_list.h
-│   ├── tui_container.h    tui_box.h      tui_separator.h    tui_text.h
-│   ├── tui_checkbox.h     tui_radio.h    tui_progress.h
-│   ├── tui_dropdown.h     tui_dialog.h   tui_clipboard.h
-│   ├── tui_menubar.h      tui_context_menu.h
-│   ├── tui_tabbar.h       tui_statusbar.h
-│   ├── tui_table.h        tui_tree_view.h
-│   ├── tui_textarea.h     tui_text_view.h  tui_scroll_container.h
-│   └── tui_terminal.h
+│   ├── zephio.h              Core init/shutdown
+│   ├── zephio_app.h          High-level app runtime (event loop, lifecycle)
+│   ├── zephio_widget.h       Base widget type and tree operations
+│   ├── zephio_screen.h       Double-buffered screen
+│   ├── zephio_input.h        Keyboard input and event loop
+│   ├── zephio_mouse.h        Mouse event types
+│   ├── zephio_ansi.h         ANSI escape sequence helpers
+│   ├── zephio_style.h        Themes and styles
+│   ├── zephio_layout.h       Layout engine
+│   ├── zephio_animation.h    Animation system
+│   ├── zephio_label.h        zephio_button.h   zephio_input_field.h  zephio_list.h
+│   ├── zephio_container.h    zephio_box.h      zephio_separator.h    zephio_text.h
+│   ├── zephio_checkbox.h     zephio_radio.h    zephio_progress.h
+│   ├── zephio_dropdown.h     zephio_dialog.h   zephio_clipboard.h
+│   ├── zephio_menubar.h      zephio_context_menu.h
+│   ├── zephio_tabbar.h       zephio_statusbar.h
+│   ├── zephio_table.h        zephio_tree_view.h
+│   ├── zephio_textarea.h     zephio_text_view.h  zephio_scroll_container.h
+│   └── zephio_terminal.h
 ├── src/              Implementation
 ├── examples/         Ready-to-run demos (15 examples)
 ├── tests/            Unit tests
@@ -156,28 +160,28 @@ int main(void) {
 
 | Widget | Header | Description |
 |---|---|---|
-| **Label** | `tui_label.h` | Static text display with configurable colors and attributes |
-| **Button** | `tui_button.h` | Clickable button with `on_click` callback |
-| **InputField** | `tui_input_field.h` | Text input with `on_change` / `on_submit` callbacks |
-| **List** | `tui_list.h` | Scrollable selectable list with `on_select` callback |
-| **Container** | `tui_container.h` | Background panel with configurable background color |
-| **Box** | `tui_box.h` | Bordered box with optional title |
-| **Separator** | `tui_separator.h` | Horizontal or vertical divider line |
-| **CheckBox** | `tui_checkbox.h` | Toggle checkbox with label |
-| **Radio** | `tui_radio.h` | Single-selection radio button group |
-| **Progress** | `tui_progress.h` | Horizontal progress bar (0-100%) |
-| **Dropdown** | `tui_dropdown.h` | Expandable selection dropdown |
-| **Dialog** | `tui_dialog.h` | Modal dialog with overlay |
-| **MenuBar** | `tui_menubar.h` | Horizontal menu bar with submenus |
-| **ContextMenu** | `tui_context_menu.h` | Right-click context menu |
-| **TabBar** | `tui_tabbar.h` | Tab-based page switching |
-| **StatusBar** | `tui_statusbar.h` | Segmented status bar |
-| **Table** | `tui_table.h` | Column-based data display with headers |
-| **TreeView** | `tui_tree_view.h` | Hierarchical tree with expand/collapse |
-| **TextArea** | `tui_textarea.h` | Multi-line editable text |
-| **TextView** | `tui_text_view.h` | Multi-line read-only text with word wrap |
-| **ScrollContainer** | `tui_scroll_container.h` | Scrollable widget container |
-| **Clipboard** | `tui_clipboard.h` | OSC 52 clipboard copy/paste |
+| **Label** | `zephio_label.h` | Static text display with configurable colors and attributes |
+| **Button** | `zephio_button.h` | Clickable button with `on_click` callback |
+| **InputField** | `zephio_input_field.h` | Text input with `on_change` / `on_submit` callbacks |
+| **List** | `zephio_list.h` | Scrollable selectable list with `on_select` callback |
+| **Container** | `zephio_container.h` | Background panel with configurable background color |
+| **Box** | `zephio_box.h` | Bordered box with optional title |
+| **Separator** | `zephio_separator.h` | Horizontal or vertical divider line |
+| **CheckBox** | `zephio_checkbox.h` | Toggle checkbox with label |
+| **Radio** | `zephio_radio.h` | Single-selection radio button group |
+| **Progress** | `zephio_progress.h` | Horizontal progress bar (0-100%) |
+| **Dropdown** | `zephio_dropdown.h` | Expandable selection dropdown |
+| **Dialog** | `zephio_dialog.h` | Modal dialog with overlay |
+| **MenuBar** | `zephio_menubar.h` | Horizontal menu bar with submenus |
+| **ContextMenu** | `zephio_context_menu.h` | Right-click context menu |
+| **TabBar** | `zephio_tabbar.h` | Tab-based page switching |
+| **StatusBar** | `zephio_statusbar.h` | Segmented status bar |
+| **Table** | `zephio_table.h` | Column-based data display with headers |
+| **TreeView** | `zephio_tree_view.h` | Hierarchical tree with expand/collapse |
+| **TextArea** | `zephio_textarea.h` | Multi-line editable text |
+| **TextView** | `zephio_text_view.h` | Multi-line read-only text with word wrap |
+| **ScrollContainer** | `zephio_scroll_container.h` | Scrollable widget container |
+| **Clipboard** | `zephio_clipboard.h` | OSC 52 clipboard copy/paste |
 
 All widgets embed `TuiWidget` as their first member and support the widget tree operations from `tui_widget.h` (add/remove children, render, focus, hit-testing, mouse dispatch).
 
@@ -187,8 +191,23 @@ All widgets embed `TuiWidget` as their first member and support the widget tree 
 - [Architecture](docs/ARCHITECTURE.md) — Module map, rendering pipeline, event flow
 - [Widget Development](docs/WIDGET_DEVELOPMENT.md) — Creating custom widgets
 - [Layout System](docs/LAYOUT.md) — Fixed/Fill/Auto, weights, nested layouts
-- [Styling & Theming](docs/STYLING.md) — Colors, themes, truecolor fallback
+- [Styling & Theming](docs/STYLING.md) — Colors, themes, truecolor
 - [ncurses Migration](docs/MIGRATION_NCURSES.md) — Cheatsheet: ncurses → Zephio mapping
+
+## Linking Against Zephio
+
+To link against the shared libraries:
+
+```sh
+gcc -std=c11 $(pkg-config --cflags --libs zephio) myapp.c -o myapp
+```
+
+Or manually:
+
+```sh
+gcc -std=c11 -I/path/to/zephio/include -o myapp myapp.c \
+    -L/path/to/zephio/lib -lzephio -lzephio-widgets -lm
+```
 
 ## License
 

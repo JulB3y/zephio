@@ -209,6 +209,7 @@ install:
 	install -d $(DESTDIR)/usr/local/include/zephio
 	install -m644 include/*.h $(DESTDIR)/usr/local/include/zephio/
 	install -Dm644 zephio.pc $(DESTDIR)/usr/local/lib/pkgconfig/zephio.pc
+	@ldconfig || true
 
 uninstall:
 	rm -f $(DESTDIR)/usr/local/lib/$(notdir $(SOLIB)) $(DESTDIR)/usr/local/lib/libzephio.so
